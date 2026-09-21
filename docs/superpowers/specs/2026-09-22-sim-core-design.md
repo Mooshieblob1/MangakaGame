@@ -1,7 +1,7 @@
 # Sub-project 1: Simulation Core — Design
 
 Date: 2026-09-22
-Status: approved in brainstorming, awaiting owner review of this document
+Status: implemented and verified on 2026-09-22; see ../sub-project-1-completion.md
 Roadmap: `2026-09-22-roadmap.md`
 
 ## Goal
