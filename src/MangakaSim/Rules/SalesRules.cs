@@ -39,6 +39,7 @@ public static class SalesRules
 
     public static long Royalty(long copies, double cover) => (long)Math.Round(copies * cover * RoyaltyRate, MidpointRounding.AwayFromZero);
     public const int PrintCost1996 = 120;
+    public const int ConventionTable1996 = 20_000;
 
     /// <summary>The studio keeps 60% of the cover, less the per-copy printing cost (sub-project 3).</summary>
     public static long DoujinIncome(long copies, double cover, double printCost) =>

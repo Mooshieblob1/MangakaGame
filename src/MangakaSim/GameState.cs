@@ -129,6 +129,7 @@ public partial class GameState
         IssueCloseStep();
         SalesStep();
         PitchStep();
+        CostsStep();
         RiskStep();
         DayEndStep();
         if (Clock.Hour == 0) StartNewDay();

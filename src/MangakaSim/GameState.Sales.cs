@@ -160,8 +160,10 @@ public partial class GameState
     {
         if (DoujinCopiesThisMonth > 0)
         {
+            var table = Economy.Inflate(SalesRules.ConventionTable1996, PriceIndexNow);
+            AddLedger(-table, "convention table");
             Emit(EventType.ConventionRecap,
-                $"Convention season: {DoujinCopiesThisMonth:N0} doujin copies sold last month and {DoujinFansThisMonth:N0} new fans.",
+                $"Convention season: {DoujinCopiesThisMonth:N0} doujin copies sold last month and {DoujinFansThisMonth:N0} new fans; the table cost {table:N0} yen.",
                 new EventContext(Amount: DoujinCopiesThisMonth));
         }
         DoujinCopiesThisMonth = 0;
@@ -184,7 +186,4 @@ public partial class GameState
             new EventContext(Amount: -cost));
     }
 
-    private void ApplySetPromotion(SetPromotionCommand c) => throw new InvalidCommandException("SetPromotion is not available yet.");
-    private void ApplyMovePremises(MovePremisesCommand c) => throw new InvalidCommandException("MovePremises is not available yet.");
-    private void ApplyBuyAmenity(BuyAmenityCommand c) => throw new InvalidCommandException("BuyAmenity is not available yet.");
 }

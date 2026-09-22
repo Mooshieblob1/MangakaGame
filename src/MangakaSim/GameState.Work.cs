@@ -9,7 +9,11 @@ public partial class GameState
         {
             if (!IsWorkingHour(person, TickStart, out var isOvertime)) continue;
             if (person.OnBreak) continue;
-            if (person.CurrentTask is not { } task) continue;
+            if (person.CurrentTask is not { } task)
+            {
+                Promote(person);
+                continue;
+            }
             var chapter = FindChapter(task.ChapterId);
             if (chapter is null) continue;
             var series = SeriesOf(chapter);
