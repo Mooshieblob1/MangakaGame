@@ -150,7 +150,7 @@ public partial class GameState
             l.Time.Ticks % TimeSpan.TicksPerHour == 0 && l.Time <= Clock.Now &&
             (l.SeriesId is null || FindSeries(l.SeriesId.Value) is not null)), "ledger");
         check(Money == Economy.StartingMoney + Ledger!.Sum(l => l.Amount), "money (must equal the ledger sum)");
-        check(LedgerWindowStart >= 0 && LedgerWindowStart <= Ledger.Count, "ledger window");
+        check(LedgerWindowStart >= 0 && LedgerWindowStart <= Ledger!.Count, "ledger window");
         check(StudioTrackRecord is >= 0 and <= 100 && double.IsFinite(StudioTrackRecord), "studio track record");
         check(LastTrendUpdateMonth.Day == 1 && LastTrendUpdateMonth.TimeOfDay == TimeSpan.Zero, "trend update month");
         check(DoujinCopiesThisMonth >= 0 && DoujinFansThisMonth >= 0 && double.IsFinite(DoujinFansThisMonth), "doujin month counters");
@@ -168,7 +168,7 @@ public partial class GameState
             foreach (var filler in market.Fillers!)
             {
                 check(filler is not null && filler.Id >= 1 && filler.Id < market.NextFillerId && fillerIds.Add(filler.Id), "filler id");
-                check(!string.IsNullOrWhiteSpace(filler.Title) && TrendData.HasGenre(filler.Genre) &&
+                check(!string.IsNullOrWhiteSpace(filler!.Title) && TrendData.HasGenre(filler.Genre) &&
                     filler.Popularity >= FillerRules.MinPopularity && filler.Popularity <= FillerRules.MaxPopularity &&
                     filler.IssuesBelowLine >= 0, "filler details");
             }
@@ -238,7 +238,8 @@ public partial class GameState
                 check(chapter.Editor != EditorStatus.AwaitingReview ||
                     (chapter.StageWork(Stage.Name).IsDone && chapter.StageWork(Stage.Pencils).Status == StageStatus.NotStarted &&
                      chapter.EditorDecisionAt is not null), "awaiting review state");
-                check(chapter.Quality is null || (chapter.Status == ChapterStatus.Complete && chapter.Quality is >= 0 and <= 100), "chapter quality");
+                check((chapter.Quality is not null) == (chapter.Status == ChapterStatus.Complete) &&
+                    (chapter.Quality is null || chapter.Quality is >= 0 and <= 100), "chapter quality");
                 check(!chapter.IsOneShot || chapter.PitchMagazineId is null || Publishers.Find(chapter.PitchMagazineId) is not null, "one-shot magazine");
                 check(!chapter.IsPublished || chapter.Status == ChapterStatus.Complete, "published chapter must be complete");
                 check(chapter.Stages.All(w => w.OvertimeHours >= 0 && double.IsFinite(w.Contribution) && w.Contribution >= 0), "stage quality data");

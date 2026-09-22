@@ -26,14 +26,21 @@ public partial class GameState
             var multiplier = Settings.Balance.SkillMultiplier(person.Skill(task.Stage));
             work.HoursDone = Math.Min(work.HoursRequired, work.HoursDone + multiplier);
             person.HoursWorkedToday++;
-            if (isOvertime) person.OvertimeHoursToday++;
+            if (isOvertime)
+            {
+                person.OvertimeHoursToday++;
+                work.OvertimeHours++;
+            }
 
             if (work.HoursDone >= work.HoursRequired)
             {
                 work.Status = StageStatus.Complete;
+                work.Contribution = QualityRules.Contribution(task.Stage, person.Skill(task.Stage),
+                    work.OvertimeHours, work.HoursRequired, chapter.RedoCount);
                 Emit(EventType.StageCompleted,
                     $"{person.Name} finished {task.Stage} on {series.Title} ch.{chapter.Number}.",
                     seriesId: series.Id, chapterNumber: chapter.Number, personId: person.Id, stage: task.Stage);
+                OnStageFinished(chapter, work);
                 CompleteChapterIfDone(chapter);
                 // Rebuild queues so CurrentTask moves to the next startable item.
                 RunPlanner();
@@ -66,7 +73,13 @@ public partial class GameState
         return chapter is { IsAtRisk: true };
     }
 
-    /// <summary>If every stage is Complete or Skipped, closes the chapter and records lateness.</summary>
+    /// <summary>Called after a stage completes or is skipped: hooks that depend on which stage finished.</summary>
+    private void OnStageFinished(Chapter chapter, StageWork work)
+    {
+        if (work.Stage == Stage.Name) SubmitForReviewIfRequired(chapter);
+    }
+
+    /// <summary>If every stage is Complete or Skipped, closes the chapter, scores it and records lateness.</summary>
     internal void CompleteChapterIfDone(Chapter chapter)
     {
         if (chapter.Status == ChapterStatus.Complete || !chapter.IsFinished) return;
@@ -74,20 +87,25 @@ public partial class GameState
         chapter.Status = ChapterStatus.Complete;
         chapter.CompletedAt = Clock.Now;
         chapter.IsAtRisk = false;
+        chapter.Quality = QualityRules.Quality(chapter.Stages.Select(s => s.Contribution));
         if (Clock.Now > chapter.DueDate)
         {
             chapter.IsLate = true;
             chapter.HoursOverdue = (int)Math.Ceiling((Clock.Now - chapter.DueDate).TotalHours);
         }
         Emit(EventType.ChapterCompleted,
-            $"{series.Title} ch.{chapter.Number} complete" + (chapter.IsLate ? $" ({chapter.HoursOverdue}h late)." : " on time."),
+            $"{series.Title} ch.{chapter.Number} finished, quality {chapter.Quality}" +
+            (chapter.IsLate ? $" ({chapter.HoursOverdue}h late)." : " (on time)."),
             seriesId: series.Id, chapterNumber: chapter.Number);
-        if (chapter.IsLate)
+        // Serialized chapters are judged at the issue close (IssueMissed), not by the doujin deadline rule.
+        if (chapter.IsLate && !series.IsSerialized)
         {
             Emit(EventType.DeadlineMissed,
                 $"{series.Title} ch.{chapter.Number} missed its deadline by {chapter.HoursOverdue}h.",
                 seriesId: series.Id, chapterNumber: chapter.Number);
         }
+        ApplyChapterCompletionReputation(series, chapter);
+        TryCreateDoujinVolume(series);
         RunPlanner();
     }
 }
