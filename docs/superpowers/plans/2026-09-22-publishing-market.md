@@ -1,6 +1,6 @@
 # Publishing and Market Implementation Plan
 
-**Status: approved plan, implementation in progress.** Completion notes will be written to `docs/superpowers/sub-project-2-completion.md`.
+**Status: implemented and verified on 2026-09-22.** See [completion notes](../sub-project-2-completion.md) for results and corrections to the plan's example values.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
@@ -98,11 +98,11 @@ Modified: `Rng.cs`, `Model.cs`, `GameEvent.cs`, `EventType.cs`, `Settings.cs`, `
 - `DailyRecapPayload` gains `long YenEarned`, `int ChaptersPublished`, `int IssuesMissed`.
 - `Settings.Default()` sets `SerializationOffered, PitchRejected, EditorRedoRequested, CancellationWarning, SeriesCancelled, VolumeMilestone, ConventionRecap, SeriesBecameIconic` to true.
 
-- [ ] **Step 1: Write the failing tests.** `NextDouble` stays in `[0,1)` over 10,000 draws and is deterministic for a seed; `NextInt(1, 3)` only yields 1, 2, 3 and hits all three; `NextDouble(-0.02, 0.02)` stays in range. `EventType` has 35 values with `PitchSubmitted == 11` and `WentOnline == 34`. Defaults include the eight new auto-pause keys.
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run tests to verify they pass.**
-- [ ] **Step 5: Commit** `feat(sim): rng helpers, publishing event types and auto-pause defaults`.
+- [x] **Step 1: Write the failing tests.** `NextDouble` stays in `[0,1)` over 10,000 draws and is deterministic for a seed; `NextInt(1, 3)` only yields 1, 2, 3 and hits all three; `NextDouble(-0.02, 0.02)` stays in range. `EventType` has 35 values with `PitchSubmitted == 11` and `WentOnline == 34`. Defaults include the eight new auto-pause keys.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run tests to verify they pass.**
+- [x] **Step 5: Commit** `feat(sim): rng helpers, publishing event types and auto-pause defaults`.
 
 ---
 
@@ -141,11 +141,11 @@ public sealed class TrendCatalog {
 
 Validation throws `InvalidDataException` for: duplicate ids, unknown publisher id, `RosterSize <= CancellationRank`, `FeePerPageMin >= FeePerPageMax`, affinity outside 0.75..1.25, tier outside 1..3, hour outside 0..23, keyframe years not strictly increasing, missing `other` genre, keyframes for a genre not in the list, and the spread rule (per year: at least two genres ≤ 0.70, at least two ≥ 1.20, mean excluding `other` within 0.90..1.10).
 
-- [ ] **Step 1: Write the failing tests.** Default catalog loads six magazines and three publishers; `tokiwa-jump` is tier 1 weekly Shonen with roster 20, line 15, fees 9,000–20,000, Thursday 18:00, 9 chapters per volume; `Affinity("action") == 1.2`, `Affinity("horror") == 1.0`; every affinity in range and roster > line for all six. `trends.json` has twelve genres including `other`, the spread rule holds for every keyframe year, `PriceIndex[1996] == 1.00`, `InternetReach[2005] == 1.0`. Each validation rule is exercised with a mutated JSON copy that throws.
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement the two catalogs and data files.**
-- [ ] **Step 4: Run tests to verify they pass.**
-- [ ] **Step 5: Commit** `feat(sim): publisher and trend catalogs as embedded json`.
+- [x] **Step 1: Write the failing tests.** Default catalog loads six magazines and three publishers; `tokiwa-jump` is tier 1 weekly Shonen with roster 20, line 15, fees 9,000–20,000, Thursday 18:00, 9 chapters per volume; `Affinity("action") == 1.2`, `Affinity("horror") == 1.0`; every affinity in range and roster > line for all six. `trends.json` has twelve genres including `other`, the spread rule holds for every keyframe year, `PriceIndex[1996] == 1.00`, `InternetReach[2005] == 1.0`. Each validation rule is exercised with a mutated JSON copy that throws.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement the two catalogs and data files.**
+- [x] **Step 4: Run tests to verify they pass.**
+- [x] **Step 5: Commit** `feat(sim): publisher and trend catalogs as embedded json`.
 
 ---
 
@@ -201,7 +201,7 @@ CancellationRules.CancelChance(double effectiveRep)         // 1 - 0.4 × rep/10
 FillerRules.Adjectives / Nouns (≥ 40 each); PopularityRange(int tier); ReplacementRange = (45, 65); IconicRange = (85, 95)
 ```
 
-- [ ] **Step 1: Write the failing tests** with these exact expectations:
+- [x] **Step 1: Write the failing tests** with these exact expectations:
   - `Economy`: 1996-04-01 → 1.00; 1999-07-01 → 1.015; 2030-01-01 → `1.18 × 1.02^4` (within 1e-9).
   - `TrendRules`: `slice of life` 2002-07-02 (midway 2000→2005) → 0.60; 2025 holds 1.00 for slice of life; `Crowding` for 0..8 → 1, 1, 1, 0.97, 0.94, 0.91, 0.88, 0.85, 0.85; `Normalise("  Sci-Fi ")` → `sci-fi`, `"isekai"` → `other`.
   - `QualityRules`: skill 80 everywhere → 84; Tones skipped → 76 (see decisions); Pencils with 20% overtime → Pencils contribution 30 × 0.84 × 0.9 = 22.68 and chapter quality 82; `SkillFactor(80, 4) == 1.0` (0.84 + 0.20 capped); `SkillFactor(0) == 0.2`, `(50) == 0.6`, `(100) == 1.0`.
@@ -213,10 +213,10 @@ FillerRules.Adjectives / Nouns (≥ 40 each); PopularityRange(int tier); Replace
   - `ReputationRules`: protection 300 chapters, 500k fans, impact 50 → 0.7; staff term of `[10]` → 10, of `[50, 30, 10, 90]` → 0.5×90 + 0.3×50 + 0.2×30 = 66; ending bonus line 15, avg rank 5, 500k copies → 1 + 4 × (10/15) = 3.7 (1 dp); withdraw penalty 20 chapters → −4, 200 chapters → −10.
   - `CancellationRules`: P = 0 → 3, 3, 8; P = 1 → 12, 26, 2; a strike 8 weeks old with lifetime 8 on a weekly is dropped, 7 weeks old kept; chance rep 50 → 0.8.
   - `FillerRules`: both word lists ≥ 40 distinct entries; ranges (40,95), (35,85), (30,75).
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement the rule modules.**
-- [ ] **Step 4: Run tests to verify they pass.**
-- [ ] **Step 5: Commit** `feat(sim): pure publishing, market, sales and reputation rules`.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement the rule modules.**
+- [x] **Step 4: Run tests to verify they pass.**
+- [x] **Step 5: Commit** `feat(sim): pure publishing, market, sales and reputation rules`.
 
 ---
 
@@ -247,11 +247,11 @@ public class SerializationOffer { string MagazineId; int FeePerPage; DateTime Fi
 
 `NewGame`: Aki `Reputation = 10`; `Money = 500,000` with no ledger entry; one `MagazineState` per catalog magazine with `NextIssueClose` = first close day/hour at or after start; `RosterSize − 1` fillers per magazine (title, weighted genre, popularity by tier, tier 1 iconic re-roll); one `GenreTrend` per genre; `LastTrendUpdateMonth = 1996-04-01`. `AddLedger(long amount, string reason, int? seriesId)` appends and updates `Money`.
 
-- [ ] **Step 1: Write the failing tests.** New game has six markets in catalog order, `tokiwa-jump` next close `1996-04-04 18:00`, `hoshigaku-sunday` `1996-04-02 18:00`, `kaidan-magazine` `1996-04-03 18:00`; 19 fillers in Jump, 13 in Flowers; every filler popularity within its tier range; exactly one iconic filler per tier 1 magazine at 85–95 and none elsewhere; filler genres all in the catalog list; twelve trends; `Money == 500000`; Aki reputation 10; same seed gives identical rosters, different seeds differ. Save JSON contains `"Version": 2`; loading `"Version": 1` fails with "not supported"; round trip identical; missing `Markets` or `Trends` rejected.
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement.** Also bump `FromJson` required properties and `ValidateSave`: exactly one market per catalog magazine, closes on the hour and `>= Clock.Now`, unique filler ids, rank entries point at existing rows, one trend per genre with `|Noise| <= 0.15`, `0 <= Boom <= 1`, `0 <= PlayerInfluence <= 0.5`, `Money == 500000 + Σ Ledger`, reputations and track record in 0..100.
-- [ ] **Step 4: Run all tests.**
-- [ ] **Step 5: Commit** `feat(sim): market model, rosters, ledger and save version 2`.
+- [x] **Step 1: Write the failing tests.** New game has six markets in catalog order, `tokiwa-jump` next close `1996-04-04 18:00`, `hoshigaku-sunday` `1996-04-02 18:00`, `kaidan-magazine` `1996-04-03 18:00`; 19 fillers in Jump, 13 in Flowers; every filler popularity within its tier range; exactly one iconic filler per tier 1 magazine at 85–95 and none elsewhere; filler genres all in the catalog list; twelve trends; `Money == 500000`; Aki reputation 10; same seed gives identical rosters, different seeds differ. Save JSON contains `"Version": 2`; loading `"Version": 1` fails with "not supported"; round trip identical; missing `Markets` or `Trends` rejected.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement.** Also bump `FromJson` required properties and `ValidateSave`: exactly one market per catalog magazine, closes on the hour and `>= Clock.Now`, unique filler ids, rank entries point at existing rows, one trend per genre with `|Noise| <= 0.15`, `0 <= Boom <= 1`, `0 <= PlayerInfluence <= 0.5`, `Money == 500000 + Σ Ledger`, reputations and track record in 0..100.
+- [x] **Step 4: Run all tests.**
+- [x] **Step 5: Commit** `feat(sim): market model, rosters, ledger and save version 2`.
 
 ---
 
@@ -264,11 +264,11 @@ public class SerializationOffer { string MagazineId; int FeePerPage; DateTime Fi
 
 Behaviour: `WorkStep` adds 1 to `StageWork.OvertimeHours` for an overtime hour. When a stage completes, `OnStageFinished(chapter, work, person)` sets `Contribution` from `QualityRules` using the assignee's skill and `RedoCount` for Name; a skipped stage gets 0. `CompleteChapterIfDone` computes `Quality`, puts it in the `ChapterCompleted` message ("… finished, quality 84"), applies `(Quality − 60) / 20 × HourShare` (halved for doujin) to each contributor, skips `DeadlineMissed` for Serialized series, and calls `TryCreateDoujinVolume(series)`: an Unpublished series with ≥ 5 finished chapters outside every volume gets a `Volume { IsDoujin = true, IsReleased = true, ReleaseDate = now }`, `VolumeReleased`, and `+0.5` track record when `AverageQuality >= 75`.
 
-- [ ] **Step 1: Write the failing tests.** Clean solo weekly chapter completes with quality 84 and the message contains "quality 84"; Aki's reputation rises by 1.2 × 0.5 = 0.6 for a doujin chapter; Tones skipped → 74; an at-risk weekly with overtime records `OvertimeHours > 0` on the stage that ran late and its contribution is below the clean value; fifth finished chapter creates a doujin volume covering chapters 1–5 with `AverageQuality == 84`, emits `VolumeReleased`, and adds 0.5 track record; the sixth chapter creates no volume.
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run all tests.**
-- [ ] **Step 5: Commit** `feat(sim): chapter quality, overtime tracking, personal reputation and doujin volumes`.
+- [x] **Step 1: Write the failing tests.** Clean solo weekly chapter completes with quality 84 and the message contains "quality 84"; Aki's reputation rises by 1.2 × 0.5 = 0.6 for a doujin chapter; Tones skipped → 74; an at-risk weekly with overtime records `OvertimeHours > 0` on the stage that ran late and its contribution is below the clean value; fifth finished chapter creates a doujin volume covering chapters 1–5 with `AverageQuality == 84`, emits `VolumeReleased`, and adds 0.5 track record; the sixth chapter creates no volume.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run all tests.**
+- [x] **Step 5: Commit** `feat(sim): chapter quality, overtime tracking, personal reputation and doujin volumes`.
 
 ---
 
@@ -281,11 +281,11 @@ Behaviour: `WorkStep` adds 1 to `StageWork.OvertimeHours` for an overtime hour. 
 
 Behaviour per spec section 5. `ReviewMagazine(chapter)` is the contract magazine for a Serialized series or `PitchMagazineId` for a one-shot; `RequiresEditor(chapter)` is true only in those cases. Name completion or skip on such a chapter sets `AwaitingReview` and `EditorDecisionAt = now + ReviewHours(tier)`. `IsStartable` returns false for Pencils while `AwaitingReview`. `EditorStep` resolves due reviews: `RedoCount == 2` approves; otherwise one `Rng.NextDouble()` against `EditorRules.ApproveChance(nameQuality, threshold)`. Redo resets Name, `RedoCount++`, Name assignee −0.5 reputation, studio −0.25 track record, emits `EditorRedoRequested` with the Name quality, and runs the planner.
 
-- [ ] **Step 1: Write the failing tests** using a series forced to Serialized in a tier 3 magazine by setting `Publishing`, `Contract` and `Cadence` directly: after Name completes Pencils is not startable and Aki's `CurrentTask` is null (or another series' work); at `EditorDecisionAt` with a seed that approves, `EditorApproved` fires and Pencils starts; with a seed that rejects, Name is back to NotStarted with `RedoCount == 1`, reputation dropped 0.5, track record dropped 0.25; a third submission is approved regardless of seed; a doujin chapter never enters review.
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run all tests.**
-- [ ] **Step 5: Commit** `feat(sim): editor gate on the name stage`.
+- [x] **Step 1: Write the failing tests** using a series forced to Serialized in a tier 3 magazine by setting `Publishing`, `Contract` and `Cadence` directly: after Name completes Pencils is not startable and Aki's `CurrentTask` is null (or another series' work); at `EditorDecisionAt` with a seed that approves, `EditorApproved` fires and Pencils starts; with a seed that rejects, Name is back to NotStarted with `RedoCount == 1`, reputation dropped 0.5, track record dropped 0.25; a third submission is approved regardless of seed; a doujin chapter never enters review.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run all tests.**
+- [x] **Step 5: Commit** `feat(sim): editor gate on the name stage`.
 
 ---
 
@@ -297,11 +297,11 @@ Behaviour per spec section 5. `ReviewMagazine(chapter)` is the contract magazine
 
 Commands `PitchSeriesCommand(int SeriesId, string MagazineId)`, `AcceptOfferCommand(int SeriesId)`, `DeclineOfferCommand(int SeriesId)`. Validation and effects per spec section 4 and the "pitching replaces an untouched open chapter" decision. `CreateNextChapter(series, oneShot: false, pagesOverride: null)` sets a Serialized chapter's due date to the first close strictly after the previous chapter's due date and a one-shot's to the first close at least 14 days out. `PitchStep` resolves one-shots and expires offers.
 
-- [ ] **Step 1: Write the failing tests.** `PitchSeries` on a fresh series replaces the untouched chapter 1 with a 31-page one-shot (Name needs 37.2 h) due at Flowers' first close ≥ 14 days out (`1996-05-01 18:00`, since Flowers closes every 28 days from 3 April), sets `Pitching`, emits `PitchSubmitted`; pitching an unknown magazine, a Pitching series, or a series with a started chapter throws and changes nothing; after the one-shot completes and is approved, resolution happens at the close: with a rejecting seed `PitchRejected` names a factor, cooldown is 26 weeks, and a second pitch throws; with an accepting seed `SerializationOffered` carries a fee equal to `PitchRules.FeePerPage` and `FirstIssueClose == 4th close`; `AcceptOffer` makes the series Serialized with `Cadence == Monthly` and the open chapter due at `FirstIssueClose` with `Editor == NotRequired`; `DeclineOffer` returns to Unpublished without cooldown; an unanswered offer expires at `FirstIssueClose` with `OfferExpired`.
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run all tests.**
-- [ ] **Step 5: Commit** `feat(sim): pitching, serialization offers and serialized due dates`.
+- [x] **Step 1: Write the failing tests.** `PitchSeries` on a fresh series replaces the untouched chapter 1 with a 31-page one-shot (Name needs 37.2 h) due at Flowers' first close ≥ 14 days out (`1996-05-01 18:00`, since Flowers closes every 28 days from 3 April), sets `Pitching`, emits `PitchSubmitted`; pitching an unknown magazine, a Pitching series, or a series with a started chapter throws and changes nothing; after the one-shot completes and is approved, resolution happens at the close: with a rejecting seed `PitchRejected` names a factor, cooldown is 26 weeks, and a second pitch throws; with an accepting seed `SerializationOffered` carries a fee equal to `PitchRules.FeePerPage` and `FirstIssueClose == 4th close`; `AcceptOffer` makes the series Serialized with `Cadence == Monthly` and the open chapter due at `FirstIssueClose` with `Editor == NotRequired`; `DeclineOffer` returns to Unpublished without cooldown; an unanswered offer expires at `FirstIssueClose` with `OfferExpired`.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run all tests.**
+- [x] **Step 5: Commit** `feat(sim): pitching, serialization offers and serialized due dates`.
 
 ---
 
@@ -314,11 +314,11 @@ Commands `PitchSeriesCommand(int SeriesId, string MagazineId)`, `AcceptOfferComm
 
 Behaviour per spec section 6 with the decisions above. `IssueCloseStep` handles each magazine whose `NextIssueClose <= now`: publish or miss, score, record, fanbase, cultural impact, reputation and cancellation hooks (Task 9 fills the cancellation rule; this task records strikes and below-line counts), filler drift and retirement, advance, then the monthly trend update (`UpdateTrendsMonthly`) with layers 2 and 3 and `GenreTrendShifted` events. `CheckIconic(series)` runs after every fanbase or impact change.
 
-- [ ] **Step 1: Write the failing tests.** A serialized series whose chapter is complete and approved at the close gets `ChapterPublished`, a `"chapter fee"` ledger entry of `Pages × FeePerPage`, `ChaptersPublished == 1`, a rank, `LastRanking` with `RosterSize` rows, and fanbase `> 0`; an unready chapter gets `IssueMissed`, one strike (after grace is disabled by setting `Contract.ChaptersPublished = 8`), due date moved one cadence, fanbase × 0.97, and no row in the table; fillers drift within ±3 and stay in 5..100; a filler forced to popularity 5 in a magazine with 12 closes is replaced with a new id and 45–65 popularity while a forced-low iconic filler survives; `NextIssueClose` advances by 28 days for a monthly magazine; the first close in May 1996 runs one monthly trend update even though several magazines close that month (noise changed for exactly one update, `LastTrendUpdateMonth == 1996-05-01`); a forced boom (set `BoomEndsAt` past and `BoomFading == false`) emits `GenreTrendShifted` at fade start; a top-3 finish with quality ≥ 80 adds 0.01 player influence; cultural impact rises 0.05 per publish and 0.1 per top-3; a series at impact 90 and fanbase 1,000,000 becomes Iconic once and takes no strike on a later miss.
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run all tests.**
-- [ ] **Step 5: Commit** `feat(sim): issue close, rankings, fanbase, filler churn and genre trends`.
+- [x] **Step 1: Write the failing tests.** A serialized series whose chapter is complete and approved at the close gets `ChapterPublished`, a `"chapter fee"` ledger entry of `Pages × FeePerPage`, `ChaptersPublished == 1`, a rank, `LastRanking` with `RosterSize` rows, and fanbase `> 0`; an unready chapter gets `IssueMissed`, one strike (after grace is disabled by setting `Contract.ChaptersPublished = 8`), due date moved one cadence, fanbase × 0.97, and no row in the table; fillers drift within ±3 and stay in 5..100; a filler forced to popularity 5 in a magazine with 12 closes is replaced with a new id and 45–65 popularity while a forced-low iconic filler survives; `NextIssueClose` advances by 28 days for a monthly magazine; the first close in May 1996 runs one monthly trend update even though several magazines close that month (noise changed for exactly one update, `LastTrendUpdateMonth == 1996-05-01`); a forced boom (set `BoomEndsAt` past and `BoomFading == false`) emits `GenreTrendShifted` at fade start; a top-3 finish with quality ≥ 80 adds 0.01 player influence; cultural impact rises 0.05 per publish and 0.1 per top-3; a series at impact 90 and fanbase 1,000,000 becomes Iconic once and takes no strike on a later miss.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run all tests.**
+- [x] **Step 5: Commit** `feat(sim): issue close, rankings, fanbase, filler churn and genre trends`.
 
 ---
 
@@ -330,11 +330,11 @@ Behaviour per spec section 6 with the decisions above. `IssueCloseStep` handles 
 
 Commands `WithdrawSeriesCommand(int SeriesId)`, `EndSeriesCommand(int SeriesId)`. Behaviour per spec section 9 plus the rounding and warning-restart decisions. `Cancel(series)`, `Withdraw(series)`, `End(series)` share `ClearContract(series)` and `ScheduleFinalVolume(series)`.
 
-- [ ] **Step 1: Write the failing tests.** Below-line ranks accumulate `WeeksBelowLine`; at the warning clock `CancellationWarning` fires once; recovering above the line lifts it; three live strikes trigger exactly one roll: a surviving seed emits `CancellationSurvived`, halves strikes and restarts the warning clock, a cancelling seed emits `SeriesCancelled`, ends the series, clears the contract, drops the open chapter, sets a 52-week cooldown, and applies −2 to Aki and −8 to track record; a strike older than its lifetime is dropped; `WithdrawSeries` clears the contract, multiplies fanbase by 0.9, keeps the open chapter as doujin with `Editor == NotRequired`, applies the penalty; `EndSeries` with 12 published chapters gives a proper ending bonus computed from `ReputationRules.EndingBonus` and emits `SeriesEnded`, with fewer applies the withdraw penalty; a doujin series ends free; both commands validate.
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run all tests.**
-- [ ] **Step 5: Commit** `feat(sim): protection, cancellation, withdraw and end`.
+- [x] **Step 1: Write the failing tests.** Below-line ranks accumulate `WeeksBelowLine`; at the warning clock `CancellationWarning` fires once; recovering above the line lifts it; three live strikes trigger exactly one roll: a surviving seed emits `CancellationSurvived`, halves strikes and restarts the warning clock, a cancelling seed emits `SeriesCancelled`, ends the series, clears the contract, drops the open chapter, sets a 52-week cooldown, and applies −2 to Aki and −8 to track record; a strike older than its lifetime is dropped; `WithdrawSeries` clears the contract, multiplies fanbase by 0.9, keeps the open chapter as doujin with `Editor == NotRequired`, applies the penalty; `EndSeries` with 12 published chapters gives a proper ending bonus computed from `ReputationRules.EndingBonus` and emits `SeriesEnded`, with fewer applies the withdraw penalty; a doujin series ends free; both commands validate.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run all tests.**
+- [x] **Step 5: Commit** `feat(sim): protection, cancellation, withdraw and end`.
 
 ---
 
@@ -346,11 +346,11 @@ Commands `WithdrawSeriesCommand(int SeriesId)`, `EndSeriesCommand(int SeriesId)`
 
 Command `GetOnlineCommand()`. `SalesStep` per spec sections 7 and 8: release check every tick, Monday 00:00 sales for tankobon and doujin volumes, royalties and doujin income into the ledger, fanbase gains, `VolumeMilestone` with track record and player influence side effects, word of mouth when online, convention recap on the first Monday of a month. Tankobon scheduling after `ChapterPublished` and final volumes on end or cancel. `DailyRecapPayload` counters filled from the window.
 
-- [ ] **Step 1: Write the failing tests.** After the ninth publish in Jump a tankobon is scheduled six weeks after the close with `AverageQuality` equal to the mean quality and `VolumeScheduled` fires; at its release date `VolumeReleased` fires once; the next Monday sells `floor(Fanbase × 0.6 × q/70 × trend)` copies and writes a `"royalties"` entry of `round(copies × 400 × index × 0.1)`; a doujin volume with fanbase 0 and quality 84 sells 240 on the next Monday and writes `"doujin sales"` of `round(240 × 500 × 0.6)` = 72,000 yen, then 96 the week after, and nothing after week 4; `GetOnline` in 1996 debits 120,000, sets `HasInternet`, and throws when repeated or with `Money < cost`; online, the doujin window is 8 weeks and word of mouth adds `Fanbase × 0.01 × reach`; the first Monday of the following month emits `ConventionRecap` with the month's copies and resets the counters; a volume forced past 100,000 copies emits `VolumeMilestone`, adds 3 track record and 0.05 influence; the daily recap after a fee shows `YenEarned` and `ChaptersPublished == 1`.
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run all tests.**
-- [ ] **Step 5: Commit** `feat(sim): volume sales, doujin sales, ledger, internet and recap counters`.
+- [x] **Step 1: Write the failing tests.** After the ninth publish in Jump a tankobon is scheduled six weeks after the close with `AverageQuality` equal to the mean quality and `VolumeScheduled` fires; at its release date `VolumeReleased` fires once; the next Monday sells `floor(Fanbase × 0.6 × q/70 × trend)` copies and writes a `"royalties"` entry of `round(copies × 400 × index × 0.1)`; a doujin volume with fanbase 0 and quality 84 sells 240 on the next Monday and writes `"doujin sales"` of `round(240 × 500 × 0.6)` = 72,000 yen, then 96 the week after, and nothing after week 4; `GetOnline` in 1996 debits 120,000, sets `HasInternet`, and throws when repeated or with `Money < cost`; online, the doujin window is 8 weeks and word of mouth adds `Fanbase × 0.01 × reach`; the first Monday of the following month emits `ConventionRecap` with the month's copies and resets the counters; a volume forced past 100,000 copies emits `VolumeMilestone`, adds 3 track record and 0.05 influence; the daily recap after a fee shows `YenEarned` and `ChaptersPublished == 1`.
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run all tests.**
+- [x] **Step 5: Commit** `feat(sim): volume sales, doujin sales, ledger, internet and recap counters`.
 
 ---
 
@@ -362,11 +362,11 @@ Command `GetOnlineCommand()`. `SalesStep` per spec sections 7 and 8: release che
 
 All of spec section 11's `ValidateSave` additions. A scripted two-year game (create, pitch with a known accepting seed, accept, serialize, get online, second doujin series) round-trips byte-identically, continues identically after load, and every new invariant is exercised by a mutated `JsonNode` copy that throws `InvalidDataException`.
 
-- [ ] **Step 1: Write the failing tests.**
-- [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run all tests.**
-- [ ] **Step 5: Commit** `feat(sim): save validation for publishing state`.
+- [x] **Step 1: Write the failing tests.**
+- [x] **Step 2: Run tests to verify they fail.**
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run all tests.**
+- [x] **Step 5: Commit** `feat(sim): save validation for publishing state`.
 
 ---
 
@@ -378,11 +378,11 @@ All of spec section 11's `ValidateSave` additions. A scripted two-year game (cre
 
 Per spec section 12: series panel with magazine dropdown and Pitch / Accept / Decline / Withdraw / End buttons plus a status block; a Market column with the selected magazine's latest ranking (player rows marked), ledger tail with balance, price index and a Get Online button, and volumes; bottom status lines for studio reputation and trends. The smoke test runs a doujin chapter, pitches to `hoshigaku-flowers`, accepts under a seed that succeeds, runs until a chapter publishes and a volume sells, checks the ledger for a fee and a royalty entry, saves, reloads and validates, and captures one screenshot when `--capture` is passed.
 
-- [ ] **Step 1: Extend the scene and the smoke test.**
-- [ ] **Step 2: Build the solution with `-warnaserror` and run the full test suite.**
-- [ ] **Step 3: Run the headless import and smoke test.**
-- [ ] **Step 4: Update README, roadmap status and write the completion notes.**
-- [ ] **Step 5: Commit** `feat(godot): publishing and market debug controls, smoke test and docs`.
+- [x] **Step 1: Extend the scene and the smoke test.**
+- [x] **Step 2: Build the solution with `-warnaserror` and run the full test suite.**
+- [x] **Step 3: Run the headless import and smoke test.**
+- [x] **Step 4: Update README, roadmap status and write the completion notes.**
+- [x] **Step 5: Commit** `feat(godot): publishing and market debug controls, smoke test and docs`.
 
 ---
 

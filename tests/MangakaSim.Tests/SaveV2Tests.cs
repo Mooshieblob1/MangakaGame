@@ -24,7 +24,7 @@ public class SaveV2Tests
         return state;
     }
 
-    private static int SerializedSeed() =>
+    private static readonly Lazy<int> CachedSeed = new(() =>
         EditorTests.FindSeed(s =>
         {
             var g = GameState.NewGame(s);
@@ -32,7 +32,9 @@ public class SaveV2Tests
             g.Apply(new PitchSeriesCommand(g.Series[0].Id, Flowers));
             for (var i = 0; i < 24 * 60 && g.Series[0].Publishing == PublishingStatus.Pitching; i++) g.Advance(1);
             return g;
-        }, g => g.Series[0].Publishing == PublishingStatus.Offered);
+        }, g => g.Series[0].Publishing == PublishingStatus.Offered));
+
+    private static int SerializedSeed() => CachedSeed.Value;
 
     [Fact]
     public void Two_years_of_play_round_trip_and_continue_identically()

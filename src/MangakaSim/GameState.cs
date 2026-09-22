@@ -82,7 +82,7 @@ public partial class GameState
     internal double GenreTrendFor(Series series) =>
         series.IsIconic ? 1.0 : TrendRules.Effective(TrendOf(series.Genre), TrendData, Clock.Now);
 
-    internal double PriceIndexNow => Economy.PriceIndex(TrendData, Clock.Now);
+    public double PriceIndexNow => Economy.PriceIndex(TrendData, Clock.Now);
 
     public int AllocateId() => NextId++;
 

@@ -68,7 +68,7 @@ public partial class GameState
         ReputationRules.Protection(series.ChaptersPublished, series.Fanbase, series.CulturalImpact);
 
     /// <summary>Strikes still inside their lifetime for the series' magazine, oldest first.</summary>
-    internal List<DateTime> LiveStrikes(Series series, Magazine magazine) =>
+    public List<DateTime> LiveStrikes(Series series, Magazine magazine) =>
         CancellationRules.LiveStrikes(series.Strikes, Clock.Now, magazine.CadenceDays,
             CancellationRules.StrikeLifetime(ProtectionOf(series)));
 
