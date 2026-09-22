@@ -154,6 +154,10 @@ public partial class GameState
 
     public Series? FindSeries(int id) => Series.FirstOrDefault(s => s.Id == id);
     public Person? FindPerson(int id) => People.FirstOrDefault(p => p.Id == id);
+    /// <summary>Current people and, after sub-project 3, former staff kept for history.</summary>
+    public Person? FindAnyPerson(int id) => FindPerson(id) ?? FormerPeople.FirstOrDefault(p => p.Id == id);
+    /// <summary>People who quit or were fired, kept so hours, ledger entries and events keep their names.</summary>
+    public List<Person> FormerPeople { get; set; } = new();
     public Chapter? FindChapter(int chapterId) =>
         Series.SelectMany(s => s.Chapters).FirstOrDefault(c => c.Id == chapterId);
     public Series SeriesOf(Chapter chapter) => Series.First(s => s.Chapters.Contains(chapter));

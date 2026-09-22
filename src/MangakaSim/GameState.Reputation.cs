@@ -24,8 +24,10 @@ public partial class GameState
         var hours = new Dictionary<int, double>();
         foreach (var work in chapters.SelectMany(c => c.Stages))
         {
-            if (work.AssignedTo is not { } id || work.HoursDone <= 0) continue;
-            hours[id] = hours.GetValueOrDefault(id) + work.HoursDone;
+            foreach (var (id, h) in work.HoursByPerson)
+            {
+                if (h > 0) hours[id] = hours.GetValueOrDefault(id) + h;
+            }
         }
         var total = hours.Values.Sum();
         return total <= 0

@@ -20,4 +20,14 @@ public class StageTests
         Assert.Equal(Stage.Tones, StageOrder.Next(Stage.Backgrounds));
         Assert.Null(StageOrder.Next(Stage.Tones));
     }
+
+    [Fact]
+    public void Prerequisites_form_the_dependency_graph()
+    {
+        Assert.Empty(StageOrder.Prerequisites(Stage.Name));
+        Assert.Equal(new[] { Stage.Name }, StageOrder.Prerequisites(Stage.Pencils));
+        Assert.Equal(new[] { Stage.Pencils }, StageOrder.Prerequisites(Stage.Inks));
+        Assert.Equal(new[] { Stage.Pencils }, StageOrder.Prerequisites(Stage.Backgrounds));
+        Assert.Equal(new[] { Stage.Inks, Stage.Backgrounds }, StageOrder.Prerequisites(Stage.Tones));
+    }
 }

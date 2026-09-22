@@ -24,7 +24,9 @@ public partial class GameState
             }
 
             var multiplier = Settings.Balance.SkillMultiplier(person.Skill(task.Stage));
-            work.HoursDone = Math.Min(work.HoursRequired, work.HoursDone + multiplier);
+            var delivered = Math.Min(work.HoursRequired, work.HoursDone + multiplier) - work.HoursDone;
+            work.HoursDone += delivered;
+            work.HoursByPerson[person.Id] = work.HoursByPerson.GetValueOrDefault(person.Id) + delivered;
             person.HoursWorkedToday++;
             if (isOvertime)
             {
@@ -35,8 +37,8 @@ public partial class GameState
             if (work.HoursDone >= work.HoursRequired)
             {
                 work.Status = StageStatus.Complete;
-                work.Contribution = QualityRules.Contribution(task.Stage, person.Skill(task.Stage),
-                    work.OvertimeHours, work.HoursRequired, chapter.RedoCount);
+                work.Contribution = QualityRules.Contribution(task.Stage, WeightedSkill(work),
+                    work.OvertimeHours, work.HoursRequired, chapter.RedoCount, WeightedFatigue(work));
                 Emit(EventType.StageCompleted,
                     $"{person.Name} finished {task.Stage} on {series.Title} ch.{chapter.Number}.",
                     seriesId: series.Id, chapterNumber: chapter.Number, personId: person.Id, stage: task.Stage);
@@ -72,6 +74,16 @@ public partial class GameState
         var chapter = FindChapter(task.ChapterId);
         return chapter is { IsAtRisk: true };
     }
+
+    /// <summary>Hours-weighted mean skill of everyone who worked the stage; the current assignee's skill when nobody has.</summary>
+    internal double WeightedSkill(StageWork work) =>
+        QualityRules.WeightedSkill(work.HoursByPerson, id => FindAnyPerson(id)?.Skill(work.Stage) ?? 0,
+            fallback: work.AssignedTo is { } a ? FindAnyPerson(a)?.Skill(work.Stage) ?? 0 : 0);
+
+    /// <summary>Hours-weighted mean fatigue of the people who worked the stage.</summary>
+    internal double WeightedFatigue(StageWork work) =>
+        QualityRules.WeightedSkill(work.HoursByPerson, id => FindAnyPerson(id)?.Fatigue ?? 0,
+            fallback: work.AssignedTo is { } a ? FindAnyPerson(a)?.Fatigue ?? 0 : 0);
 
     /// <summary>Called after a stage completes or is skipped: hooks that depend on which stage finished.</summary>
     private void OnStageFinished(Chapter chapter, StageWork work)

@@ -29,6 +29,8 @@ public class StageWork
     public double HoursDone { get; set; }
     public int? AssignedTo { get; set; }
     public StageStatus Status { get; set; } = StageStatus.NotStarted;
+    /// <summary>Hours logged per person id; sums to HoursDone.</summary>
+    public Dictionary<int, double> HoursByPerson { get; set; } = new();
     /// <summary>Hours worked outside the assignee's regular schedule.</summary>
     public double OvertimeHours { get; set; }
     /// <summary>Quality points, set when the stage completes (0 when skipped).</summary>
@@ -121,6 +123,8 @@ public class Person
     public Dictionary<Stage, int> Skills { get; set; } = new();
     /// <summary>0..100, no decay.</summary>
     public double Reputation { get; set; }
+    /// <summary>0..100; lowers the skill used for quality.</summary>
+    public double Fatigue { get; set; }
     public Schedule Schedule { get; set; } = new();
     public bool OvertimeAllowed { get; set; }
     public List<QueueRef> Queue { get; set; } = new();

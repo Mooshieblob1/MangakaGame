@@ -27,6 +27,8 @@ public class IssueCloseTests
     {
         foreach (var work in chapter.Stages)
         {
+            var assignee = work.AssignedTo ?? state.People[0].Id;
+            work.HoursByPerson[assignee] = work.HoursByPerson.GetValueOrDefault(assignee) + (work.HoursRequired - work.HoursDone);
             work.HoursDone = work.HoursRequired;
             work.Status = StageStatus.Complete;
             work.Contribution = QualityRules.Weight(work.Stage) * quality;

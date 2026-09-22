@@ -62,4 +62,26 @@ public class QualityRulesTests
         Assert.Equal(100, QualityRules.Quality(new[] { 120.0 }));
         Assert.Equal(51, QualityRules.Quality(new[] { 50.5 }));
     }
+
+    [Fact]
+    public void Fatigue_lowers_the_effective_skill_and_the_quality()
+    {
+        Assert.Equal(56, FatigueRules.EffectiveSkill(80, 100), 9);
+        Assert.Equal(80, FatigueRules.EffectiveSkill(80, 0), 9);
+        Assert.Equal(4.0, FatigueRules.Accrue(2, 10), 9);
+        Assert.Equal(0.0, FatigueRules.Accrue(0, 8), 9);
+        Assert.Equal(6, FatigueRules.Recover(true));
+        Assert.Equal(3, FatigueRules.Recover(false));
+        var tired = StageOrder.All.Select(s => QualityRules.Contribution(s, 80, 0, 100, 0, fatigue: 100));
+        Assert.Equal(65, QualityRules.Quality(tired)); // skill 56 -> factor 0.648 -> 64.8
+    }
+
+    [Fact]
+    public void Weighted_skill_is_the_hours_weighted_mean()
+    {
+        var hours = new Dictionary<int, double> { [1] = 10, [2] = 10 };
+        var skills = new Dictionary<int, double> { [1] = 80, [2] = 60 };
+        Assert.Equal(70, QualityRules.WeightedSkill(hours, id => skills[id], fallback: 0), 9);
+        Assert.Equal(42, QualityRules.WeightedSkill(new Dictionary<int, double>(), id => skills[id], fallback: 42), 9);
+    }
 }

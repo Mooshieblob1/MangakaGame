@@ -157,4 +157,30 @@ public class WorkTests
         Assert.False(state.IsWorkingHour(person, monday18.AddHours(2), out _)); // cap of 2
         Assert.False(state.IsWorkingHour(person, new DateTime(1996, 4, 7, 18, 0, 0), out _)); // Sunday
     }
+
+    [Fact]
+    public void Backgrounds_is_startable_while_inks_is_in_progress_but_tones_waits_for_both()
+    {
+        var state = Monthly();
+        state.Advance(76); // Name done Tuesday 13:00, Pencils (17.8 working hours) done Thursday 11:00; now Thursday 12:00
+        var chapter = state.Series[0].Chapters[0];
+        Assert.Equal(StageStatus.Complete, chapter.StageWork(Stage.Pencils).Status);
+        Assert.Equal(StageStatus.InProgress, chapter.StageWork(Stage.Inks).Status);
+        Assert.True(state.IsStartable(new QueueRef(chapter.Id, Stage.Backgrounds)));
+        Assert.False(state.IsStartable(new QueueRef(chapter.Id, Stage.Tones)));
+        Assert.Equal(new QueueRef(chapter.Id, Stage.Inks), state.People[0].CurrentTask); // one person still goes in stage order
+    }
+
+    [Fact]
+    public void Hours_by_person_track_who_worked_each_stage()
+    {
+        var state = Monthly();
+        state.Advance(24 + 5);
+        var name = state.Series[0].Chapters[0].StageWork(Stage.Name);
+        Assert.Equal(StageStatus.Complete, name.Status);
+        var (id, hours) = Assert.Single(name.HoursByPerson);
+        Assert.Equal(state.People[0].Id, id);
+        Assert.Equal(name.HoursDone, hours, 6);
+        Assert.Equal(1.0, state.HourShares(state.Series[0].Chapters[0])[state.People[0].Id], 6);
+    }
 }
