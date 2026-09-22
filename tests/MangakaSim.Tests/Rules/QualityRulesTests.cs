@@ -68,10 +68,11 @@ public class QualityRulesTests
     {
         Assert.Equal(56, FatigueRules.EffectiveSkill(80, 100), 9);
         Assert.Equal(80, FatigueRules.EffectiveSkill(80, 0), 9);
-        Assert.Equal(4.0, FatigueRules.Accrue(2, 10), 9);
+        Assert.Equal(6.0, FatigueRules.Accrue(2, 10), 9);
         Assert.Equal(0.0, FatigueRules.Accrue(0, 8), 9);
+        Assert.Equal(2.0, FatigueRules.Accrue(0, 10), 9); // a ten-hour day is neutral against the recovery
         Assert.Equal(6, FatigueRules.Recover(true));
-        Assert.Equal(3, FatigueRules.Recover(false));
+        Assert.Equal(2, FatigueRules.Recover(false));
         var tired = StageOrder.All.Select(s => QualityRules.Contribution(s, 80, 0, 100, 0, fatigue: 100));
         Assert.Equal(65, QualityRules.Quality(tired)); // skill 56 -> factor 0.648 -> 64.8
     }

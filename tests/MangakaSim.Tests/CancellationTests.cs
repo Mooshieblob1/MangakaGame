@@ -8,11 +8,20 @@ public class CancellationTests
 {
     private const string Jump = "tokiwa-jump";
 
+    /// <summary>Gives the chapter the next close will judge the given quality, then runs to that close.</summary>
     private static void CloseWith(GameState state, int quality, double fanbase)
     {
         var series = state.Series[0];
         series.Fanbase = fanbase;
-        ForceComplete(state, series.OpenChapter!, quality);
+        var judged = state.ContractChapters(series).Where(c => !c.IsPublished).MinBy(c => c.Number)!;
+        if (judged.Status == ChapterStatus.Complete)
+        {
+            // Aki finished it herself under the serialized pipeline; rewrite its score.
+            foreach (var work in judged.Stages) work.Contribution = QualityRules.Weight(work.Stage) * quality;
+            judged.Quality = quality;
+            judged.Editor = EditorStatus.Approved;
+        }
+        else ForceComplete(state, judged, quality);
         state.Advance(state.Clock.HoursUntil(state.MarketOf(Jump).NextIssueClose));
     }
 

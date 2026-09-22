@@ -169,8 +169,8 @@ public class PitchTests
         Assert.Equal(expectedEditor, open.Editor);
         Assert.Contains(state.Events, e => e.Type == EventType.OfferAccepted && e.MagazineId == Flowers);
 
-        // The chapter after the redirected one is due at the following close.
-        var next = state.CreateNextChapter(series);
+        // The chapter after the redirected one is due at the following close (the pipeline may already have opened it).
+        var next = series.Chapters.Last() == open ? state.CreateNextChapter(series) : series.Chapters.Last();
         Assert.Equal(offer.FirstIssueClose.AddDays(28), next.DueDate);
         Assert.Equal(19, next.Pages);
     }

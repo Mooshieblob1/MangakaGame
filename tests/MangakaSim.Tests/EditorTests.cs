@@ -43,12 +43,15 @@ public class EditorTests
         Assert.Equal(EditorStatus.AwaitingReview, chapter.Editor);
         Assert.Equal(new DateTime(1996, 4, 3, 13, 0, 0), chapter.EditorDecisionAt);
         Assert.False(state.IsStartable(new QueueRef(chapter.Id, Stage.Pencils)));
-        Assert.Null(state.People[0].CurrentTask);
+        // The serialized pipeline opens chapter 2 as soon as the name is submitted, so Aki writes ahead.
+        var next = state.Series[0].Chapters[1];
+        Assert.Equal(new QueueRef(next.Id, Stage.Name), state.People[0].CurrentTask);
         Assert.Contains(new QueueRef(chapter.Id, Stage.Pencils), state.People[0].Queue);
 
-        state.Advance(23); // Wednesday 12:00: still under review, nothing worked
+        state.Advance(23); // Wednesday 12:00: still under review, no pencils yet
         Assert.Equal(0, chapter.StageWork(Stage.Pencils).HoursDone);
         Assert.Equal(EditorStatus.AwaitingReview, chapter.Editor);
+        Assert.True(next.StageWork(Stage.Name).HoursDone > 0);
     }
 
     [Fact]
@@ -120,7 +123,7 @@ public class EditorTests
         state.Apply(new SkipStageCommand(chapter.Id, Stage.Name));
         Assert.Equal(EditorStatus.AwaitingReview, chapter.Editor);
         Assert.Equal(state.Clock.Now.AddHours(24), chapter.EditorDecisionAt);
-        Assert.Null(state.People[0].CurrentTask);
+        Assert.NotEqual(chapter.Id, state.People[0].CurrentTask?.ChapterId); // pencils wait; the next name starts
     }
 
     [Fact]

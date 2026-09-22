@@ -44,7 +44,8 @@ public class StaffRulesTests
     public void Happiness_equilibrium_and_drift()
     {
         Assert.Equal(50, HappinessRules.Equilibrium(1, 0, 0, 0, 0), 9);
-        Assert.Equal(58, HappinessRules.Equilibrium(1.4, 0, 0, 0, 0), 9);
+        Assert.Equal(62, HappinessRules.Equilibrium(1.4, 0, 0, 0, 0), 9);
+        Assert.Equal(38, HappinessRules.Equilibrium(0.6, 0, 0, 0, 0), 9);
         Assert.Equal(56, HappinessRules.Equilibrium(1, 12, 0, 0, 0), 9);
         Assert.Equal(47, HappinessRules.Equilibrium(1, 0, 0.2, 0, 0), 9);
         Assert.Equal(40, HappinessRules.Equilibrium(1, 0, 0, 1, 0), 9);

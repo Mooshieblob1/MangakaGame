@@ -5,12 +5,15 @@ public static class FatigueRules
 {
     public const double MaxSkillLoss = 0.3;
 
-    /// <summary>Daily accrual: 1.5 per overtime hour plus 0.5 per regular hour beyond eight.</summary>
+    /// <summary>
+    /// Daily accrual: 2 per overtime hour plus 1 per regular hour beyond eight. With the recovery below a
+    /// ten-hour day is neutral and a twelve-hour day adds two a day.
+    /// </summary>
     public static double Accrue(int overtimeHours, int regularHours) =>
-        1.5 * overtimeHours + 0.5 * Math.Max(0, regularHours - 8);
+        2.0 * overtimeHours + 1.0 * Math.Max(0, regularHours - 8);
 
-    /// <summary>Daily recovery: 6 on a day off, 3 otherwise.</summary>
-    public static double Recover(bool dayOff) => dayOff ? 6 : 3;
+    /// <summary>Daily recovery: 6 on a day off, 2 otherwise.</summary>
+    public static double Recover(bool dayOff) => dayOff ? 6 : 2;
 
     public static double Clamp(double fatigue) => Math.Clamp(fatigue, 0, 100);
 

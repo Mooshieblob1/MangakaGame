@@ -15,8 +15,11 @@ public static class HappinessRules
     public const double BetterPremises = 5;
     public const double CrowdingPenaltyPerPerson = 8;
 
+    public const double PayWeight = 30;
+
+    /// <summary>50 plus pay (30 per 100% above or below market), atmosphere, overtime, breaks and studio standing.</summary>
     public static double Equilibrium(double payFactor, double atmosphere, double overtimeShare, double breaksPerDay, double trackRecord) =>
-        Math.Clamp(50 + 20 * (payFactor - 1) + atmosphere / 2 - 15 * overtimeShare - 10 * breaksPerDay
+        Math.Clamp(50 + PayWeight * (payFactor - 1) + atmosphere / 2 - 15 * overtimeShare - 10 * breaksPerDay
                    + 10 * Math.Min(1, trackRecord / 50), 0, 100);
 
     /// <summary>Moves a tenth of the way toward the equilibrium.</summary>

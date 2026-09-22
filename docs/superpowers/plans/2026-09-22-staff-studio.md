@@ -39,6 +39,8 @@
 - **Doujin printing** is charged inside the same `"doujin sales"` ledger entry (net amount); the convention table fee is a separate `"convention table"` entry.
 - **Atmosphere crowding** uses the current people count against capacity; the studio starts in the garage with capacity 2, so hiring a second assistant needs the apartment.
 - **`ComputeAtRisk`** with several assignees: each assignee's remaining share (their stages' remaining person-hours) is compared with their own regular hours before the due date; unassigned stages fall to the lead.
+- **Serialized pipeline.** A Serialized series opens its next chapter as soon as the current one's Name is submitted (at most two open chapters), so the lead writes the next name while the editor reads and the assistants draw. Without it the mangaka idles through every 48-hour review and no staffing can hold a weekly slot. Doujin series keep the sub-project 1 rule of one open chapter.
+- **Retuned constants.** A diagnostic year showed the spec's fatigue numbers never accumulate (recovery 3 beats a twelve-hour day's accrual of 2) and the pay term (weight 20 at a 0.6 floor) cannot push anyone below the moonlighting line. Fatigue now accrues 2 per overtime hour and 1 per regular hour beyond eight and recovers 2 a day (6 on a day off), so a ten-hour day is neutral and a twelve-hour day adds two; the pay weight is 30. The spec's rule tests are updated to these values.
 - **Solo weekly guardrail** uses the real editor and the real pipeline; the staffed guardrail hires two skill-60 assistants directly through a test-only catalog candidate rather than searching seeds.
 
 ## File structure

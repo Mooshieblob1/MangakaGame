@@ -27,12 +27,23 @@ public partial class GameState
         foreach (var person in People) OrderQueue(person);
     }
 
+    /// <summary>
+    /// Doujin series keep one open chapter. A Serialized series opens its next chapter as soon as the current
+    /// one's Name is submitted, so the lead writes ahead while the editor reads and the assistants draw: at most
+    /// two chapters are open.
+    /// </summary>
     private void EnsureNextChapters()
     {
         foreach (var series in Series.Where(s => s.Status == SeriesStatus.Active))
         {
-            var hasOpenChapter = series.Chapters.Any(c => c.Status != ChapterStatus.Complete);
-            if (!hasOpenChapter) CreateNextChapter(series);
+            var open = series.Chapters.Where(c => c.Status != ChapterStatus.Complete).ToList();
+            if (open.Count == 0)
+            {
+                CreateNextChapter(series);
+                continue;
+            }
+            if (series.IsSerialized && open.Count == 1 && open[0].StageWork(Stage.Name).IsDone && !open[0].IsOneShot)
+                CreateNextChapter(series);
         }
     }
 

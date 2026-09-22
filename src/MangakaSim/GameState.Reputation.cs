@@ -160,6 +160,12 @@ public partial class GameState
             foreach (var open in series.Chapters.Where(c => c.Status != ChapterStatus.Complete).ToList())
                 series.Chapters.Remove(open);
         }
+        // Unpublished chapters, finished or not, are doujin work again and owe nothing to an editor.
+        foreach (var chapter in series.Chapters.Where(c => !c.IsPublished && !c.IsOneShot))
+        {
+            chapter.Editor = EditorStatus.NotRequired;
+            chapter.EditorDecisionAt = null;
+        }
     }
 
     // ---------------------------------------------------------------- withdraw and end

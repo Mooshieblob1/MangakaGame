@@ -118,7 +118,7 @@ public class NeedsTests
         var state = LongDays();
         var aki = state.People[0];
         state.Advance(24 * 6); // Monday to Sunday morning: six days of 12 regular hours, one overtime hour worked and one break
-        Assert.Equal(6 * (1.5 * 1 + 0.5 * 4) - 6 * 3, aki.Fatigue, 6); // +3.5 a day, -3 recovery
+        Assert.Equal(6 * (2.0 * 1 + 1.0 * 4) - 6 * 2, aki.Fatigue, 6); // +6 a day, -2 recovery
         Assert.Equal(6, aki.RecentOvertime.Count);
         Assert.Equal(1, aki.RecentOvertime.Last());
         Assert.Equal(12, aki.RecentRegular.Last());
