@@ -96,6 +96,7 @@ public partial class GameState
     {
         Clock.Advance();
         WorkStep();
+        EditorStep();
         IssueCloseStep();
         RiskStep();
         DayEndStep();

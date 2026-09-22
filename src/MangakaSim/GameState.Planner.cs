@@ -107,6 +107,8 @@ public partial class GameState
         if (SeriesOf(chapter).Status != SeriesStatus.Active) return false;
         var work = chapter.StageWork(r.Stage);
         if (work.IsDone) return false;
+        // The editor holds Pencils until the Name is approved; later stages wait through the dependency rule.
+        if (r.Stage == Stage.Pencils && chapter.Editor == EditorStatus.AwaitingReview) return false;
         return chapter.Stages.TakeWhile(s => s.Stage != r.Stage).All(s => s.IsDone);
     }
 }

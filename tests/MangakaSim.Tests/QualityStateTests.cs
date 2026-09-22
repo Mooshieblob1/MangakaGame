@@ -112,7 +112,8 @@ public class QualityStateTests
         var series = state.Series[0];
         series.Publishing = PublishingStatus.Serialized;
         series.Contract = new Contract { MagazineId = "tokiwa-jump", FeePerPage = 9000, SignedAt = state.Clock.Now };
-        state.Advance(7 * 24 + 3);
+        state.Advance(14 * 24); // 63 working hours plus a 48h review: well past the 8 April due date
+        Assert.Equal(ChapterStatus.Complete, series.Chapters[0].Status);
         Assert.True(series.Chapters[0].IsLate);
         Assert.DoesNotContain(state.Events, e => e.Type == EventType.DeadlineMissed);
     }
