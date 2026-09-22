@@ -62,6 +62,99 @@ public partial class GameState
         }
     }
 
+    // ---------------------------------------------------------------- protection and cancellation
+
+    internal double ProtectionOf(Series series) =>
+        ReputationRules.Protection(series.ChaptersPublished, series.Fanbase, series.CulturalImpact);
+
+    /// <summary>Strikes still inside their lifetime for the series' magazine, oldest first.</summary>
+    internal List<DateTime> LiveStrikes(Series series, Magazine magazine) =>
+        CancellationRules.LiveStrikes(series.Strikes, Clock.Now, magazine.CadenceDays,
+            CancellationRules.StrikeLifetime(ProtectionOf(series)));
+
+    /// <summary>Runs at issue close for a ranked, non-Iconic Serialized series.</summary>
+    private void ApplyCancellationRule(Series series, Magazine magazine, int rank)
+    {
+        var protection = ProtectionOf(series);
+        var inGrace = series.Contract!.ChaptersPublished <= ReputationRules.GraceChapters;
+        series.Strikes = LiveStrikes(series, magazine);
+
+        if (rank <= magazine.CancellationRank)
+        {
+            series.WeeksBelowLine = 0;
+            if (series.WarningIssuedAt is not null)
+            {
+                series.WarningIssuedAt = null;
+                Emit(EventType.CancellationWarningLifted,
+                    $"{series.Title} climbs back above the line at #{rank}; {magazine.Name} withdraws its warning.",
+                    new EventContext(SeriesId: series.Id, MagazineId: magazine.Id, Rank: rank));
+            }
+        }
+        else if (!inGrace)
+        {
+            series.WeeksBelowLine++;
+            if (series.WarningIssuedAt is null && series.WeeksBelowLine >= CancellationRules.WarningClock(protection))
+            {
+                series.WarningIssuedAt = Clock.Now;
+                Emit(EventType.CancellationWarning,
+                    $"{magazine.Name} warns {series.Title}: {series.WeeksBelowLine} issues below the line at #{rank}. Climb back or face cancellation.",
+                    new EventContext(SeriesId: series.Id, MagazineId: magazine.Id, Rank: rank));
+            }
+        }
+
+        var issuesUnderWarning = series.WarningIssuedAt is { } warned
+            ? (int)Math.Floor((Clock.Now - warned).TotalDays / magazine.CadenceDays)
+            : -1;
+        var rollDue = (series.WarningIssuedAt is not null && issuesUnderWarning >= CancellationRules.CancelClock(protection)) ||
+                      series.Strikes.Count >= CancellationRules.StrikesForRoll;
+        if (!rollDue) return;
+
+        var chance = CancellationRules.CancelChance(EffectiveReputation);
+        if (Rng.NextDouble() < chance)
+        {
+            CancelSeries(series, magazine);
+            return;
+        }
+        series.WeeksBelowLine /= 2;
+        var keep = series.Strikes.Count / 2;
+        series.Strikes = series.Strikes.OrderBy(s => s).TakeLast(keep).ToList();
+        if (series.WarningIssuedAt is not null) series.WarningIssuedAt = Clock.Now;
+        Emit(EventType.CancellationSurvived,
+            $"{magazine.Name} keeps {series.Title} on for now, but the editors are watching.",
+            new EventContext(SeriesId: series.Id, MagazineId: magazine.Id, Rank: rank));
+    }
+
+    private void CancelSeries(Series series, Magazine magazine)
+    {
+        var contract = series.Contract!;
+        Emit(EventType.SeriesCancelled,
+            $"{magazine.Name} cancels {series.Title} after {contract.ChaptersPublished} chapters.",
+            new EventContext(SeriesId: series.Id, MagazineId: magazine.Id));
+        ApplyFlatToContributors(series, ReputationRules.PersonCancellation);
+        AdjustTrackRecord(ReputationRules.Cancellation);
+        series.PitchCooldowns[magazine.Id] = Clock.Now.AddDays(7 * 52);
+        EndSerialization(series, dropOpenChapter: true);
+        series.Status = SeriesStatus.Ended;
+        ScheduleFinalVolume(series, magazine);
+        RunPlanner();
+    }
+
+    /// <summary>Clears the contract and publishing state; optionally drops the open chapter.</summary>
+    private void EndSerialization(Series series, bool dropOpenChapter)
+    {
+        series.Contract = null;
+        series.PendingOffer = null;
+        series.Publishing = PublishingStatus.Unpublished;
+        series.Strikes.Clear();
+        series.WeeksBelowLine = 0;
+        series.WarningIssuedAt = null;
+        if (dropOpenChapter)
+        {
+            foreach (var open in series.Chapters.Where(c => c.Status != ChapterStatus.Complete).ToList())
+                series.Chapters.Remove(open);
+        }
+    }
+
     private void ApplyWithdrawSeries(WithdrawSeriesCommand c) => throw new InvalidCommandException("WithdrawSeries is not available yet.");
     private void ApplyEndSeries(EndSeriesCommand c) => throw new InvalidCommandException("EndSeries is not available yet.");
 }

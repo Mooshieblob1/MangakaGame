@@ -178,7 +178,8 @@ public partial class GameState
             {
                 check(entry is not null && entry.Rank == rank++ && entry.Title is not null && double.IsFinite(entry.Score) &&
                     (entry.SeriesId is null) != (entry.FillerId is null), "rank entry");
-                check(entry!.SeriesId is null ? market.Fillers.Any(f => f.Id == entry.FillerId) : FindSeries(entry.SeriesId.Value) is not null,
+                // A filler retired in the same close keeps its row in that issue's table, so any id the magazine has issued is valid.
+                check(entry!.SeriesId is null ? entry.FillerId >= 1 && entry.FillerId < market.NextFillerId : FindSeries(entry.SeriesId.Value) is not null,
                     "rank entry target");
             }
         }

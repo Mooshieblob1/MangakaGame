@@ -38,6 +38,7 @@
 - **Surviving a roll restarts the warning clock.** `WarningIssuedAt = now` after `CancellationSurvived`; the warning stays active. Without this the roll would repeat every issue.
 - **RankingPublished** fires only for magazines where a player series published this issue; six silent magazines a week would drown the log.
 - **Zero-yen ledger entries are not written.** A released volume that sells no copies in a week gets no royalty entry.
+- **Rank entries may name a retired filler.** A filler retired at a close keeps its row in that issue's table, so `ValidateSave` accepts any filler id the magazine has issued (`1 <= id < NextFillerId`) rather than only current roster members.
 - **Issue close advance exists from Task 4** so the save invariant `NextIssueClose >= Clock.Now` holds before Task 8 fills in publishing and rankings.
 - **Volumes** carry `bool IsReleased` so `VolumeReleased` fires once. Doujin volumes are created released. Chapters "not in any volume" are those whose number lies outside every volume's `[FirstChapter, LastChapter]` range.
 - **Million-seller influence** is tracked by `Series.MillionInfluenceGiven`.

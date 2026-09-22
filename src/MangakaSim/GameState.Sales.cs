@@ -40,5 +40,29 @@ public partial class GameState
         if (volume.AverageQuality >= 75) AdjustTrackRecord(ReputationRules.DoujinQualityVolume);
     }
 
+    /// <summary>After a publish: enough published chapters outside any volume make a tankobon due six weeks later.</summary>
+    private void TryScheduleTankobon(Series series, Magazine magazine, DateTime closeTime)
+    {
+        var chapters = ChaptersOutsideVolumes(series, publishedOnly: true);
+        if (chapters.Count < magazine.ChaptersPerVolume) return;
+        ScheduleTankobon(series, chapters, closeTime);
+    }
+
+    /// <summary>On ending or cancellation: leftover published chapters (at least three) become a final volume.</summary>
+    private void ScheduleFinalVolume(Series series, Magazine magazine)
+    {
+        var chapters = ChaptersOutsideVolumes(series, publishedOnly: true);
+        if (chapters.Count < SalesRules.MinLeftoverForFinalVolume) return;
+        ScheduleTankobon(series, chapters, Clock.Now);
+    }
+
+    private void ScheduleTankobon(Series series, List<Chapter> chapters, DateTime from)
+    {
+        var volume = CreateVolume(series, chapters, isDoujin: false, from.AddDays(7 * SalesRules.ReleaseDelayWeeks));
+        Emit(EventType.VolumeScheduled,
+            $"{series.Title} vol.{volume.Number} (ch.{volume.FirstChapter}-{volume.LastChapter}) goes on sale {volume.ReleaseDate:d MMM yyyy}.",
+            new EventContext(SeriesId: series.Id, VolumeId: volume.Id));
+    }
+
     private void ApplyGetOnline(GetOnlineCommand c) => throw new InvalidCommandException("GetOnline is not available yet.");
 }
