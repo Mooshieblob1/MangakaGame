@@ -73,17 +73,24 @@ public partial class GameState
     }
 
     internal GameEvent Emit(EventType type, string message, int? seriesId = null,
-        int? chapterNumber = null, int? personId = null, Stage? stage = null)
+        int? chapterNumber = null, int? personId = null, Stage? stage = null) =>
+        Emit(type, message, new EventContext(seriesId, chapterNumber, personId, stage));
+
+    internal GameEvent Emit(EventType type, string message, EventContext context)
     {
         var ev = new GameEvent
         {
             Time = Clock.Now,
             Type = type,
             Message = message,
-            SeriesId = seriesId,
-            ChapterNumber = chapterNumber,
-            PersonId = personId,
-            Stage = stage,
+            SeriesId = context.SeriesId,
+            ChapterNumber = context.ChapterNumber,
+            PersonId = context.PersonId,
+            Stage = context.Stage,
+            MagazineId = context.MagazineId,
+            VolumeId = context.VolumeId,
+            Rank = context.Rank,
+            Amount = context.Amount,
         };
         Events.Add(ev);
         return ev;

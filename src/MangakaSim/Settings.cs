@@ -12,9 +12,16 @@ public class Settings
         {
             settings.AutoPause[type] = false;
         }
-        settings.AutoPause[EventType.DailyRecap] = true;
-        settings.AutoPause[EventType.ChapterCompleted] = true;
-        settings.AutoPause[EventType.DeadlineMissed] = true;
+        foreach (var type in new[]
+                 {
+                     EventType.DailyRecap, EventType.ChapterCompleted, EventType.DeadlineMissed,
+                     EventType.SerializationOffered, EventType.PitchRejected, EventType.EditorRedoRequested,
+                     EventType.CancellationWarning, EventType.SeriesCancelled, EventType.VolumeMilestone,
+                     EventType.ConventionRecap, EventType.SeriesBecameIconic,
+                 })
+        {
+            settings.AutoPause[type] = true;
+        }
         return settings;
     }
 }

@@ -64,4 +64,29 @@ public class BalanceTests
         Assert.False(settings.AutoPause[EventType.StageCompleted]);
         Assert.Equal(Enum.GetValues<EventType>().Length, settings.AutoPause.Count);
     }
+
+    [Fact]
+    public void Default_settings_auto_pause_on_publishing_events()
+    {
+        var settings = Settings.Default();
+        foreach (var type in new[]
+                 {
+                     EventType.SerializationOffered, EventType.PitchRejected, EventType.EditorRedoRequested,
+                     EventType.CancellationWarning, EventType.SeriesCancelled, EventType.VolumeMilestone,
+                     EventType.ConventionRecap, EventType.SeriesBecameIconic,
+                 })
+            Assert.True(settings.AutoPause[type], type.ToString());
+        Assert.False(settings.AutoPause[EventType.ChapterPublished]);
+        Assert.False(settings.AutoPause[EventType.RankingPublished]);
+    }
+
+    [Fact]
+    public void Publishing_event_types_are_appended_in_spec_order()
+    {
+        Assert.Equal(35, Enum.GetValues<EventType>().Length);
+        Assert.Equal(10, (int)EventType.CommandApplied);
+        Assert.Equal(11, (int)EventType.PitchSubmitted);
+        Assert.Equal(19, (int)EventType.ChapterPublished);
+        Assert.Equal(34, (int)EventType.WentOnline);
+    }
 }

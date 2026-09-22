@@ -24,4 +24,18 @@ public class Rng
         if (maxExclusive <= 0) throw new ArgumentOutOfRangeException(nameof(maxExclusive));
         return (int)(NextUInt64() % (ulong)maxExclusive);
     }
+
+    /// <summary>Uniform integer in [minInclusive, maxInclusive].</summary>
+    public int NextInt(int minInclusive, int maxInclusive)
+    {
+        if (maxInclusive < minInclusive)
+            throw new ArgumentOutOfRangeException(nameof(maxInclusive), "max must be >= min");
+        return minInclusive + NextInt(maxInclusive - minInclusive + 1);
+    }
+
+    /// <summary>Uniform double in [0, 1) built from the top 53 bits.</summary>
+    public double NextDouble() => (NextUInt64() >> 11) * (1.0 / 9007199254740992.0);
+
+    /// <summary>Uniform double in [min, max).</summary>
+    public double NextDouble(double min, double max) => min + (max - min) * NextDouble();
 }
