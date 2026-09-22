@@ -122,7 +122,8 @@ public partial class GameState
         var before = volume.CopiesSold;
         volume.CopiesSold += copies;
         volume.WeeksOnSale++;
-        var income = SalesRules.DoujinIncome(copies, SalesRules.DoujinCover(Economy.PriceIndex(TrendData, volume.ReleaseDate)));
+        var releaseIndex = Economy.PriceIndex(TrendData, volume.ReleaseDate);
+        var income = SalesRules.DoujinIncome(copies, SalesRules.DoujinCover(releaseIndex), SalesRules.PrintCost(releaseIndex));
         if (income != 0) AddLedger(income, "doujin sales", series.Id);
         var fans = copies * FanbaseRules.DoujinFanShare;
         series.Fanbase += fans;

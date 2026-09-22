@@ -61,7 +61,8 @@ public class MarketRulesTests
         Assert.Equal(400, SalesRules.TankobonCover(1.0), 9);
         Assert.Equal(590, SalesRules.DoujinCover(1.18), 9);
         Assert.Equal(288_000, SalesRules.Royalty(7200, 400));
-        Assert.Equal(72_000, SalesRules.DoujinIncome(240, 500));
+        Assert.Equal(43_200, SalesRules.DoujinIncome(240, 500, 120)); // 180 yen per copy after printing
+        Assert.Equal(180, SalesRules.DoujinIncome(1, 500, SalesRules.PrintCost(1.0)));
     }
 
     [Fact]

@@ -118,7 +118,7 @@ public class SalesTests
         Assert.InRange(week1, 235, 245);
         Assert.Equal(1, volume.WeeksOnSale);
         var sale = Assert.Single(state.Ledger, l => l.Reason == "doujin sales");
-        Assert.Equal(week1 * 500 * 0.6, sale.Amount, 6);
+        Assert.Equal(week1 * (500 * 0.6 - 120), sale.Amount, 6); // printing costs 120 per copy
         Assert.Equal(moneyBefore + sale.Amount, state.Money);
         Assert.Equal(week1 * 0.3, series.Fanbase, 6);
         Assert.Equal(week1, state.DoujinCopiesThisMonth);

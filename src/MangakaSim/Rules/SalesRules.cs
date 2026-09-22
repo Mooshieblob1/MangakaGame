@@ -38,5 +38,11 @@ public static class SalesRules
     public static double DoujinCover(double priceIndex) => DoujinCover1996 * priceIndex;
 
     public static long Royalty(long copies, double cover) => (long)Math.Round(copies * cover * RoyaltyRate, MidpointRounding.AwayFromZero);
-    public static long DoujinIncome(long copies, double cover) => (long)Math.Round(copies * cover * DoujinShare, MidpointRounding.AwayFromZero);
+    public const int PrintCost1996 = 120;
+
+    /// <summary>The studio keeps 60% of the cover, less the per-copy printing cost (sub-project 3).</summary>
+    public static long DoujinIncome(long copies, double cover, double printCost) =>
+        (long)Math.Round(copies * (cover * DoujinShare - printCost), MidpointRounding.AwayFromZero);
+
+    public static double PrintCost(double priceIndex) => PrintCost1996 * priceIndex;
 }
