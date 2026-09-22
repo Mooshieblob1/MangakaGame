@@ -92,7 +92,8 @@ public partial class GameState
                 person.Schedule.WorkStartHour < person.Schedule.WorkEndHour &&
                 person.Schedule.WorkEndHour <= 24 - balance.OvertimeCap, "schedule");
             Check(person.HoursWorkedToday is >= 0 and <= 24 && person.OvertimeHoursToday >= 0 &&
-                person.OvertimeHoursToday <= person.HoursWorkedToday, "work counters");
+                person.RegularHoursToday >= 0 && person.RegularHoursToday <= person.HoursWorkedToday &&
+                person.OvertimeHoursToday + person.RegularHoursToday >= person.HoursWorkedToday, "work counters");
             Check(person.Queue is not null && person.Pins is not null, "queue");
             Check(Enum.IsDefined(person.Role) && person.Salary >= 0 && (person.Role != PersonRole.Mangaka || person.Salary == 0), "salary");
             Check(person.Needs is not null && new[] { person.Needs.Hunger, person.Needs.Thirst, person.Needs.Comfort }

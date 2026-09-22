@@ -24,8 +24,10 @@ public class DailyRecapPayload
     public List<ChapterRef> ChaptersCompleted { get; set; } = new();
     public List<ChapterRef> DeadlinesMissed { get; set; } = new();
     public long YenEarned { get; set; }
+    public long YenSpent { get; set; }
     public int ChaptersPublished { get; set; }
     public int IssuesMissed { get; set; }
+    public List<PersonMood> Moods { get; set; } = new();
 }
 
 public class GameEvent

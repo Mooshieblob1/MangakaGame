@@ -43,7 +43,9 @@ public partial class GameState
                 .Select(e => new ChapterRef(e.SeriesId!.Value, e.ChapterNumber!.Value)).ToList(),
             DeadlinesMissed = window.Where(e => e.Type == EventType.DeadlineMissed)
                 .Select(e => new ChapterRef(e.SeriesId!.Value, e.ChapterNumber!.Value)).ToList(),
-            YenEarned = Ledger.Skip(LedgerWindowStart).Sum(l => l.Amount),
+            YenEarned = Ledger.Skip(LedgerWindowStart).Where(l => l.Amount > 0).Sum(l => l.Amount),
+            YenSpent = -Ledger.Skip(LedgerWindowStart).Where(l => l.Amount < 0).Sum(l => l.Amount),
+            Moods = People.Select(p => new PersonMood(p.Id, p.Name, p.Happiness, p.Fatigue, p.BreaksToday, p.IsMoonlighting)).ToList(),
             ChaptersPublished = window.Count(e => e.Type == EventType.ChapterPublished),
             IssuesMissed = window.Count(e => e.Type == EventType.IssueMissed),
         };

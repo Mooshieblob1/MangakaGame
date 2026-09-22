@@ -123,6 +123,7 @@ public partial class GameState
     internal void Tick()
     {
         Clock.Advance();
+        NeedsStep();
         WorkStep();
         EditorStep();
         IssueCloseStep();
@@ -135,10 +136,12 @@ public partial class GameState
 
     private void StartNewDay()
     {
+        StaffNewDay();
         foreach (var person in People)
         {
             person.HoursWorkedToday = 0;
             person.OvertimeHoursToday = 0;
+            person.RegularHoursToday = 0;
             person.ManualOrder = null;
         }
         RecapFiredToday = false;

@@ -18,6 +18,7 @@ public class Settings
                      EventType.SerializationOffered, EventType.PitchRejected, EventType.EditorRedoRequested,
                      EventType.CancellationWarning, EventType.SeriesCancelled, EventType.VolumeMilestone,
                      EventType.ConventionRecap, EventType.SeriesBecameIconic,
+                     EventType.StaffQuit, EventType.PayrollMissed, EventType.CandidateAppeared, EventType.NeedCritical,
                  })
         {
             settings.AutoPause[type] = true;

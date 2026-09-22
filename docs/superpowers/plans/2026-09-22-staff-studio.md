@@ -23,7 +23,7 @@
 ## Decisions locked in by this plan (not spelled out in the spec)
 
 - **Break hour.** A break replaces the whole working hour: no hours accrue, `HoursWorkedToday` does not advance, and an overtime hour spent on a break still counts against the overtime cap.
-- **Half speed at need 0** applies to the multiplier for that hour (`0.5 ×`), computed after the break decision: a person at need 0 who is not on a break (needs above 25 on the other two, impossible in practice) works at half speed.
+- **Need 0 is unreachable.** A need below 25 forces a break before the next hour's depletion (at most 9) could reach 0, so the spec's half-speed rule can never apply and is not implemented; `NeedCritical` stays as an event for future balance changes. `Person.RegularHoursToday` counts regular hours actually worked so fatigue and the seven-day windows are not inflated by a break taken in an overtime hour.
 - **Needs reset** happens in `NeedsStep` on the first regular working hour of the day, detected by `HoursWorkedToday == 0 && BreaksToday == 0` at a regular hour.
 - **Rolling seven-day windows** for overtime share and breaks per day use two small per-person ring buffers (`RecentOvertime`, `RecentRegular`, `RecentBreaks` as `List<int>` of at most seven entries) appended at midnight. They are saved.
 - **Moonlighting hours.** A moonlighting assistant's effective `WorkEndHour` is `max(WorkStartHour + 1, WorkEndHour − 2)` for both planning and work, and `IsOvertimeHour` returns false for them.

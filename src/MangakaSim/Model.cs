@@ -162,7 +162,10 @@ public class Person
     public List<QueueRef>? ManualOrder { get; set; }
     public QueueRef? CurrentTask { get; set; }
     public int HoursWorkedToday { get; set; }
+    /// <summary>Overtime hours consumed today (breaks in overtime count against the cap).</summary>
     public int OvertimeHoursToday { get; set; }
+    /// <summary>Regular scheduled hours actually worked today.</summary>
+    public int RegularHoursToday { get; set; }
 
     public int Skill(Stage stage) => Skills.TryGetValue(stage, out var v) ? v : 0;
 }

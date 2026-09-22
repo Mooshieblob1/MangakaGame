@@ -83,10 +83,15 @@ public class BalanceTests
     [Fact]
     public void Publishing_event_types_are_appended_in_spec_order()
     {
-        Assert.Equal(35, Enum.GetValues<EventType>().Length);
+        Assert.Equal(51, Enum.GetValues<EventType>().Length);
         Assert.Equal(10, (int)EventType.CommandApplied);
         Assert.Equal(11, (int)EventType.PitchSubmitted);
         Assert.Equal(19, (int)EventType.ChapterPublished);
         Assert.Equal(34, (int)EventType.WentOnline);
+        Assert.Equal(35, (int)EventType.TookBreak);
+        Assert.Equal(50, (int)EventType.PromotionAssigned);
+        foreach (var type in new[] { EventType.StaffQuit, EventType.PayrollMissed, EventType.CandidateAppeared, EventType.NeedCritical })
+            Assert.True(Settings.Default().AutoPause[type], type.ToString());
+        Assert.False(Settings.Default().AutoPause[EventType.TookBreak]);
     }
 }
