@@ -21,6 +21,8 @@ public class MagazineState
     public List<FillerSeries> Fillers { get; set; } = new();
     public List<RankEntry> LastRanking { get; set; } = new();
     public int IssuesClosed { get; set; }
+    /// <summary>Filler ids are unique per magazine and come from this counter.</summary>
+    public int NextFillerId { get; set; } = 1;
 }
 
 public class FillerSeries

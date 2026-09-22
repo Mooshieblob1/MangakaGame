@@ -9,7 +9,7 @@ public class GameStateTickTests
     public void NewGame_has_prodigy_mangaka_and_default_settings()
     {
         var state = GameState.NewGame(seed: 5);
-        Assert.Equal(1, state.Version);
+        Assert.Equal(2, state.Version);
         Assert.Equal(GameClock.Start, state.Clock.Now);
         Assert.Equal(5, state.RngSeed);
         var person = Assert.Single(state.People);
@@ -20,6 +20,12 @@ public class GameStateTickTests
         Assert.True(person.OvertimeAllowed);
         Assert.Empty(state.Series);
         Assert.True(state.Settings.AutoPause[EventType.DailyRecap]);
+        Assert.Equal(10, person.Reputation);
+        Assert.Equal(500_000, state.Money);
+        Assert.Empty(state.Ledger);
+        Assert.Equal(0, state.StudioTrackRecord);
+        Assert.False(state.HasInternet);
+        Assert.Equal(new DateTime(1996, 4, 1), state.LastTrendUpdateMonth);
     }
 
     [Fact]

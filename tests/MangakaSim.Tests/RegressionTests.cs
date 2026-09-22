@@ -120,6 +120,9 @@ public class RegressionTests
     [InlineData("Events")]
     [InlineData("Rng")]
     [InlineData("CommandLog")]
+    [InlineData("Markets")]
+    [InlineData("Trends")]
+    [InlineData("Ledger")]
     public void Saves_with_null_required_state_are_rejected(string property)
     {
         var json = JsonNode.Parse(Started().ToJson())!;

@@ -5,6 +5,9 @@ public partial class GameState
     /// <summary>Index into Events where the events for the next recap begin.</summary>
     public int RecapWindowStart { get; set; }
 
+    /// <summary>Index into Ledger where the entries for the next recap begin.</summary>
+    public int LedgerWindowStart { get; set; }
+
     internal void DayEndStep()
     {
         if (RecapFiredToday) return;
@@ -40,6 +43,9 @@ public partial class GameState
                 .Select(e => new ChapterRef(e.SeriesId!.Value, e.ChapterNumber!.Value)).ToList(),
             DeadlinesMissed = window.Where(e => e.Type == EventType.DeadlineMissed)
                 .Select(e => new ChapterRef(e.SeriesId!.Value, e.ChapterNumber!.Value)).ToList(),
+            YenEarned = Ledger.Skip(LedgerWindowStart).Sum(l => l.Amount),
+            ChaptersPublished = window.Count(e => e.Type == EventType.ChapterPublished),
+            IssuesMissed = window.Count(e => e.Type == EventType.IssueMissed),
         };
 
         var hours = string.Join(", ", payload.HoursPerPerson.Where(h => h.Hours > 0)
@@ -51,6 +57,7 @@ public partial class GameState
         ev.Recap = payload;
         RecapFiredToday = true;
         RecapWindowStart = Events.Count;
+        LedgerWindowStart = Ledger.Count;
         return ev;
     }
 

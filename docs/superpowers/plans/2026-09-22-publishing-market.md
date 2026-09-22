@@ -38,6 +38,7 @@
 - **Surviving a roll restarts the warning clock.** `WarningIssuedAt = now` after `CancellationSurvived`; the warning stays active. Without this the roll would repeat every issue.
 - **RankingPublished** fires only for magazines where a player series published this issue; six silent magazines a week would drown the log.
 - **Zero-yen ledger entries are not written.** A released volume that sells no copies in a week gets no royalty entry.
+- **Issue close advance exists from Task 4** so the save invariant `NextIssueClose >= Clock.Now` holds before Task 8 fills in publishing and rankings.
 - **Volumes** carry `bool IsReleased` so `VolumeReleased` fires once. Doujin volumes are created released. Chapters "not in any volume" are those whose number lies outside every volume's `[FirstChapter, LastChapter]` range.
 - **Million-seller influence** is tracked by `Series.MillionInfluenceGiven`.
 - **Convention recap** runs before that Monday's sales so it sums the previous month only.
@@ -47,7 +48,7 @@
 - **Effective reputation with one person** is `0.5 × StudioTrackRecord + 0.5 × Aki.Reputation`.
 - **Economic curves step by calendar year.** The spec wants the price index to read exactly 1.00 on 1 April 1996 and internet reach 0.1 through 1996, which fractional-year interpolation cannot give, so `Economy.PriceIndex` and `Economy.InternetReach` interpolate on the integer year. Genre baselines keep the spec's fractional-year interpolation.
 - **Skipped Tones quality.** The spec's example value 74 contradicts its formula: 84 − 0.10 × 100 × 0.84 = 75.6, which rounds to 76. The formula wins; the test asserts 76.
-- **Filler words** live in `Rules/FillerRules.cs` as two static arrays (40 adjectives, 40 nouns). Filler ids come from `AllocateId` so they are unique across the save.
+- **Filler words** live in `Rules/FillerRules.cs` as two static arrays (40 adjectives, 40 nouns). Filler ids come from a per-magazine counter (`MagazineState.NextFillerId`), matching the spec's "unique per magazine" invariant and leaving the global id counter, which sub-project 1 tests hard-code, untouched.
 
 ## File structure
 

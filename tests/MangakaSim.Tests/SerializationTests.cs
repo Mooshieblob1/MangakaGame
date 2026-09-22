@@ -100,7 +100,7 @@ public class SerializationTests
     public void Json_contains_version_and_string_enums()
     {
         var json = Played().ToJson();
-        Assert.Contains("\"Version\": 1", json);
+        Assert.Contains("\"Version\": 2", json);
         Assert.Contains("\"Weekly\"", json);
         Assert.Contains("\"type\": \"CreateSeries\"", json);
     }
@@ -108,10 +108,18 @@ public class SerializationTests
     [Fact]
     public void Loading_newer_version_throws_clear_error()
     {
-        var json = Played().ToJson().Replace("\"Version\": 1", "\"Version\": 2");
+        var json = Played().ToJson().Replace("\"Version\": 2", "\"Version\": 3");
         var ex = Assert.Throws<InvalidDataException>(() => GameState.FromJson(json));
-        Assert.Contains("version 2", ex.Message);
+        Assert.Contains("version 3", ex.Message);
         Assert.Contains("newer", ex.Message);
+    }
+
+    [Fact]
+    public void Loading_version_1_save_is_rejected_as_unsupported()
+    {
+        var json = Played().ToJson().Replace("\"Version\": 2", "\"Version\": 1");
+        var ex = Assert.Throws<InvalidDataException>(() => GameState.FromJson(json));
+        Assert.Contains("not supported", ex.Message);
     }
 
     [Fact]
