@@ -129,7 +129,7 @@ public partial class GameState
                 {
                     Check(Enum.IsDefined(work.Status) && double.IsFinite(work.HoursRequired) && work.HoursRequired > 0 &&
                         double.IsFinite(work.HoursDone) && work.HoursDone >= 0 && work.HoursDone <= work.HoursRequired &&
-                        (work.AssignedTo is null || FindPerson(work.AssignedTo.Value) is not null), "stage work");
+                        (work.AssignedTo is null || (work.IsDone ? FindAnyPerson(work.AssignedTo.Value) : FindPerson(work.AssignedTo.Value)) is not null), "stage work");
                     Check(work.HoursByPerson is not null && work.HoursByPerson.Keys.All(personIds.Contains) &&
                         work.HoursByPerson.Values.All(h => double.IsFinite(h) && h >= 0) &&
                         Math.Abs(work.HoursByPerson.Values.Sum() - work.HoursDone) < 1e-6, "hours by person");

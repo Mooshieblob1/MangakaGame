@@ -39,11 +39,13 @@ public class CostTests
         var state = GameState.NewGame();
         var assistant = AddAssistant(state, "Ren Ogawa", 60, salary: 220_000);
         state.AddLedger(-400_000, "test");
-        AdvanceTo(state, new DateTime(1996, 5, 25, 10, 0, 0));
+        AdvanceTo(state, new DateTime(1996, 5, 25, 9, 0, 0));
+        var before = assistant.Happiness; // daily drift has moved it since the hire
+        state.Advance(1);
         Assert.DoesNotContain(state.Ledger, l => l.Reason == "salary");
         Assert.Single(state.Events, e => e.Type == EventType.PayrollMissed);
         Assert.Equal(1, state.Studio.MissedPayrolls);
-        Assert.Equal(40, assistant.Happiness, 6);
+        Assert.Equal(before - 20, assistant.Happiness, 6);
         Assert.Equal(1, assistant.MonthsEmployed);
 
         state.AddLedger(1_000_000, "test");

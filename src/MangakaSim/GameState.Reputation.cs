@@ -137,6 +137,7 @@ public partial class GameState
             $"{magazine.Name} cancels {series.Title} after {contract.ChaptersPublished} chapters.",
             new EventContext(SeriesId: series.Id, MagazineId: magazine.Id));
         ApplyFlatToContributors(series, ReputationRules.PersonCancellation);
+        ShockContributors(series.Chapters, HappinessRules.Cancelled);
         AdjustTrackRecord(ReputationRules.Cancellation);
         series.PitchCooldowns[magazine.Id] = Clock.Now.AddDays(7 * 52);
         EndSerialization(series, dropOpenChapter: true);

@@ -26,7 +26,7 @@ public partial class GameState
         foreach (var note in Departures.Where(d => d.Quit && !d.Returned && d.LeftAt.AddMonths(HiringRules.ReturnAfterMonths) <= Clock.Now).ToList())
         {
             note.Returned = true;
-            if (NameInUse(note.Name)) continue;
+            if (People.Any(p => p.Name == note.Name) || Candidates.Any(c => c.Name == note.Name)) continue;
             Candidates.Add(new Candidate
             {
                 Id = AllocateId(),
@@ -146,7 +146,7 @@ public partial class GameState
         });
         foreach (var work in Series.SelectMany(s => s.Chapters).SelectMany(ch => ch.Stages))
         {
-            if (work.AssignedTo == person.Id) work.AssignedTo = null;
+            if (!work.IsDone && work.AssignedTo == person.Id) work.AssignedTo = null; // finished stages keep their history
             if (work.ManualAssignee == person.Id) work.ManualAssignee = null;
         }
         foreach (var series in Series.Where(s => s.LeadId == person.Id)) series.LeadId = Mangaka.Id;

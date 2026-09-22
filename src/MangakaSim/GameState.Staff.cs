@@ -103,8 +103,74 @@ public partial class GameState
         return workingDays <= 0 ? 0 : (double)person.RecentBreaks.Sum() / workingDays;
     }
 
-    // Filled in by the happiness task.
-    private void HappinessStep() { }
-    private void MoonlightStep() { }
-    private void QuitRolls() { }
+    // ---------------------------------------------------------------- happiness
+
+    internal double PayFactorOf(Person person) =>
+        person.IsMangaka ? 1.0 : PayRules.PayFactor(person.Salary, PayRules.MarketSalary(person.Skills.Values, PriceIndexNow));
+
+    internal double EquilibriumOf(Person person) =>
+        HappinessRules.Equilibrium(PayFactorOf(person), Atmosphere, OvertimeShare(person), BreaksPerDay(person), StudioTrackRecord);
+
+    /// <summary>Daily: everyone drifts a tenth of the way toward their equilibrium.</summary>
+    private void HappinessStep()
+    {
+        var atmosphere = Atmosphere;
+        foreach (var person in People)
+        {
+            var equilibrium = HappinessRules.Equilibrium(PayFactorOf(person), atmosphere, OvertimeShare(person),
+                BreaksPerDay(person), StudioTrackRecord);
+            person.Happiness = HappinessRules.Step(person.Happiness, equilibrium);
+        }
+    }
+
+    /// <summary>Applies a happiness shock to everyone who worked on the chapters.</summary>
+    internal void ShockContributors(IEnumerable<Chapter> chapters, double delta)
+    {
+        foreach (var personId in HourShares(chapters).Keys)
+        {
+            if (FindPerson(personId) is { } person) AdjustHappiness(person, delta);
+        }
+    }
+
+    // ---------------------------------------------------------------- moonlighting and quitting
+
+    private void MoonlightStep()
+    {
+        foreach (var person in People.Where(p => p.Role == PersonRole.Assistant))
+        {
+            if (!person.IsMoonlighting)
+            {
+                var chance = MoonlightRules.StartChance(person.Happiness);
+                if (chance <= 0 || Rng.NextDouble() >= chance) continue;
+                person.IsMoonlighting = true;
+                Emit(EventType.MoonlightingStarted,
+                    $"{person.Name} has started taking outside work and leaves two hours early.",
+                    new EventContext(PersonId: person.Id));
+            }
+            else if (MoonlightRules.Stops(person.Happiness))
+            {
+                person.IsMoonlighting = false;
+                Emit(EventType.MoonlightingStopped,
+                    $"{person.Name} has dropped the outside work.",
+                    new EventContext(PersonId: person.Id));
+            }
+        }
+    }
+
+    /// <summary>This month's quit chance for an assistant; doubled after two consecutive missed payrolls.</summary>
+    internal double QuitChanceFor(Person person) =>
+        MoonlightRules.QuitChance(person.Happiness, person.MonthsEmployed) * (Studio.MissedPayrolls >= 2 ? 2 : 1);
+
+    private void QuitRolls()
+    {
+        foreach (var person in People.Where(p => p.Role == PersonRole.Assistant).ToList())
+        {
+            var chance = QuitChanceFor(person);
+            if (chance <= 0 || Rng.NextDouble() >= chance) continue;
+            Emit(EventType.StaffQuit,
+                $"{person.Name} quits (happiness {person.Happiness:0}).",
+                new EventContext(PersonId: person.Id));
+            RemovePerson(person, quit: true);
+        }
+    }
 }

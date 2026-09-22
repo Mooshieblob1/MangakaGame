@@ -266,6 +266,7 @@ public partial class GameState
             {
                 foreach (var (personId, share) in HourShares(chapter))
                     if (FindPerson(personId) is { } person) AdjustReputation(person, ReputationRules.PersonTop3 * share);
+                ShockContributors(new[] { chapter }, HappinessRules.Top3);
                 if (quality >= 80) AddPlayerInfluence(series.Genre, 0.01);
             }
             ApplyCancellationRule(series, magazine, rank);
