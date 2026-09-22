@@ -98,6 +98,7 @@ public partial class GameState
         WorkStep();
         EditorStep();
         IssueCloseStep();
+        SalesStep();
         PitchStep();
         RiskStep();
         DayEndStep();
