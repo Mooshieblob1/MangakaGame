@@ -67,6 +67,7 @@ public partial class GameState
             chapter.Editor = EditorStatus.RedoRequested;
             chapter.RedoCount++;
             name.HoursDone = 0;
+            name.HoursByPerson.Clear();
             name.Status = StageStatus.NotStarted;
             name.Contribution = 0;
             name.OvertimeHours = 0;

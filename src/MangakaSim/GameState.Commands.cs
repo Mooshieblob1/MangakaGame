@@ -141,6 +141,7 @@ public partial class GameState
         var series = SeriesOf(chapter);
         work.Status = StageStatus.Skipped;
         work.HoursDone = 0;
+        work.HoursByPerson.Clear();
         work.OvertimeHours = 0;
         work.Contribution = 0;
         if (chapter.Status == ChapterStatus.NotStarted) chapter.Status = ChapterStatus.InProgress;

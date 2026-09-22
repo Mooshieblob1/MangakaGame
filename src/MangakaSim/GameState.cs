@@ -4,7 +4,7 @@ namespace MangakaSim;
 
 public partial class GameState
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
 
     public int Version { get; set; } = CurrentVersion;
     public GameClock Clock { get; set; } = GameClock.AtStart();
@@ -33,43 +33,71 @@ public partial class GameState
     public long DoujinCopiesThisMonth { get; set; }
     public double DoujinFansThisMonth { get; set; }
 
+    // Sub-project 3 state.
+    public StudioState Studio { get; set; } = new();
+    public List<Candidate> Candidates { get; set; } = new();
+    /// <summary>Scheduled candidate names already offered, so each appears once.</summary>
+    public List<string> ScheduledCandidatesShown { get; set; } = new();
+    /// <summary>Former staff who quit: name, skills and the month they left, for the returning-candidate rule.</summary>
+    public List<FormerStaffNote> Departures { get; set; } = new();
+    public DateTime LastPoolRefreshMonth { get; set; }
+    public DateTime LastPayrollMonth { get; set; }
+    public DateTime LastCostsMonth { get; set; }
+
     /// <summary>Static catalog data, never saved.</summary>
     [JsonIgnore]
     public PublisherCatalog Publishers { get; set; } = PublisherCatalog.LoadDefault();
     [JsonIgnore]
     public TrendCatalog TrendData { get; set; } = TrendCatalog.LoadDefault();
+    [JsonIgnore]
+    public StaffCatalog StaffData { get; set; } = StaffCatalog.LoadDefault();
 
     /// <summary>The hour that the most recent tick simulated: one hour before Clock.Now.</summary>
     [JsonIgnore]
     public DateTime TickStart => Clock.Now.AddHours(-1);
 
-    public static GameState NewGame(int seed = 0) => NewGame(seed, PublisherCatalog.LoadDefault(), TrendCatalog.LoadDefault());
+    public static GameState NewGame(int seed = 0) =>
+        NewGame(seed, PublisherCatalog.LoadDefault(), TrendCatalog.LoadDefault(), StaffCatalog.LoadDefault());
 
-    public static GameState NewGame(int seed, PublisherCatalog publishers, TrendCatalog trends)
+    public static GameState NewGame(int seed, PublisherCatalog publishers, TrendCatalog trends) =>
+        NewGame(seed, publishers, trends, StaffCatalog.LoadDefault());
+
+    public static GameState NewGame(int seed, PublisherCatalog publishers, TrendCatalog trends, StaffCatalog staff)
     {
-        var state = new GameState { RngSeed = seed, Rng = Rng.FromSeed(seed), Publishers = publishers, TrendData = trends };
+        var state = new GameState
+        {
+            RngSeed = seed, Rng = Rng.FromSeed(seed), Publishers = publishers, TrendData = trends, StaffData = staff,
+        };
         var mangaka = new Person
         {
             Id = state.AllocateId(),
             Name = "Aki",
+            Role = PersonRole.Mangaka,
             Reputation = 10,
+            Happiness = 70,
             Schedule = new Schedule { WorkStartHour = 8, WorkEndHour = 18, DaysOff = { DayOfWeek.Sunday } },
             OvertimeAllowed = true,
+            AllowedStages = StageOrder.All.ToHashSet(),
         };
         foreach (var stage in StageOrder.All) mangaka.Skills[stage] = 80;
         state.People.Add(mangaka);
 
         state.Money = Economy.StartingMoney;
-        state.LastTrendUpdateMonth = new DateTime(state.Clock.Now.Year, state.Clock.Now.Month, 1);
+        var month = new DateTime(state.Clock.Now.Year, state.Clock.Now.Month, 1);
+        state.LastTrendUpdateMonth = month;
+        state.LastPoolRefreshMonth = month;
+        state.LastPayrollMonth = month;
+        state.LastCostsMonth = month;
+        state.Studio = new StudioState { PremisesId = "garage", MovedInAt = state.Clock.Now };
         state.InitialiseTrends();
         state.InitialiseMarkets();
         return state;
     }
 
     /// <summary>Appends a ledger entry and updates the running balance.</summary>
-    internal LedgerEntry AddLedger(long amount, string reason, int? seriesId = null)
+    internal LedgerEntry AddLedger(long amount, string reason, int? seriesId = null, int? personId = null)
     {
-        var entry = new LedgerEntry { Time = Clock.Now, Amount = amount, Reason = reason, SeriesId = seriesId };
+        var entry = new LedgerEntry { Time = Clock.Now, Amount = amount, Reason = reason, SeriesId = seriesId, PersonId = personId };
         Ledger.Add(entry);
         Money += amount;
         return entry;
@@ -154,6 +182,8 @@ public partial class GameState
 
     public Series? FindSeries(int id) => Series.FirstOrDefault(s => s.Id == id);
     public Person? FindPerson(int id) => People.FirstOrDefault(p => p.Id == id);
+    /// <summary>The studio's mangaka (exactly one exists).</summary>
+    public Person Mangaka => People.First(p => p.Role == PersonRole.Mangaka);
     /// <summary>Current people and, after sub-project 3, former staff kept for history.</summary>
     public Person? FindAnyPerson(int id) => FindPerson(id) ?? FormerPeople.FirstOrDefault(p => p.Id == id);
     /// <summary>People who quit or were fired, kept so hours, ledger entries and events keep their names.</summary>

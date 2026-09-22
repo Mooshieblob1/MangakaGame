@@ -36,7 +36,9 @@ public partial class GameState
                              nameof(RecapWindowStart), nameof(RecapFiredToday),
                              nameof(Money), nameof(Ledger), nameof(StudioTrackRecord), nameof(Markets), nameof(Trends),
                              nameof(HasInternet), nameof(LastTrendUpdateMonth), nameof(DoujinCopiesThisMonth),
-                             nameof(DoujinFansThisMonth), nameof(LedgerWindowStart) })
+                             nameof(DoujinFansThisMonth), nameof(LedgerWindowStart),
+                             nameof(Studio), nameof(Candidates), nameof(FormerPeople), nameof(ScheduledCandidatesShown),
+                             nameof(Departures), nameof(LastPoolRefreshMonth), nameof(LastPayrollMonth), nameof(LastCostsMonth) })
                     if (!document.RootElement.TryGetProperty(property, out var value) || value.ValueKind == JsonValueKind.Null)
                         throw new InvalidDataException($"Save file is missing {property}.");
             }
@@ -63,7 +65,9 @@ public partial class GameState
         }
 
         Check(Clock is not null && Clock.Now.Ticks % TimeSpan.TicksPerHour == 0, "clock");
-        Check(People is { Count: 1 } && People[0] is not null, "people (one mangaka is required)");
+        Check(People is { Count: >= 1 } && People.All(p => p is not null), "people");
+        Check(People!.Count(p => p.Role == PersonRole.Mangaka) == 1, "people (exactly one mangaka is required)");
+        Check(FormerPeople is not null && FormerPeople.All(p => p is not null), "former people");
         Check(Series is not null && Events is not null && Rng is not null && CommandLog is not null, "state");
         Check(Settings?.Balance is not null && Settings.AutoPause is not null, "settings");
         var balance = Settings!.Balance;
@@ -76,17 +80,31 @@ public partial class GameState
 
         var ids = new HashSet<int>();
         void CheckId(int id) => Check(id > 0 && ids.Add(id), "unique id");
-        var person = People![0];
-        CheckId(person.Id);
-        Check(person.Name is not null && person.Skills is not null && StageOrder.All.All(stage =>
-            person.Skills.TryGetValue(stage, out var skill) && skill is >= 0 and <= 100), "person skills");
-        Check(person.Schedule is not null && person.Schedule.DaysOff is not null &&
-            person.Schedule.DaysOff.All(Enum.IsDefined) && person.Schedule.WorkStartHour >= 0 &&
-            person.Schedule.WorkStartHour < person.Schedule.WorkEndHour &&
-            person.Schedule.WorkEndHour <= 24 - balance.OvertimeCap, "schedule");
-        Check(person.HoursWorkedToday is >= 0 and <= 24 && person.OvertimeHoursToday >= 0 &&
-            person.OvertimeHoursToday <= person.HoursWorkedToday, "work counters");
-        Check(person.Queue is not null && person.Pins is not null, "queue");
+        var personIds = new HashSet<int>();
+        foreach (var person in People.Concat(FormerPeople!))
+        {
+            CheckId(person.Id);
+            personIds.Add(person.Id);
+            Check(person.Name is not null && person.Skills is not null && StageOrder.All.All(stage =>
+                person.Skills.TryGetValue(stage, out var skill) && skill is >= 0 and <= 100), "person skills");
+            Check(person.Schedule is not null && person.Schedule.DaysOff is not null &&
+                person.Schedule.DaysOff.All(Enum.IsDefined) && person.Schedule.WorkStartHour >= 0 &&
+                person.Schedule.WorkStartHour < person.Schedule.WorkEndHour &&
+                person.Schedule.WorkEndHour <= 24 - balance.OvertimeCap, "schedule");
+            Check(person.HoursWorkedToday is >= 0 and <= 24 && person.OvertimeHoursToday >= 0 &&
+                person.OvertimeHoursToday <= person.HoursWorkedToday, "work counters");
+            Check(person.Queue is not null && person.Pins is not null, "queue");
+            Check(Enum.IsDefined(person.Role) && person.Salary >= 0 && (person.Role != PersonRole.Mangaka || person.Salary == 0), "salary");
+            Check(person.Needs is not null && new[] { person.Needs.Hunger, person.Needs.Thirst, person.Needs.Comfort }
+                .All(n => double.IsFinite(n) && n is >= 0 and <= 100), "needs");
+            Check(double.IsFinite(person.Happiness) && person.Happiness is >= 0 and <= 100 &&
+                double.IsFinite(person.Fatigue) && person.Fatigue is >= 0 and <= 100, "mood");
+            Check(person.AllowedStages is { Count: >= 1 } && person.AllowedStages.All(Enum.IsDefined) &&
+                (person.Role != PersonRole.Mangaka || person.AllowedStages.Contains(Stage.Name)), "allowed stages");
+            Check(person.BreaksToday >= 0 && person.MonthsEmployed >= 0 && person.RecentOvertime is { Count: <= 7 } &&
+                person.RecentRegular is { Count: <= 7 } && person.RecentBreaks is { Count: <= 7 }, "staff counters");
+            Check(person.PromotionSeriesId is null || person.PromotionSeriesId == 0 || FindSeries(person.PromotionSeriesId.Value) is not null, "promotion target");
+        }
 
         foreach (var series in Series!)
         {
@@ -96,6 +114,7 @@ public partial class GameState
                 Enum.IsDefined(series.Cadence) && Enum.IsDefined(series.Status) && series.PagesPerChapter > 0 &&
                 series.Chapters is not null, "series details");
             Check(series.StartDate.Ticks % TimeSpan.TicksPerHour == 0, "series start date");
+            Check(FindPerson(series.LeadId) is { } lead && lead.AllowedStages.Contains(Stage.Name), "series lead");
             var number = 1;
             foreach (var chapter in series.Chapters!)
             {
@@ -106,20 +125,28 @@ public partial class GameState
                 Check(chapter.Stages is { Count: 5 } && chapter.Stages.All(s => s is not null) &&
                     chapter.Stages.Select(s => s.Stage).SequenceEqual(StageOrder.All), "chapter stages");
                 foreach (var work in chapter.Stages!)
+                {
                     Check(Enum.IsDefined(work.Status) && double.IsFinite(work.HoursRequired) && work.HoursRequired > 0 &&
                         double.IsFinite(work.HoursDone) && work.HoursDone >= 0 && work.HoursDone <= work.HoursRequired &&
-                        (work.AssignedTo is null || work.AssignedTo == person.Id), "stage work");
+                        (work.AssignedTo is null || FindPerson(work.AssignedTo.Value) is not null), "stage work");
+                    Check(work.HoursByPerson is not null && work.HoursByPerson.Keys.All(personIds.Contains) &&
+                        work.HoursByPerson.Values.All(h => double.IsFinite(h) && h >= 0) &&
+                        Math.Abs(work.HoursByPerson.Values.Sum() - work.HoursDone) < 1e-6, "hours by person");
+                    Check(work.ManualAssignee is null || FindPerson(work.ManualAssignee.Value) is not null, "manual assignee");
+                }
                 Check((chapter.Status == ChapterStatus.Complete) == chapter.IsFinished &&
                     (chapter.Status == ChapterStatus.Complete) == chapter.CompletedAt.HasValue, "chapter completion");
             }
         }
-        Check(NextId > ids.Max(), "next id");
         bool ValidRef(QueueRef reference) => Enum.IsDefined(reference.Stage) && FindChapter(reference.ChapterId) is not null;
-        Check(person.Queue!.All(r => ValidRef(r) && IsStartableOrPending(r, person.Id)) &&
-            person.Queue.Distinct().Count() == person.Queue.Count, "queue references");
-        Check(person.Pins!.All(ValidRef) && person.Pins.Distinct().Count() == person.Pins.Count, "pins");
-        Check(person.ManualOrder is null || person.ManualOrder.All(ValidRef), "manual queue");
-        Check(person.CurrentTask is null || (person.Queue.Contains(person.CurrentTask.Value) && IsStartable(person.CurrentTask.Value)), "current task");
+        foreach (var person in People)
+        {
+            Check(person.Queue!.All(r => ValidRef(r) && IsStartableOrPending(r, person.Id)) &&
+                person.Queue.Distinct().Count() == person.Queue.Count, "queue references");
+            Check(person.Pins!.All(ValidRef) && person.Pins.Distinct().Count() == person.Pins.Count, "pins");
+            Check(person.ManualOrder is null || person.ManualOrder.All(ValidRef), "manual queue");
+            Check(person.CurrentTask is null || (person.Queue.Contains(person.CurrentTask.Value) && IsStartable(person.CurrentTask.Value)), "current task");
+        }
         Check(Events!.All(e => e is not null && Enum.IsDefined(e.Type) && e.Message is not null), "events");
         foreach (var ev in Events.Where(e => e.Type == EventType.DailyRecap))
         {
@@ -134,6 +161,7 @@ public partial class GameState
         Check(CommandLog!.All(e => e is not null && e.Command is not null &&
             e.Time.Ticks % TimeSpan.TicksPerHour == 0 && e.Time <= Clock!.Now), "command log");
 
+        ValidateStudioState(Check, CheckId, personIds);
         ValidatePublishingState(Check, CheckId, ids);
     }
 
@@ -264,5 +292,28 @@ public partial class GameState
             }
         }
         check(NextId > ids.Max(), "next id");
+    }
+
+    private void ValidateStudioState(Action<bool, string> check, Action<int> checkId, HashSet<int> personIds)
+    {
+        check(Studio is not null && StaffData.FindPremises(Studio.PremisesId) is { } premises &&
+              Studio.Amenities is not null && Studio.Amenities.All(id => StaffData.FindAmenity(id) is not null) &&
+              Studio.Amenities.Distinct().Count() == Studio.Amenities.Count && Studio.MissedPayrolls >= 0 &&
+              Studio.MovedInAt.Ticks % TimeSpan.TicksPerHour == 0, "studio");
+        check(People.Count <= StaffData.RequirePremises(Studio!.PremisesId).Capacity + 2, "studio capacity");
+        check(Candidates is not null && Candidates.All(c => c is not null), "candidates");
+        var names = new HashSet<string>();
+        foreach (var candidate in Candidates!)
+        {
+            checkId(candidate.Id);
+            check(!string.IsNullOrWhiteSpace(candidate.Name) && names.Add(candidate.Name) && candidate.AskingSalary > 0 &&
+                  candidate.AvailableUntil > Clock.Now && candidate.Skills is not null &&
+                  StageOrder.All.All(s => candidate.Skills.TryGetValue(s, out var v) && v is >= 0 and <= 100), "candidate details");
+        }
+        check(ScheduledCandidatesShown is not null && Departures is not null && Departures.All(d => d is not null &&
+            d.Name is not null && d.Skills is not null && d.LeftAt <= Clock.Now), "departures");
+        check(Ledger.All(l => l.PersonId is null || personIds.Contains(l.PersonId.Value)), "ledger person ids");
+        foreach (var month in new[] { LastPoolRefreshMonth, LastPayrollMonth, LastCostsMonth })
+            check(month.Day == 1 && month.TimeOfDay == TimeSpan.Zero, "staff month markers");
     }
 }

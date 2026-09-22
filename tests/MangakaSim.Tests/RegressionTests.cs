@@ -107,6 +107,7 @@ public class RegressionTests
     [InlineData("{\"Version\":\"1\"}")]
     [InlineData("{\"Version\":0}")]
     [InlineData("{\"Version\":1}")]
+    [InlineData("{\"Version\":3}")]
     public void Incomplete_or_unsupported_saves_fail_clearly(string json)
     {
         Assert.Throws<InvalidDataException>(() => GameState.FromJson(json));
@@ -123,6 +124,9 @@ public class RegressionTests
     [InlineData("Markets")]
     [InlineData("Trends")]
     [InlineData("Ledger")]
+    [InlineData("Studio")]
+    [InlineData("Candidates")]
+    [InlineData("FormerPeople")]
     public void Saves_with_null_required_state_are_rejected(string property)
     {
         var json = JsonNode.Parse(Started().ToJson())!;

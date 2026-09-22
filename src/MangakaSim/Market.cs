@@ -10,6 +10,7 @@ public class LedgerEntry
     public long Amount { get; set; }
     public string Reason { get; set; } = "";
     public int? SeriesId { get; set; }
+    public int? PersonId { get; set; }
 }
 
 public class MagazineState

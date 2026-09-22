@@ -1,0 +1,44 @@
+{
+  "premises": [
+    { "id": "garage", "name": "The garage", "capacity": 2, "monthlyRent": 0, "atmosphere": -10 },
+    { "id": "apartment", "name": "Two-room apartment", "capacity": 4, "monthlyRent": 80000, "atmosphere": 0 },
+    { "id": "office", "name": "Small office", "capacity": 8, "monthlyRent": 250000, "atmosphere": 10 }
+  ],
+  "amenities": [
+    { "id": "kettle", "name": "Kettle", "need": "thirst", "cost": 8000, "monthlyUpkeep": 500, "recoveryPerBreak": 40, "atmosphere": 0 },
+    { "id": "water-cooler", "name": "Water cooler", "need": "thirst", "cost": 40000, "monthlyUpkeep": 3000, "recoveryPerBreak": 70, "atmosphere": 2 },
+    { "id": "snack-shelf", "name": "Snack shelf", "need": "hunger", "cost": 15000, "monthlyUpkeep": 12000, "recoveryPerBreak": 40, "atmosphere": 0 },
+    { "id": "fridge", "name": "Fridge", "need": "hunger", "cost": 90000, "monthlyUpkeep": 4000, "recoveryPerBreak": 70, "atmosphere": 2 },
+    { "id": "folding-chairs", "name": "Folding chairs", "need": "comfort", "cost": 12000, "monthlyUpkeep": 0, "recoveryPerBreak": 30, "atmosphere": -2 },
+    { "id": "office-chairs", "name": "Office chairs", "need": "comfort", "cost": 120000, "monthlyUpkeep": 0, "recoveryPerBreak": 60, "atmosphere": 4 },
+    { "id": "sofa", "name": "Sofa", "need": "comfort", "cost": 60000, "monthlyUpkeep": 0, "recoveryPerBreak": 50, "atmosphere": 3 },
+    { "id": "radio", "name": "Radio", "need": "none", "cost": 6000, "monthlyUpkeep": 0, "recoveryPerBreak": 0, "atmosphere": 2 },
+    { "id": "air-conditioner", "name": "Air conditioner", "need": "none", "cost": 150000, "monthlyUpkeep": 6000, "recoveryPerBreak": 0, "atmosphere": 5 }
+  ],
+  "scheduledCandidates": [
+    { "name": "Eiichido Oga", "appearsAt": "1997-07-01T00:00:00", "monthsAvailable": 3,
+      "skills": { "Name": 55, "Pencils": 70, "Inks": 75, "Backgrounds": 60, "Tones": 65 },
+      "askingMultiplier": 1.0, "note": "future star, draws fast" },
+    { "name": "Akiro Tokiyama", "appearsAt": "1998-03-01T00:00:00", "monthsAvailable": 3,
+      "skills": { "Name": 40, "Pencils": 85, "Inks": 80, "Backgrounds": 70, "Tones": 50 },
+      "askingMultiplier": 1.2, "note": "brilliant penciller, moody" }
+  ],
+  "givenNames": [
+    "Haruto", "Yui", "Sora", "Riku", "Hana", "Ren", "Aoi", "Yuto", "Mio", "Kaito",
+    "Sakura", "Daichi", "Rin", "Sota", "Yuna", "Itsuki", "Mei", "Kenta", "Nao", "Takumi",
+    "Emi", "Ryo", "Miyu", "Shun", "Kana", "Hayato", "Ayame", "Tomoya", "Reina", "Kazuki",
+    "Chiharu", "Naoki", "Fumi", "Keisuke", "Asuka", "Makoto", "Yoshiko", "Tetsu", "Sayo", "Goro",
+    "Ichiro", "Mitsuki", "Jun", "Nanami", "Osamu", "Kiyo", "Hideo", "Tamaki", "Shiro", "Akane",
+    "Isamu", "Wakana", "Noboru", "Suzu", "Toru", "Ayano", "Minoru", "Kotone", "Eiji", "Momo",
+    "Satoru", "Hotaru", "Kohei", "Ruri"
+  ],
+  "familyNames": [
+    "Tokiyama", "Oga", "Kishimura", "Arakida", "Inoyama", "Watabe", "Morishita", "Kuroi", "Tanabe", "Sakurada",
+    "Fujimaki", "Hoshino", "Kagemori", "Ueshiba", "Nakahara", "Okabe", "Yamashiro", "Kondo", "Ishigaki", "Tsukuda",
+    "Matsubara", "Nishioka", "Hirose", "Kitagawa", "Sugimura", "Ogawa", "Miyata", "Endo", "Takada", "Shibuya",
+    "Asakura", "Iwasaki", "Kamiya", "Onodera", "Sakai", "Tachibana", "Uchida", "Yanagi", "Hamada", "Kuroda",
+    "Mizuno", "Nagai", "Ozaki", "Sekine", "Terada", "Umeda", "Wada", "Yoshioka", "Amano", "Fukuda",
+    "Ikeda", "Kawasaki", "Maeda", "Nomura", "Sano", "Tsuji", "Yokota", "Baba", "Higashi", "Kojima",
+    "Murata", "Noda", "Segawa", "Toda"
+  ]
+}

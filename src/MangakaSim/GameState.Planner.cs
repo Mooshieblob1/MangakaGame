@@ -13,6 +13,7 @@ public partial class GameState
             PagesPerChapter = pagesPerChapter,
             Status = SeriesStatus.Active,
             StartDate = Clock.Now,
+            LeadId = Mangaka.Id,
         };
         Series.Add(series);
         return series;

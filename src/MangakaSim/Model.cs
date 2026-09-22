@@ -31,6 +31,8 @@ public class StageWork
     public StageStatus Status { get; set; } = StageStatus.NotStarted;
     /// <summary>Hours logged per person id; sums to HoursDone.</summary>
     public Dictionary<int, double> HoursByPerson { get; set; } = new();
+    /// <summary>A player-chosen assignee that wins over the planner until the stage is done.</summary>
+    public int? ManualAssignee { get; set; }
     /// <summary>Hours worked outside the assignee's regular schedule.</summary>
     public double OvertimeHours { get; set; }
     /// <summary>Quality points, set when the stage completes (0 when skipped).</summary>
@@ -89,6 +91,8 @@ public class Series
     public DateTime StartDate { get; set; }
     public List<Chapter> Chapters { get; set; } = new();
 
+    /// <summary>The person who writes the Name and pencils by default.</summary>
+    public int LeadId { get; set; }
     public PublishingStatus Publishing { get; set; } = PublishingStatus.Unpublished;
     public Contract? Contract { get; set; }
     public SerializationOffer? PendingOffer { get; set; }
@@ -125,6 +129,31 @@ public class Person
     public double Reputation { get; set; }
     /// <summary>0..100; lowers the skill used for quality.</summary>
     public double Fatigue { get; set; }
+    public PersonRole Role { get; set; } = PersonRole.Assistant;
+    /// <summary>Nominal yen per month; 0 for the mangaka.</summary>
+    public int Salary { get; set; }
+    public DateTime? HiredAt { get; set; }
+    public Needs Needs { get; set; } = new();
+    /// <summary>0..100.</summary>
+    public double Happiness { get; set; } = 60;
+    public bool IsMoonlighting { get; set; }
+    public int MonthsEmployed { get; set; }
+    /// <summary>Stages the planner may hand this person.</summary>
+    public HashSet<Stage> AllowedStages { get; set; } = new();
+    /// <summary>This hour is a break rather than work.</summary>
+    public bool OnBreak { get; set; }
+    public int BreaksToday { get; set; }
+    /// <summary>Last seven days, newest last: overtime hours, regular hours, breaks.</summary>
+    public List<int> RecentOvertime { get; set; } = new();
+    public List<int> RecentRegular { get; set; } = new();
+    public List<int> RecentBreaks { get; set; } = new();
+    /// <summary>Promotion duty in idle hours: null off, 0 the whole studio, otherwise a series id.</summary>
+    public int? PromotionSeriesId { get; set; }
+
+    [JsonIgnore]
+    public bool IsMangaka => Role == PersonRole.Mangaka;
+
+    public bool MayWork(Stage stage) => AllowedStages.Contains(stage);
     public Schedule Schedule { get; set; } = new();
     public bool OvertimeAllowed { get; set; }
     public List<QueueRef> Queue { get; set; } = new();
