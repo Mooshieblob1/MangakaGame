@@ -98,8 +98,9 @@ public partial class GameState
             else
             {
                 MissIssue(series, chapter, magazine, closeTime);
+                if (!series.IsIconic) ApplyCancellationRule(series, magazine, rank: null);
             }
-            ResequenceDueDates(series, magazine, chapter);
+            if (series.IsSerialized) ResequenceDueDates(series, magazine, chapter);
         }
         foreach (var filler in market.Fillers)
             rows.Add(new IssueRow(filler.Title, filler.Genre, null, null, filler));

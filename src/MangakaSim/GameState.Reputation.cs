@@ -72,14 +72,18 @@ public partial class GameState
         CancellationRules.LiveStrikes(series.Strikes, Clock.Now, magazine.CadenceDays,
             CancellationRules.StrikeLifetime(ProtectionOf(series)));
 
-    /// <summary>Runs at issue close for a ranked, non-Iconic Serialized series.</summary>
-    private void ApplyCancellationRule(Series series, Magazine magazine, int rank)
+    /// <summary>Runs at issue close for a non-Iconic Serialized series; rank is null when it missed the issue.</summary>
+    private void ApplyCancellationRule(Series series, Magazine magazine, int? rank)
     {
         var protection = ProtectionOf(series);
         var inGrace = series.Contract!.ChaptersPublished <= ReputationRules.GraceChapters;
         series.Strikes = LiveStrikes(series, magazine);
 
-        if (rank <= magazine.CancellationRank)
+        if (rank is null)
+        {
+            // A missed issue neither counts below the line nor clears the streak.
+        }
+        else if (rank <= magazine.CancellationRank)
         {
             series.WeeksBelowLine = 0;
             if (series.WarningIssuedAt is not null)
@@ -155,6 +159,67 @@ public partial class GameState
         }
     }
 
-    private void ApplyWithdrawSeries(WithdrawSeriesCommand c) => throw new InvalidCommandException("WithdrawSeries is not available yet.");
-    private void ApplyEndSeries(EndSeriesCommand c) => throw new InvalidCommandException("EndSeries is not available yet.");
+    // ---------------------------------------------------------------- withdraw and end
+
+    private void ApplyWithdrawSeries(WithdrawSeriesCommand c)
+    {
+        var series = RequireSeries(c.SeriesId);
+        if (!series.IsSerialized)
+            throw new InvalidCommandException($"Series '{series.Title}' is not serialized; there is nothing to withdraw from.");
+        var magazine = Publishers.Require(series.Contract!.MagazineId);
+
+        EndSerialization(series, dropOpenChapter: false);
+        if (!series.IsIconic) series.Fanbase *= FanbaseRules.WithdrawChurn;
+        foreach (var open in series.Chapters.Where(ch => ch.Status != ChapterStatus.Complete))
+        {
+            open.Editor = EditorStatus.NotRequired;
+            open.EditorDecisionAt = null;
+            open.DueDate = CadenceRules.NextDue(Clock.Now, series.Cadence);
+        }
+        series.PitchCooldowns[magazine.Id] = Clock.Now.AddDays(7 * 52);
+        var penalty = ReputationRules.WithdrawPenalty(series.ChaptersPublished);
+        AdjustTrackRecord(penalty);
+        Emit(EventType.SeriesWithdrawn,
+            $"{series.Title} leaves {magazine.Name} after {series.ChaptersPublished} chapters and goes back to doujin work.",
+            new EventContext(SeriesId: series.Id, MagazineId: magazine.Id));
+        TryCreateDoujinVolume(series);
+    }
+
+    private void ApplyEndSeries(EndSeriesCommand c)
+    {
+        var series = RequireSeries(c.SeriesId);
+        if (series.Status == SeriesStatus.Ended)
+            throw new InvalidCommandException($"Series '{series.Title}' has already ended.");
+
+        string outcome;
+        if (series.IsSerialized)
+        {
+            var magazine = Publishers.Require(series.Contract!.MagazineId);
+            if (series.ChaptersPublished >= ReputationRules.ProperEndingChapters)
+            {
+                var ranked = series.Chapters.Where(ch => ch.Rank is not null).Select(ch => (double)ch.Rank!.Value).ToList();
+                var averageRank = ranked.Count > 0 ? ranked.Average() : magazine.CancellationRank;
+                var totalCopies = series.Volumes.Sum(v => v.CopiesSold);
+                var bonus = ReputationRules.EndingBonus(magazine.CancellationRank, averageRank, totalCopies);
+                AdjustTrackRecord(bonus);
+                ApplyToContributors(series, bonus);
+                outcome = $"a proper ending after {series.ChaptersPublished} chapters (+{bonus:0.0} track record)";
+            }
+            else
+            {
+                AdjustTrackRecord(ReputationRules.WithdrawPenalty(series.ChaptersPublished));
+                outcome = $"an early end after {series.ChaptersPublished} chapters; {magazine.Name} is not pleased";
+            }
+            EndSerialization(series, dropOpenChapter: true);
+            series.Status = SeriesStatus.Ended;
+            ScheduleFinalVolume(series, magazine);
+        }
+        else
+        {
+            EndSerialization(series, dropOpenChapter: true);
+            series.Status = SeriesStatus.Ended;
+            outcome = "the doujin run ends quietly";
+        }
+        Emit(EventType.SeriesEnded, $"{series.Title} ends: {outcome}.", new EventContext(SeriesId: series.Id));
+    }
 }
