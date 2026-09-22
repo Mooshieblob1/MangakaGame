@@ -19,7 +19,10 @@ public class IssueCloseTests
         return state;
     }
 
-    /// <summary>Marks the chapter finished and approved with a clean quality, as if Aki had drawn it perfectly.</summary>
+    /// <summary>
+    /// Marks every stage finished with a clean contribution, as if Aki had drawn it perfectly, then closes the chapter
+    /// through the normal completion path (quality, reputation, doujin volumes, planner) and approves it.
+    /// </summary>
     internal static void ForceComplete(GameState state, Chapter chapter, int quality = 84)
     {
         foreach (var work in chapter.Stages)
@@ -28,11 +31,13 @@ public class IssueCloseTests
             work.Status = StageStatus.Complete;
             work.Contribution = QualityRules.Weight(work.Stage) * quality;
         }
-        chapter.Status = ChapterStatus.Complete;
-        chapter.CompletedAt = state.Clock.Now;
-        chapter.Quality = quality;
-        chapter.Editor = EditorStatus.Approved;
-        chapter.IsAtRisk = false;
+        state.CompleteChapterIfDone(chapter);
+        Assert.Equal(quality, chapter.Quality);
+        if (state.RequiresEditor(chapter))
+        {
+            chapter.Editor = EditorStatus.Approved;
+            chapter.EditorDecisionAt = null;
+        }
         state.RunPlanner();
     }
 

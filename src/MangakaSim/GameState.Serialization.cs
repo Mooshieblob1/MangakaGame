@@ -227,7 +227,8 @@ public partial class GameState
             }
             check(series.Status != SeriesStatus.Ended || series.Publishing == PublishingStatus.Unpublished, "ended series must be unpublished");
             check(series.Contract is null || (Publishers.Find(series.Contract.MagazineId) is not null && series.Contract.FeePerPage > 0 &&
-                series.Contract.ChaptersPublished >= 0 && series.Contract.ChaptersPublished <= series.ChaptersPublished), "contract");
+                series.Contract.ChaptersPublished >= 0 && series.Contract.ChaptersPublished <= series.ChaptersPublished &&
+                series.Contract.FirstChapterNumber >= 1), "contract");
             check(series.PendingOffer is null || (Publishers.Find(series.PendingOffer.MagazineId) is not null && series.PendingOffer.FeePerPage > 0 &&
                 series.PendingOffer.ExpiresAt >= Clock.Now), "pending offer");
 

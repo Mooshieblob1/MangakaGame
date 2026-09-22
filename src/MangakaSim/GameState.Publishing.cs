@@ -218,10 +218,12 @@ public partial class GameState
         var open = series.OpenChapter;
         if (open is null)
         {
-            CreateNextChapter(series, pitchMagazine: null, dueOverride: offer.FirstIssueClose);
+            var created = CreateNextChapter(series, pitchMagazine: null, dueOverride: offer.FirstIssueClose);
+            series.Contract.FirstChapterNumber = created.Number;
         }
         else
         {
+            series.Contract.FirstChapterNumber = open.Number;
             open.DueDate = offer.FirstIssueClose;
             var name = open.StageWork(Stage.Name);
             var pencils = open.StageWork(Stage.Pencils);

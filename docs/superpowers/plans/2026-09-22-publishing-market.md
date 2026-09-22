@@ -33,6 +33,7 @@
 - **Offer timing.** `FirstIssueClose` is the fourth close counting the magazine's next close as the first, so `NextIssueClose + 3 × cadence` right after a close.
 - **Boom bookkeeping.** `GenreTrend` gains `bool BoomFading` so the fade-start roll for `BoomFloor` happens exactly once. A new boom starting on top of a residual floor sets `BoomPeak = min(1.0, Boom + draw)` so `Boom` stays within the save invariant `0..1`.
 - **Trend month.** `LastTrendUpdateMonth` starts at the game's first month (April 1996), so the first monthly update runs at the first issue close of May 1996.
+- **Contract start.** `Contract.FirstChapterNumber` records the chapter the magazine owns first (the open chapter at acceptance, or the one created then). Chapters finished before the contract stay doujin work and are never judged at an issue close; the two-year round trip exposed a prodigy's backlog being "missed" without this.
 - **Contract grace.** `Contract` carries `int ChaptersPublished` (chapters published under this contract). The first eight are the grace period; `Series.ChaptersPublished` stays the lifetime count.
 - **Clocks are rounded.** Warning clock `round(3 + 9P)`, cancel clock `round(3 + 23P)`, strike lifetime `round(8 − 6P)` issues. A strike's age in issues is `floor(days / cadenceDays)`.
 - **Surviving a roll restarts the warning clock.** `WarningIssuedAt = now` after `CancellationSurvived`; the warning stays active. Without this the roll would repeat every issue.

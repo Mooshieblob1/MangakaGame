@@ -83,6 +83,8 @@ public class Contract
     public DateTime SignedAt { get; set; }
     /// <summary>Chapters published under this contract; the first eight are the grace period.</summary>
     public int ChaptersPublished { get; set; }
+    /// <summary>The first chapter number the magazine owns; earlier finished chapters stay doujin work.</summary>
+    public int FirstChapterNumber { get; set; } = 1;
 }
 
 public class SerializationOffer

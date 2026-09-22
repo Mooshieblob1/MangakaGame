@@ -80,6 +80,12 @@ public partial class GameState
     internal IEnumerable<Series> SerializedIn(string magazineId) =>
         Series.Where(s => s.IsSerialized && s.Contract!.MagazineId == magazineId);
 
+    /// <summary>Chapters the current contract owns: from its first chapter on, one-shots excluded.</summary>
+    internal IEnumerable<Chapter> ContractChapters(Series series) =>
+        series.Contract is { } contract
+            ? series.Chapters.Where(c => !c.IsOneShot && c.Number >= contract.FirstChapterNumber)
+            : Enumerable.Empty<Chapter>();
+
     private void CloseIssue(MagazineState market, Magazine magazine)
     {
         var closeTime = market.NextIssueClose;
@@ -88,7 +94,7 @@ public partial class GameState
         // 1. Publish or miss. The earliest unpublished chapter of each series is the one this issue judges.
         foreach (var series in SerializedIn(magazine.Id).ToList())
         {
-            var chapter = series.Chapters.Where(c => !c.IsPublished && !c.IsOneShot).MinBy(c => c.Number);
+            var chapter = ContractChapters(series).Where(c => !c.IsPublished).MinBy(c => c.Number);
             if (chapter is null || chapter.DueDate > closeTime) continue;
             if (chapter.Status == ChapterStatus.Complete && chapter.Editor == EditorStatus.Approved)
             {
@@ -221,7 +227,7 @@ public partial class GameState
     private void ResequenceDueDates(Series series, Magazine magazine, Chapter judged)
     {
         var previousDue = judged.DueDate;
-        foreach (var later in series.Chapters.Where(c => c.Number > judged.Number && !c.IsPublished && !c.IsOneShot).OrderBy(c => c.Number))
+        foreach (var later in ContractChapters(series).Where(c => c.Number > judged.Number && !c.IsPublished).OrderBy(c => c.Number))
         {
             if (later.DueDate <= previousDue) later.DueDate = NextCloseAfter(magazine, previousDue);
             previousDue = later.DueDate;
