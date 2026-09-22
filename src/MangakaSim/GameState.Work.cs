@@ -55,7 +55,7 @@ public partial class GameState
     internal bool IsWorkingHour(Person person, DateTime hourStart, out bool isOvertime)
     {
         isOvertime = false;
-        if (person.Schedule.IsRegularHour(hourStart)) return true;
+        if (IsRegularHour(person, hourStart)) return true;
         if (IsOvertimeHour(person, hourStart))
         {
             isOvertime = true;
@@ -66,7 +66,7 @@ public partial class GameState
 
     internal bool IsOvertimeHour(Person person, DateTime hourStart)
     {
-        if (!person.OvertimeAllowed) return false;
+        if (!person.OvertimeAllowed || person.IsMoonlighting) return false;
         if (person.OvertimeHoursToday >= Settings.Balance.OvertimeCap) return false;
         var schedule = person.Schedule;
         if (schedule.IsDayOff(hourStart)) return false;

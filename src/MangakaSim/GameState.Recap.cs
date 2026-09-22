@@ -74,7 +74,7 @@ public partial class GameState
         for (var n = 0; n < limit; n++)
         {
             var hour = Clock.Now.AddHours(n);
-            if (People.Any(p => p.Schedule.IsRegularHour(hour))) return n;
+            if (People.Any(p => IsRegularHour(p, hour))) return n;
         }
         return 0;
     }

@@ -20,31 +20,40 @@ public partial class GameState
         }
     }
 
+    /// <summary>At risk when any assignee's share of the remaining work exceeds their regular hours before the due date.</summary>
     internal bool ComputeAtRisk(Chapter chapter)
     {
-        var assignee = AssigneeOf(chapter);
-        var remaining = RemainingPersonHours(chapter);
-        if (remaining <= 0) return false;
-        return remaining > RegularHoursBefore(assignee, Clock.Now, chapter.DueDate);
+        foreach (var (person, remaining) in RemainingPersonHoursByPerson(chapter))
+        {
+            if (remaining <= 0) continue;
+            if (remaining > RegularHoursBefore(person, Clock.Now, chapter.DueDate)) return true;
+        }
+        return false;
     }
 
-    /// <summary>Person assigned to the first unfinished stage; falls back to the first person.</summary>
+    /// <summary>Person assigned to the first unfinished stage; falls back to the series lead.</summary>
     internal Person AssigneeOf(Chapter chapter)
     {
         var firstOpen = chapter.Stages.FirstOrDefault(s => !s.IsDone);
-        return (firstOpen?.AssignedTo is { } id ? FindPerson(id) : null) ?? People[0];
+        return (firstOpen?.AssignedTo is { } id ? FindPerson(id) : null) ?? LeadOf(chapter);
     }
 
-    internal double RemainingPersonHours(Chapter chapter)
+    internal Person LeadOf(Chapter chapter) => FindPerson(SeriesOf(chapter).LeadId) ?? Mangaka;
+
+    internal double RemainingPersonHours(Chapter chapter) => RemainingPersonHoursByPerson(chapter).Sum(kv => kv.Value);
+
+    /// <summary>Remaining person-hours per assignee; unassigned stages fall to the lead.</summary>
+    internal Dictionary<Person, double> RemainingPersonHoursByPerson(Chapter chapter)
     {
-        double total = 0;
+        var lead = LeadOf(chapter);
+        var result = new Dictionary<Person, double>();
         foreach (var work in chapter.Stages.Where(s => !s.IsDone))
         {
-            var person = (work.AssignedTo is { } id ? FindPerson(id) : null) ?? People[0];
+            var person = (work.AssignedTo is { } id ? FindPerson(id) : null) ?? lead;
             var multiplier = Settings.Balance.SkillMultiplier(person.Skill(work.Stage));
-            total += Math.Max(0, work.HoursRequired - work.HoursDone) / multiplier;
+            result[person] = result.GetValueOrDefault(person) + Math.Max(0, work.HoursRequired - work.HoursDone) / multiplier;
         }
-        return total;
+        return result;
     }
 
     /// <summary>Regular scheduled hours whose start lies in [from, until). Overtime is not counted.</summary>
@@ -53,7 +62,7 @@ public partial class GameState
         var count = 0;
         for (var hour = from; hour < until; hour = hour.AddHours(1))
         {
-            if (person.Schedule.IsRegularHour(hour)) count++;
+            if (IsRegularHour(person, hour)) count++;
         }
         return count;
     }

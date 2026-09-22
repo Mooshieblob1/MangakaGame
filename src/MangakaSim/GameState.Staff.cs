@@ -29,7 +29,7 @@ public partial class GameState
             person.OnBreak = false;
             if (!IsWorkingHour(person, TickStart, out var overtime)) continue;
 
-            if (person.HoursWorkedToday == 0 && person.BreaksToday == 0 && person.Schedule.IsRegularHour(TickStart))
+            if (person.HoursWorkedToday == 0 && person.BreaksToday == 0 && IsRegularHour(person, TickStart))
                 person.Needs = new Needs();
 
             if (NeedsRules.NeedsBreak(person.Needs))

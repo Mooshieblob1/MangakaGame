@@ -100,15 +100,54 @@ public partial class GameState
         return close;
     }
 
+    /// <summary>
+    /// Hands every unfinished stage of every active series to a person: manual assignments win, a stage in
+    /// progress keeps its assignee, the lead writes the Name and pencils unless buried, and everything else goes
+    /// to the best available person by skill discounted by the work already queued for them.
+    /// </summary>
     private void AssignStages()
     {
-        // Sub-project 1: the single person gets everything. Sub-project 3 replaces this.
-        var assignee = People[0].Id;
-        foreach (var chapter in Series.Where(s => s.Status == SeriesStatus.Active).SelectMany(s => s.Chapters))
+        var queued = People.ToDictionary(p => p.Id, _ => 0.0);
+        var mangaka = Mangaka;
+        foreach (var series in Series.Where(s => s.Status == SeriesStatus.Active))
         {
-            foreach (var stage in chapter.Stages.Where(s => !s.IsDone)) stage.AssignedTo = assignee;
+            var lead = FindPerson(series.LeadId) ?? mangaka;
+            foreach (var chapter in series.Chapters.OrderBy(c => c.DueDate).ThenBy(c => c.Number))
+            {
+                foreach (var work in chapter.Stages.Where(w => !w.IsDone))
+                {
+                    var chosen = ChooseAssignee(work, lead, queued) ?? mangaka;
+                    work.AssignedTo = chosen.Id;
+                    var multiplier = Settings.Balance.SkillMultiplier(chosen.Skill(work.Stage));
+                    queued[chosen.Id] = queued.GetValueOrDefault(chosen.Id) + Math.Max(0, work.HoursRequired - work.HoursDone) / multiplier;
+                }
+            }
         }
     }
+
+    private Person? ChooseAssignee(StageWork work, Person lead, Dictionary<int, double> queued)
+    {
+        if (work.ManualAssignee is { } manual && FindPerson(manual) is { } chosen && chosen.MayWork(work.Stage)) return chosen;
+        if (work.Status == StageStatus.InProgress && work.AssignedTo is { } current && FindPerson(current) is { } keeper) return keeper;
+        if (work.Stage == Stage.Name) return lead;
+        if (work.Stage == Stage.Pencils && lead.MayWork(Stage.Pencils) &&
+            queued.GetValueOrDefault(lead.Id) <= AssignmentRules.LeadPencilsBacklogHours) return lead;
+        var candidates = People.Where(p => p.MayWork(work.Stage))
+            .Select(p => (p.Id, AssignmentRules.Score(Settings.Balance.SkillMultiplier(p.Skill(work.Stage)), queued.GetValueOrDefault(p.Id))));
+        var best = AssignmentRules.Best(candidates);
+        return best is { } id ? FindPerson(id) : null;
+    }
+
+    /// <summary>The person's working window, shortened by two hours while moonlighting.</summary>
+    internal int EffectiveWorkEndHour(Person person) =>
+        person.IsMoonlighting
+            ? Math.Max(person.Schedule.WorkStartHour + 1, person.Schedule.WorkEndHour - MoonlightRules.EarlyLeaveHours)
+            : person.Schedule.WorkEndHour;
+
+    /// <summary>True when the hour starting at hourStart is inside the person's (possibly shortened) regular schedule.</summary>
+    internal bool IsRegularHour(Person person, DateTime hourStart) =>
+        !person.Schedule.IsDayOff(hourStart) && hourStart.Hour >= person.Schedule.WorkStartHour &&
+        hourStart.Hour < EffectiveWorkEndHour(person);
 
     internal IEnumerable<QueueRef> UnfinishedRefs(Person person) =>
         Series.Where(s => s.Status == SeriesStatus.Active)
