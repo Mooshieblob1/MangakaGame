@@ -50,8 +50,13 @@ public partial class GameState
     /// <summary>Regular scheduled hours whose start lies in [from, until). Overtime is not counted.</summary>
     internal int RegularHoursBefore(Person person, DateTime from, DateTime until)
     {
-        var count = 0;
-        for (var hour = from; hour < until; hour = hour.AddHours(1))
+        if (until <= from) return 0;
+        // Buffered serialized chapters can be months ahead. Whole weeks repeat
+        // the same schedule; only the remaining partial week needs scanning.
+        var weeks = (int)((until - from).TotalHours / (24 * 7));
+        var count = weeks * (7 - person.Schedule.DaysOff.Count) *
+            (person.Schedule.WorkEndHour - person.Schedule.WorkStartHour);
+        for (var hour = from.AddDays(weeks * 7); hour < until; hour = hour.AddHours(1))
         {
             if (person.Schedule.IsRegularHour(hour)) count++;
         }

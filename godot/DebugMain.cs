@@ -53,13 +53,20 @@ public partial class DebugMain : Control
         foreach (var edge in new[] { "left", "top", "right", "bottom" })
             margin.AddThemeConstantOverride($"margin_{edge}", 12);
         AddChild(margin);
-        var root = new HBoxContainer();
+        var root = new VBoxContainer();
         root.AddThemeConstantOverride("separation", 12);
         margin.AddChild(root);
 
-        root.AddChild(BuildLeftColumn());
-        root.AddChild(BuildPersonColumn());
-        root.AddChild(BuildLogColumn());
+        root.AddChild(BuildTimelineControls());
+        _mainTabs = new TabContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
+        root.AddChild(_mainTabs);
+        var production = new HBoxContainer { Name = "Production" };
+        production.AddThemeConstantOverride("separation", 12);
+        production.AddChild(BuildLeftColumn());
+        production.AddChild(BuildPersonColumn());
+        production.AddChild(BuildLogColumn());
+        _mainTabs.AddChild(production);
+        _mainTabs.AddChild(BuildPublishingPanel());
 
         _recapDialog = new AcceptDialog { Title = "Daily recap", OkButtonText = "Continue", Exclusive = true };
         _recapDialog.Confirmed += OnRecapContinue;
@@ -154,6 +161,9 @@ public partial class DebugMain : Control
             foreach (var c in recap.ChaptersCompleted) lines.Add($"Chapter done: {DescribeChapter(c.SeriesId, c.ChapterNumber)}");
             foreach (var c in recap.DeadlinesMissed) lines.Add($"Deadline missed: {DescribeChapter(c.SeriesId, c.ChapterNumber)}");
             foreach (var c in recap.ChaptersAtRisk) lines.Add($"At risk: {DescribeChapter(c.SeriesId, c.ChapterNumber)}");
+            lines.Add($"Income: ¥{recap.YenEarned:N0}");
+            foreach (var c in recap.ChaptersPublished) lines.Add($"Published: {DescribeChapter(c.SeriesId, c.ChapterNumber)}");
+            foreach (var id in recap.IssuesMissed) lines.Add($"Issue missed: {_state.FindSeries(id)?.Title}");
         }
         _recapDialog.DialogText = string.Join("\n", lines);
         _recapDialog.PopupCentered();
@@ -170,6 +180,7 @@ public partial class DebugMain : Control
         try
         {
             _state.Apply(command);
+            _publishingFeedback.Text = "";
             _dirty = true;
             ScanEvents();
         }
@@ -235,13 +246,9 @@ public partial class DebugMain : Control
 
     // ---------------------------------------------------------------- UI construction
 
-    private Control BuildLeftColumn()
+    private Control BuildTimelineControls()
     {
-        var column = new VBoxContainer
-        {
-            SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsStretchRatio = 2.8f,
-        };
+        var column = new HFlowContainer();
 
         _clockLabel = new Label();
         column.AddChild(_clockLabel);
@@ -262,6 +269,16 @@ public partial class DebugMain : Control
         load.Pressed += Load;
         speeds.AddChild(load);
         column.AddChild(speeds);
+        return column;
+    }
+
+    private Control BuildLeftColumn()
+    {
+        var column = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsStretchRatio = 2.8f,
+        };
 
         column.AddChild(BuildSeriesForm());
         column.AddChild(BuildSeriesControls());
@@ -403,6 +420,7 @@ public partial class DebugMain : Control
         RefreshSeriesOption();
         RefreshChapterGrid();
         RefreshPersonPanel();
+        RefreshPublishing();
     }
 
     private void RefreshSeriesOption()
@@ -543,5 +561,9 @@ public partial class DebugMain : Control
 
     private void AppendLog(GameEvent ev) => _log.AddText($"[{ev.Time:ddd MM-dd HH:mm}] {ev.Type}: {ev.Message}\n");
 
-    private void LogLine(string text) => _log.AddText($"[{_state.Clock.Now:ddd MM-dd HH:mm}] {text}\n");
+    private void LogLine(string text)
+    {
+        _log.AddText($"[{_state.Clock.Now:ddd MM-dd HH:mm}] {text}\n");
+        _publishingFeedback.Text = text;
+    }
 }

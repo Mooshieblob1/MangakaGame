@@ -1,8 +1,9 @@
 # Mangaka Studio
 
-A real-time manga studio management simulation. Sub-project 1 is implemented:
-one mangaka, chapter production, schedules and overtime, queue overrides,
-deadline tracking, daily recaps, save/load, and a Godot debug screen.
+A real-time manga studio management simulation. Sub-projects 1 and 2 are
+implemented: chapter production, doujin publishing, magazine pitches and
+editor reviews, serialization, reader rankings, book sales, money, reputation,
+genre trends, cancellation, daily recaps, and deterministic save/load.
 
 ## Run the debug screen
 
@@ -35,8 +36,26 @@ $godot = Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Packages\GodotEngine.Godo
 5. **Save** and **Load** use Godot's `user://debug.json`. On Windows this is
    normally `%APPDATA%\Godot\app_userdata\MangakaGame\debug.json`.
 
-The screen is a functional debug harness. Publishing, money, quality, hiring,
-the 3D office, and the finished management UI belong to later sub-projects.
+Open the **Publishing** tab to choose one of six magazines and **Pitch one-shot**.
+An untouched next-chapter draft can be replaced by a pitch; finish any work
+already started first. The 31-page sample goes through Name review before
+production continues. A successful pitch produces an offer to accept or decline.
+Accepting starts a contract with a fixed fee per page and a first issue date.
+
+The Publishing tab shows rankings, editor status, quality, fans, cancellation
+warnings, books, transactions, and genre trends. **Get online** expands doujin
+sales. Five completed doujin chapters release a book immediately; commercial
+books collect published chapters and release six weeks later. Sales happen on
+Mondays. Pausing a serialized series does not pause its magazine deadlines;
+completed stock publishes first, then issues are missed. **Withdraw** returns
+the series to doujin. **End series** closes it while released books keep selling.
+
+Saves now use **version 2**. Version 1 saves are rejected; there is no migration.
+Start a new game for this milestone. Save/load includes publishing history,
+market state, contributor hours, the ledger, and the random generator state.
+
+The screen remains a debug harness. Hiring, studio costs, the 3D office,
+historical rivals, and finished management screens belong to later milestones.
 
 ## Validate
 
@@ -49,8 +68,10 @@ New-Item -ItemType Directory -Force TestResults | Out-Null
 ```
 
 The automated Godot walkthrough tests the actual scene controls, timing,
-automatic pauses, recaps, queue editing, and save/load. It writes a separate
-test save under `TestResults`, leaving the normal debug save alone.
+automatic pauses, recaps, queue editing, offers and expiry, editor review,
+publication, royalties, withdrawal, endings, and save/load. Its fixed-seed
+publishing run uses real commands and ticks. It writes a separate test save
+under `TestResults`, leaving the normal debug save alone.
 
 To run with graphics and capture screenshots:
 
@@ -58,7 +79,8 @@ To run with graphics and capture screenshots:
 & $godot --path godot -- --smoke-test --capture
 ```
 
-This produces `TestResults/debug-main.png` and `TestResults/debug-recap.png`.
+This produces `TestResults/debug-main.png`, `debug-recap.png`,
+`debug-publishing.png`, `debug-books.png`, and `debug-trends.png`.
 Test outputs, build products, and Godot caches are ignored by Git.
 
 ## Code and design
@@ -71,3 +93,6 @@ Test outputs, build products, and Godot caches are ignored by Git.
 - [Simulation design](docs/superpowers/specs/2026-09-22-sim-core-design.md)
 - [Implementation plan](docs/superpowers/plans/2026-09-22-sim-core.md)
 - [Completion notes and verification](docs/superpowers/sub-project-1-completion.md)
+- [Publishing and market design](docs/superpowers/specs/2026-09-22-publishing-market-design.md)
+- [Publishing implementation plan](docs/superpowers/plans/2026-09-22-publishing-market.md)
+- [Sub-project 2 completion and verification](docs/superpowers/sub-project-2-completion.md)

@@ -1,0 +1,71 @@
+{
+  "CommandLog": [],
+  "Version": 1,
+  "Clock": {
+    "Now": "1996-04-01T08:00:00"
+  },
+  "Series": [],
+  "People": [
+    {
+      "Id": 1,
+      "Name": "Aki",
+      "Skills": {
+        "Name": 80,
+        "Pencils": 80,
+        "Inks": 80,
+        "Backgrounds": 80,
+        "Tones": 80
+      },
+      "Schedule": {
+        "WorkStartHour": 8,
+        "WorkEndHour": 18,
+        "DaysOff": [
+          "Sunday"
+        ]
+      },
+      "OvertimeAllowed": true,
+      "Queue": [],
+      "Pins": [],
+      "ManualOrder": null,
+      "CurrentTask": null,
+      "HoursWorkedToday": 0,
+      "OvertimeHoursToday": 0
+    }
+  ],
+  "Events": [],
+  "RngSeed": 0,
+  "Rng": {
+    "State": 0
+  },
+  "Settings": {
+    "AutoPause": {
+      "DayStarted": false,
+      "WeekStarted": false,
+      "StageStarted": false,
+      "StageCompleted": false,
+      "StageSkipped": false,
+      "ChapterCreated": false,
+      "ChapterCompleted": true,
+      "DeadlineMissed": true,
+      "ChapterAtRisk": false,
+      "DailyRecap": true,
+      "CommandApplied": false
+    },
+    "Balance": {
+      "BaseHoursPerPage": {
+        "Name": 1.2,
+        "Pencils": 1.5,
+        "Inks": 1,
+        "Backgrounds": 1,
+        "Tones": 0.5
+      },
+      "OvertimeCap": 2,
+      "MultiplierAtSkill0": 0.5,
+      "MultiplierAtSkill50": 1,
+      "MultiplierAtSkill100": 2
+    }
+  },
+  "NextId": 2,
+  "RecapFiredToday": false,
+  "RecapWindowStart": 0
+}

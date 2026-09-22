@@ -30,6 +30,12 @@ public class RegressionTests
     public void Invalid_commands_fail_without_any_state_change(ICommand command)
     {
         var state = Started();
+        command = command switch
+        {
+            PinStageCommand c => c with { ChapterId = state.Series[0].Chapters[0].Id },
+            SkipStageCommand c => c with { ChapterId = state.Series[0].Chapters[0].Id },
+            _ => command,
+        };
         var before = state.ToJson();
         Assert.Throws<InvalidCommandException>(() => state.Apply(command));
         Assert.Equal(before, state.ToJson());
@@ -131,7 +137,7 @@ public class RegressionTests
     public void Changing_schedule_does_not_grant_more_than_the_daily_overtime_cap()
     {
         var state = Started();
-        state.Apply(new SetPagesPerChapterCommand(2, 200));
+        state.Apply(new SetPagesPerChapterCommand(state.Series[0].Id, 200));
         state.Series[0].Chapters[0].DueDate = state.Clock.Now;
         state.Advance(12);
         state.Apply(new SetScheduleCommand(1, 8, 20, new() { DayOfWeek.Sunday }));

@@ -9,7 +9,7 @@ public class GameStateTickTests
     public void NewGame_has_prodigy_mangaka_and_default_settings()
     {
         var state = GameState.NewGame(seed: 5);
-        Assert.Equal(1, state.Version);
+        Assert.Equal(GameState.CurrentVersion, state.Version);
         Assert.Equal(GameClock.Start, state.Clock.Now);
         Assert.Equal(5, state.RngSeed);
         var person = Assert.Single(state.People);

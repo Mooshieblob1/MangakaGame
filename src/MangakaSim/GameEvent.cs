@@ -3,9 +3,14 @@ namespace MangakaSim;
 public record StageRef(int SeriesId, int ChapterNumber, Stage Stage);
 public record ChapterRef(int SeriesId, int ChapterNumber);
 public record PersonHours(int PersonId, string Name, int Hours, int OvertimeHours);
+public record EventContext(string? MagazineId = null, int? VolumeId = null, int? Rank = null,
+    long? Amount = null, DateTime? ActivityDate = null);
 
 public class DailyRecapPayload
 {
+    public long YenEarned { get; set; }
+    public List<ChapterRef> ChaptersPublished { get; set; } = new();
+    public List<int> IssuesMissed { get; set; } = new();
     public List<StageRef> StagesStarted { get; set; } = new();
     public List<StageRef> StagesCompleted { get; set; } = new();
     public List<PersonHours> HoursPerPerson { get; set; } = new();
@@ -16,6 +21,11 @@ public class DailyRecapPayload
 
 public class GameEvent
 {
+    public DateTime ActivityDate { get; set; }
+    public string? MagazineId { get; set; }
+    public int? VolumeId { get; set; }
+    public int? Rank { get; set; }
+    public long? Amount { get; set; }
     public DateTime Time { get; set; }
     public EventType Type { get; set; }
     public string Message { get; set; } = "";

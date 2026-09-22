@@ -13,4 +13,11 @@ public enum EventType
     ChapterAtRisk,
     DailyRecap,
     CommandApplied,
+    PitchSubmitted, PitchRejected, SerializationOffered, OfferAccepted,
+    OfferDeclined, OfferExpired, EditorApproved, EditorRedoRequested,
+    ChapterPublished, IssueMissed, RankingPublished, CancellationWarning,
+    CancellationWarningLifted, CancellationSurvived, SeriesCancelled,
+    SeriesWithdrawn, SeriesEnded, SeriesBecameIconic, VolumeScheduled,
+    VolumeReleased, VolumeMilestone, ConventionRecap, GenreTrendShifted,
+    WentOnline,
 }

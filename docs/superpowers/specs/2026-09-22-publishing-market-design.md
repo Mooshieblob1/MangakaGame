@@ -1,7 +1,9 @@
 # Sub-project 2: Publishing and Market — Design
 
 Date: 2026-09-22
-Status: approved design, awaiting implementation plan
+Status: implemented and verified on 2026-09-23
+Plan: [Publishing and Market implementation plan](../plans/2026-09-22-publishing-market.md)
+Completion: [implementation notes and verification](../sub-project-2-completion.md)
 Roadmap: `2026-09-22-roadmap.md`
 Builds on: `2026-09-22-sim-core-design.md` and the sub-project 1 code at commit `e9662d1`
 

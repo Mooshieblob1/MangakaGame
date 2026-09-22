@@ -7,6 +7,7 @@
     <RootNamespace>MangakaSim</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Data/*.json" />
     <InternalsVisibleTo Include="MangakaSim.Tests" />
   </ItemGroup>
 </Project>

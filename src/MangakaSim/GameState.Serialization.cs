@@ -33,9 +33,13 @@ public partial class GameState
             {
                 foreach (var property in new[] { nameof(Clock), nameof(People), nameof(Series), nameof(Events),
                              nameof(Rng), nameof(RngSeed), nameof(Settings), nameof(NextId), nameof(CommandLog),
-                             nameof(RecapWindowStart), nameof(RecapFiredToday) })
+                             nameof(RecapWindowStart), nameof(RecapFiredToday), nameof(Money), nameof(Ledger),
+                             nameof(StudioTrackRecord), nameof(Markets), nameof(Trends), nameof(HasInternet),
+                             nameof(DoujinCopiesThisMonth), nameof(DoujinFansThisMonth) })
                     if (!document.RootElement.TryGetProperty(property, out var value) || value.ValueKind == JsonValueKind.Null)
                         throw new InvalidDataException($"Save file is missing {property}.");
+                foreach (var property in new[] { nameof(LastTrendUpdateMonth), nameof(LastSalesAt) })
+                    if (!document.RootElement.TryGetProperty(property, out _)) throw new InvalidDataException($"Save file is missing {property}.");
             }
         }
 
@@ -46,9 +50,18 @@ public partial class GameState
         if (version != CurrentVersion)
             throw new InvalidDataException($"Save file version {version} is not supported.");
 
-        var state = JsonSerializer.Deserialize<GameState>(json, JsonOptions)
-                    ?? throw new InvalidDataException("Save file is empty.");
-        state.ValidateSave();
+        GameState state;
+        try
+        {
+            state = JsonSerializer.Deserialize<GameState>(json, JsonOptions)
+                ?? throw new InvalidDataException("Save file is empty.");
+        }
+        catch (JsonException ex) { throw new InvalidDataException($"Save data is malformed: {ex.Message}", ex); }
+        try { state.ValidateSave(); }
+        catch (Exception ex) when (ex is OverflowException or ArgumentOutOfRangeException)
+        {
+            throw new InvalidDataException("Save file has out-of-range numeric totals or dates.", ex);
+        }
         return state;
     }
 
@@ -59,7 +72,7 @@ public partial class GameState
             if (!valid) throw new InvalidDataException($"Save file has invalid {field}.");
         }
 
-        Check(Clock is not null && Clock.Now.Ticks % TimeSpan.TicksPerHour == 0, "clock");
+        Check(Clock is not null && Clock.Now >= GameClock.Start && Clock.Now.Ticks % TimeSpan.TicksPerHour == 0, "clock");
         Check(People is { Count: 1 } && People[0] is not null, "people (one mangaka is required)");
         Check(Series is not null && Events is not null && Rng is not null && CommandLog is not null, "state");
         Check(Settings?.Balance is not null && Settings.AutoPause is not null, "settings");
@@ -93,23 +106,26 @@ public partial class GameState
                 Enum.IsDefined(series.Cadence) && Enum.IsDefined(series.Status) && series.PagesPerChapter > 0 &&
                 series.Chapters is not null, "series details");
             Check(series.StartDate.Ticks % TimeSpan.TicksPerHour == 0, "series start date");
-            var number = 1;
+            var number = 0;
             foreach (var chapter in series.Chapters!)
             {
                 Check(chapter is not null, "chapter");
                 CheckId(chapter!.Id);
-                Check(chapter.Number == number++ && Enum.IsDefined(chapter.Status) &&
+                Check(chapter.Number > number && Enum.IsDefined(chapter.Status) &&
                     chapter.DueDate.Ticks % TimeSpan.TicksPerHour == 0 && chapter.HoursOverdue >= 0, "chapter details");
+                number = chapter.Number;
                 Check(chapter.Stages is { Count: 5 } && chapter.Stages.All(s => s is not null) &&
                     chapter.Stages.Select(s => s.Stage).SequenceEqual(StageOrder.All), "chapter stages");
                 foreach (var work in chapter.Stages!)
                     Check(Enum.IsDefined(work.Status) && double.IsFinite(work.HoursRequired) && work.HoursRequired > 0 &&
                         double.IsFinite(work.HoursDone) && work.HoursDone >= 0 && work.HoursDone <= work.HoursRequired &&
                         (work.AssignedTo is null || work.AssignedTo == person.Id), "stage work");
-                Check((chapter.Status == ChapterStatus.Complete) == chapter.IsFinished &&
+                Check((chapter.Status != ChapterStatus.Complete || (chapter.IsFinished &&
+                    (chapter.EditorMagazineId is null || chapter.Editor == EditorStatus.Approved))) &&
                     (chapter.Status == ChapterStatus.Complete) == chapter.CompletedAt.HasValue, "chapter completion");
             }
         }
+        ValidateMarketSave(ids);
         Check(NextId > ids.Max(), "next id");
         bool ValidRef(QueueRef reference) => Enum.IsDefined(reference.Stage) && FindChapter(reference.ChapterId) is not null;
         Check(person.Queue!.All(r => ValidRef(r) && IsStartableOrPending(r, person.Id)) &&
@@ -126,7 +142,9 @@ public partial class GameState
                 recap.StagesCompleted is not null && recap.StagesCompleted.All(s => s is not null) &&
                 recap.ChaptersCompleted is not null && recap.ChaptersCompleted.All(c => c is not null) &&
                 recap.ChaptersAtRisk is not null && recap.ChaptersAtRisk.All(c => c is not null) &&
-                recap.DeadlinesMissed is not null && recap.DeadlinesMissed.All(c => c is not null), "daily recap");
+                recap.DeadlinesMissed is not null && recap.DeadlinesMissed.All(c => c is not null) &&
+                recap.ChaptersPublished is not null && recap.ChaptersPublished.All(c => c is not null) &&
+                recap.IssuesMissed is not null && recap.YenEarned >= 0, "daily recap");
         }
         Check(CommandLog!.All(e => e is not null && e.Command is not null &&
             e.Time.Ticks % TimeSpan.TicksPerHour == 0 && e.Time <= Clock!.Now), "command log");

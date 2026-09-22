@@ -153,6 +153,8 @@ public partial class DebugMain
             await SettleUi();
             await CaptureSmokeImage("debug-main");
 
+            await RunPublishingSmoke();
+
             GD.Print($"GODOT SMOKE PASS: {_smokeChecks} checks");
             GetTree().Quit(0);
         }

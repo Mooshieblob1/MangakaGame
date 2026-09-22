@@ -4,7 +4,7 @@ namespace MangakaSim;
 
 public partial class GameState
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     public int Version { get; set; } = CurrentVersion;
     public GameClock Clock { get; set; } = GameClock.AtStart();
@@ -33,6 +33,7 @@ public partial class GameState
         };
         foreach (var stage in StageOrder.All) mangaka.Skills[stage] = 80;
         state.People.Add(mangaka);
+        state.InitializeMarket();
         return state;
     }
 
@@ -47,7 +48,13 @@ public partial class GameState
     internal void Tick()
     {
         Clock.Advance();
+        var closes = Markets.Where(m => m.NextIssueClose <= Clock.Now)
+            .Select(m => new IssueCloseContext(m.MagazineId, m.NextIssueClose, m.IssuesClosed + 1)).ToArray();
         WorkStep();
+        EditorStep();
+        IssueCloseStep(closes);
+        SalesStep();
+        PitchStep(closes);
         RiskStep();
         DayEndStep();
         if (Clock.Hour == 0) StartNewDay();
@@ -62,7 +69,7 @@ public partial class GameState
             person.ManualOrder = null;
         }
         RecapFiredToday = false;
-        RecapWindowStart = Events.Count;
+        RecapWindowStart = StartOfActivityDate(Clock.Now.Date);
 
         Emit(EventType.DayStarted, $"{Clock.Now:ddd d MMM yyyy} begins.");
         if (Clock.DayOfWeek == DayOfWeek.Monday)
@@ -73,11 +80,16 @@ public partial class GameState
     }
 
     internal GameEvent Emit(EventType type, string message, int? seriesId = null,
-        int? chapterNumber = null, int? personId = null, Stage? stage = null)
+        int? chapterNumber = null, int? personId = null, Stage? stage = null, EventContext? context = null)
     {
         var ev = new GameEvent
         {
             Time = Clock.Now,
+            ActivityDate = context?.ActivityDate ?? Clock.Now.Date,
+            MagazineId = context?.MagazineId,
+            VolumeId = context?.VolumeId,
+            Rank = context?.Rank,
+            Amount = context?.Amount,
             Type = type,
             Message = message,
             SeriesId = seriesId,

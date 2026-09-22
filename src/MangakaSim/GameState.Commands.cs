@@ -32,6 +32,12 @@ public partial class GameState
             case SkipStageCommand c: ApplySkipStage(c); break;
             case SetScheduleCommand c: ApplySetSchedule(c); break;
             case SetOvertimeAllowedCommand c: ApplySetOvertimeAllowed(c); break;
+            case PitchSeriesCommand c: ApplyPitch(c); break;
+            case AcceptOfferCommand c: ApplyAcceptOffer(c); break;
+            case DeclineOfferCommand c: ApplyDeclineOffer(c); break;
+            case WithdrawSeriesCommand c: ApplyWithdraw(c); break;
+            case EndSeriesCommand c: ApplyEnd(c); break;
+            case GetOnlineCommand: ApplyGetOnline(); break;
             default:
                 throw new InvalidCommandException($"Unsupported command {command.GetType().Name}.");
         }
@@ -74,7 +80,9 @@ public partial class GameState
     {
         var series = RequireSeries(c.SeriesId);
         if (!Enum.IsDefined(c.Cadence)) throw new InvalidCommandException($"Unknown cadence {c.Cadence}.");
+        if (series.Publishing == PublishingStatus.Serialized) throw new InvalidCommandException("The magazine sets the publication schedule.");
         series.Cadence = c.Cadence;
+        series.DoujinCadence = c.Cadence;
     }
 
     private void ApplySetPagesPerChapter(SetPagesPerChapterCommand c)
@@ -135,10 +143,13 @@ public partial class GameState
         var series = SeriesOf(chapter);
         work.Status = StageStatus.Skipped;
         work.HoursDone = 0;
+        work.Contribution = 0;
+        work.OvertimeHours = 0;
         if (chapter.Status == ChapterStatus.NotStarted) chapter.Status = ChapterStatus.InProgress;
         Emit(EventType.StageSkipped,
             $"{c.Stage} on {series.Title} ch.{chapter.Number} skipped.",
             seriesId: series.Id, chapterNumber: chapter.Number, stage: c.Stage);
+        SubmitNameIfReady(chapter);
         CompleteChapterIfDone(chapter);
     }
 

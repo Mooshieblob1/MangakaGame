@@ -1,3 +1,5 @@
+using MangakaSim.Rules;
+
 namespace MangakaSim;
 
 public partial class GameState
@@ -10,6 +12,7 @@ public partial class GameState
             Title = title,
             Genre = genre,
             Cadence = cadence,
+            DoujinCadence = cadence,
             PagesPerChapter = pagesPerChapter,
             Status = SeriesStatus.Active,
             StartDate = Clock.Now,
@@ -28,27 +31,39 @@ public partial class GameState
 
     private void EnsureNextChapters()
     {
-        foreach (var series in Series.Where(s => s.Status == SeriesStatus.Active))
+        foreach (var series in Series.Where(s => s.Status == SeriesStatus.Active &&
+                     s.Publishing is not (PublishingStatus.Pitching or PublishingStatus.Offered)))
         {
             var hasOpenChapter = series.Chapters.Any(c => c.Status != ChapterStatus.Complete);
             if (!hasOpenChapter) CreateNextChapter(series);
         }
     }
 
-    internal Chapter CreateNextChapter(Series series)
+    internal Chapter CreateNextChapter(Series series, int? pages = null, DateTime? due = null)
     {
         var previous = series.Chapters.LastOrDefault();
-        var number = previous is null ? 1 : previous.Number + 1;
+        var number = series.NextChapterNumber++;
         var from = previous?.DueDate ?? series.StartDate;
+        var chapterPages = pages ?? series.PagesPerChapter;
+        var deadline = due ?? series.NextChapterDueOverride;
+        if (deadline is null && series.Contract is { } contract)
+        {
+            var lastSlot = series.Chapters.Where(c => !c.IsOneShot && !c.DoujinEligible).OrderBy(c => c.DueDate).LastOrDefault();
+            deadline = lastSlot is null ? contract.FirstIssueClose : IssueSchedule.FirstCloseAfter(PublisherCatalog.Get(contract.MagazineId), lastSlot.DueDate);
+        }
+        series.NextChapterDueOverride = null;
         var chapter = new Chapter
         {
             Id = AllocateId(),
             Number = number,
-            DueDate = CadenceRules.NextDue(from, series.Cadence),
+            Pages = chapterPages,
+            DueDate = deadline ?? CadenceRules.NextDue(from, series.Cadence),
+            DoujinEligible = series.Publishing == PublishingStatus.Unpublished,
+            EditorMagazineId = series.Contract?.MagazineId,
             Stages = StageOrder.All.Select(stage => new StageWork
             {
                 Stage = stage,
-                HoursRequired = Settings.Balance.HoursRequired(stage, series.PagesPerChapter),
+                HoursRequired = Settings.Balance.HoursRequired(stage, chapterPages),
             }).ToList(),
         };
         series.Chapters.Add(chapter);
@@ -107,6 +122,7 @@ public partial class GameState
         if (SeriesOf(chapter).Status != SeriesStatus.Active) return false;
         var work = chapter.StageWork(r.Stage);
         if (work.IsDone) return false;
+        if (r.Stage != Stage.Name && chapter.EditorMagazineId is not null && chapter.Editor != EditorStatus.Approved) return false;
         return chapter.Stages.TakeWhile(s => s.Stage != r.Stage).All(s => s.IsDone);
     }
 }

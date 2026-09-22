@@ -24,4 +24,19 @@ public class Rng
         if (maxExclusive <= 0) throw new ArgumentOutOfRangeException(nameof(maxExclusive));
         return (int)(NextUInt64() % (ulong)maxExclusive);
     }
+
+    public int NextInt(int minInclusive, int maxExclusive)
+    {
+        if (minInclusive >= maxExclusive) throw new ArgumentOutOfRangeException(nameof(maxExclusive));
+        return (int)(minInclusive + (long)(NextUInt64() % (ulong)((long)maxExclusive - minInclusive)));
+    }
+
+    public double NextDouble() => (NextUInt64() >> 11) * (1.0 / (1UL << 53));
+
+    public double NextDouble(double min, double max)
+    {
+        if (!double.IsFinite(min) || !double.IsFinite(max) || min >= max || !double.IsFinite(max - min))
+            throw new ArgumentOutOfRangeException(nameof(max));
+        return min + (max - min) * NextDouble();
+    }
 }

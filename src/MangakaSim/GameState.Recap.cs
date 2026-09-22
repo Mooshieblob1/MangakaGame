@@ -26,9 +26,13 @@ public partial class GameState
 
     internal GameEvent EmitDailyRecap()
     {
-        var window = Events.Skip(RecapWindowStart).ToList();
+        var window = Events.Skip(RecapWindowStart).Where(e => e.ActivityDate == TickStart.Date).ToList();
         var payload = new DailyRecapPayload
         {
+            YenEarned = Ledger.Where(e => e.Time.Date == TickStart.Date && e.Amount > 0).Sum(e => e.Amount),
+            ChaptersPublished = window.Where(e => e.Type == EventType.ChapterPublished)
+                .Select(e => new ChapterRef(e.SeriesId!.Value, e.ChapterNumber!.Value)).ToList(),
+            IssuesMissed = window.Where(e => e.Type == EventType.IssueMissed).Select(e => e.SeriesId!.Value).ToList(),
             StagesStarted = window.Where(e => e.Type == EventType.StageStarted)
                 .Select(e => new StageRef(e.SeriesId!.Value, e.ChapterNumber!.Value, e.Stage!.Value)).ToList(),
             StagesCompleted = window.Where(e => e.Type == EventType.StageCompleted)
@@ -47,11 +51,19 @@ public partial class GameState
         var message = $"Day done. {hours}. Stages completed: {payload.StagesCompleted.Count}. " +
                       $"Chapters completed: {payload.ChaptersCompleted.Count}. At risk: {payload.ChaptersAtRisk.Count}.";
 
-        var ev = Emit(EventType.DailyRecap, message);
+        var ev = Emit(EventType.DailyRecap, message, context: new(ActivityDate: TickStart.Date));
         ev.Recap = payload;
         RecapFiredToday = true;
-        RecapWindowStart = Events.Count;
+        RecapWindowStart = Clock.Now.Date > TickStart.Date ? StartOfActivityDate(Clock.Now.Date) : Events.Count;
         return ev;
+    }
+
+    private int StartOfActivityDate(DateTime date)
+    {
+        // At midnight, market events can precede the previous day's recap.
+        var index = Events.Count;
+        while (index > 0 && Events[index - 1].Time.Date >= date) index--;
+        return index;
     }
 
     /// <summary>

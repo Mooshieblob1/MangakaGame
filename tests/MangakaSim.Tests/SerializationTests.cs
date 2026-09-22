@@ -82,7 +82,7 @@ public class SerializationTests
         original.Advance(30);
         original.Apply(new SetScheduleCommand(1, 9, 17, new() { DayOfWeek.Sunday }));
         original.Advance(40);
-        original.Apply(new SkipStageCommand(3, Stage.Tones));
+        original.Apply(new SkipStageCommand(original.Series[0].Chapters[0].Id, Stage.Tones));
         original.Advance(100);
 
         var replay = GameState.NewGame(original.RngSeed);
@@ -100,7 +100,7 @@ public class SerializationTests
     public void Json_contains_version_and_string_enums()
     {
         var json = Played().ToJson();
-        Assert.Contains("\"Version\": 1", json);
+        Assert.Contains($"\"Version\": {GameState.CurrentVersion}", json);
         Assert.Contains("\"Weekly\"", json);
         Assert.Contains("\"type\": \"CreateSeries\"", json);
     }
@@ -108,9 +108,9 @@ public class SerializationTests
     [Fact]
     public void Loading_newer_version_throws_clear_error()
     {
-        var json = Played().ToJson().Replace("\"Version\": 1", "\"Version\": 2");
+        var json = Played().ToJson().Replace($"\"Version\": {GameState.CurrentVersion}", $"\"Version\": {GameState.CurrentVersion + 1}");
         var ex = Assert.Throws<InvalidDataException>(() => GameState.FromJson(json));
-        Assert.Contains("version 2", ex.Message);
+        Assert.Contains($"version {GameState.CurrentVersion + 1}", ex.Message);
         Assert.Contains("newer", ex.Message);
     }
 

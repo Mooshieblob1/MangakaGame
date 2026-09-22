@@ -22,7 +22,7 @@ public class Schedule
         !IsDayOff(hourStart) && hourStart.Hour >= WorkStartHour && hourStart.Hour < WorkEndHour;
 }
 
-public class StageWork
+public partial class StageWork
 {
     public Stage Stage { get; set; }
     public double HoursRequired { get; set; }
@@ -34,7 +34,7 @@ public class StageWork
     public bool IsDone => Status is StageStatus.Complete or StageStatus.Skipped;
 }
 
-public class Chapter
+public partial class Chapter
 {
     public int Id { get; set; }
     public int Number { get; set; }
@@ -52,7 +52,7 @@ public class Chapter
     public StageWork StageWork(Stage stage) => Stages.First(s => s.Stage == stage);
 }
 
-public class Series
+public partial class Series
 {
     public int Id { get; set; }
     public string Title { get; set; } = "";
@@ -64,7 +64,7 @@ public class Series
     public List<Chapter> Chapters { get; set; } = new();
 }
 
-public class Person
+public partial class Person
 {
     public int Id { get; set; }
     public string Name { get; set; } = "";

@@ -1,3 +1,5 @@
+using MangakaSim.Rules;
+
 namespace MangakaSim;
 
 public partial class GameState
@@ -9,6 +11,7 @@ public partial class GameState
         {
             if (!IsWorkingHour(person, TickStart, out var isOvertime)) continue;
             if (person.CurrentTask is not { } task) continue;
+            if (!IsStartable(task)) continue;
             var chapter = FindChapter(task.ChapterId);
             if (chapter is null) continue;
             var series = SeriesOf(chapter);
@@ -20,21 +23,27 @@ public partial class GameState
                 if (chapter.Status == ChapterStatus.NotStarted) chapter.Status = ChapterStatus.InProgress;
                 Emit(EventType.StageStarted,
                     $"{person.Name} started {task.Stage} on {series.Title} ch.{chapter.Number}.",
-                    seriesId: series.Id, chapterNumber: chapter.Number, personId: person.Id, stage: task.Stage);
+                    seriesId: series.Id, chapterNumber: chapter.Number, personId: person.Id, stage: task.Stage,
+                    context: new(ActivityDate: TickStart.Date));
             }
 
             var multiplier = Settings.Balance.SkillMultiplier(person.Skill(task.Stage));
             work.HoursDone = Math.Min(work.HoursRequired, work.HoursDone + multiplier);
             person.HoursWorkedToday++;
-            if (isOvertime) person.OvertimeHoursToday++;
+            work.HoursByPerson[person.Id] = checked(work.HoursByPerson.GetValueOrDefault(person.Id) + 1);
+            series.LifetimeHoursByPerson[person.Id] = checked(series.LifetimeHoursByPerson.GetValueOrDefault(person.Id) + 1);
+            if (isOvertime) { person.OvertimeHoursToday++; work.OvertimeHours++; }
 
             if (work.HoursDone >= work.HoursRequired)
             {
                 work.Status = StageStatus.Complete;
+                work.Contribution = QualityRules.Contribution(task.Stage, person.Skill(task.Stage), work.OvertimeHours, work.HoursRequired, chapter.RedoCount);
                 Emit(EventType.StageCompleted,
                     $"{person.Name} finished {task.Stage} on {series.Title} ch.{chapter.Number}.",
-                    seriesId: series.Id, chapterNumber: chapter.Number, personId: person.Id, stage: task.Stage);
-                CompleteChapterIfDone(chapter);
+                    seriesId: series.Id, chapterNumber: chapter.Number, personId: person.Id, stage: task.Stage,
+                    context: new(ActivityDate: TickStart.Date));
+                SubmitNameIfReady(chapter);
+                CompleteChapterIfDone(chapter, TickStart.Date);
                 // Rebuild queues so CurrentTask moves to the next startable item.
                 RunPlanner();
             }
@@ -67,27 +76,31 @@ public partial class GameState
     }
 
     /// <summary>If every stage is Complete or Skipped, closes the chapter and records lateness.</summary>
-    internal void CompleteChapterIfDone(Chapter chapter)
+    internal void CompleteChapterIfDone(Chapter chapter, DateTime? activityDate = null)
     {
         if (chapter.Status == ChapterStatus.Complete || !chapter.IsFinished) return;
+        if (chapter.EditorMagazineId is not null && chapter.Editor != EditorStatus.Approved) return;
         var series = SeriesOf(chapter);
         chapter.Status = ChapterStatus.Complete;
         chapter.CompletedAt = Clock.Now;
         chapter.IsAtRisk = false;
+        chapter.Quality = QualityRules.Total(chapter.Stages.Select(s => s.Contribution));
         if (Clock.Now > chapter.DueDate)
         {
             chapter.IsLate = true;
             chapter.HoursOverdue = (int)Math.Ceiling((Clock.Now - chapter.DueDate).TotalHours);
         }
         Emit(EventType.ChapterCompleted,
-            $"{series.Title} ch.{chapter.Number} complete" + (chapter.IsLate ? $" ({chapter.HoursOverdue}h late)." : " on time."),
-            seriesId: series.Id, chapterNumber: chapter.Number);
-        if (chapter.IsLate)
+            $"{series.Title} ch.{chapter.Number} complete, quality {chapter.Quality}" + (chapter.IsLate ? $" ({chapter.HoursOverdue}h late)." : " on time."),
+            seriesId: series.Id, chapterNumber: chapter.Number, context: new(ActivityDate: activityDate));
+        if (chapter.IsLate && !chapter.IsOneShot && series.Publishing == PublishingStatus.Unpublished)
         {
             Emit(EventType.DeadlineMissed,
                 $"{series.Title} ch.{chapter.Number} missed its deadline by {chapter.HoursOverdue}h.",
-                seriesId: series.Id, chapterNumber: chapter.Number);
+                seriesId: series.Id, chapterNumber: chapter.Number, context: new(ActivityDate: activityDate));
         }
+        AwardCompletion(series, chapter);
+        CollectDoujin(series);
         RunPlanner();
     }
 }
