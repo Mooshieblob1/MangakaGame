@@ -1,7 +1,7 @@
 # Sub-project 3: Staff and Studio — Design
 
 Date: 2026-09-22
-Status: draft for owner review; open decisions are listed at the end
+Status: approved on 2026-09-22 with every recommended default; plan `../plans/2026-09-22-staff-studio.md`
 Roadmap: `2026-09-22-roadmap.md`
 Builds on: `2026-09-22-publishing-market-design.md` and the sub-project 2 code
 on branch `claude/sp2-plan-implementation-z2feyy`
@@ -633,9 +633,9 @@ month to see moonlighting start, save and reload. One rendered screenshot.
 | `Settings.Default()` | four new auto-pause keys |
 | `NewGame` | studio in the garage, empty pool, Aki as Mangaka |
 
-## Open decisions for the owner
+## Decisions (approved defaults)
 
-Each has a recommended default that the plan will take unless changed.
+Each was presented with a recommended default; the owner approved all of them on 2026-09-22.
 
 1. **Does the mangaka draw a salary?** Default: no. Aki is the owner; living
    costs are abstracted away. Alternative: a fixed 150,000/month "owner draw"
