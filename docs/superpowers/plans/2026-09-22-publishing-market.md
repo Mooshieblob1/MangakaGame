@@ -45,6 +45,8 @@
 - **Recap yen.** `GameState.LedgerWindowStart` mirrors `RecapWindowStart`; `YenEarned` is the sum of ledger amounts appended since it.
 - **Pitching invariant.** `Pitching ⇒ at least one one-shot chapter with a valid PitchMagazineId`. A finished one-shot waiting for its magazine's close is legal.
 - **Effective reputation with one person** is `0.5 × StudioTrackRecord + 0.5 × Aki.Reputation`.
+- **Economic curves step by calendar year.** The spec wants the price index to read exactly 1.00 on 1 April 1996 and internet reach 0.1 through 1996, which fractional-year interpolation cannot give, so `Economy.PriceIndex` and `Economy.InternetReach` interpolate on the integer year. Genre baselines keep the spec's fractional-year interpolation.
+- **Skipped Tones quality.** The spec's example value 74 contradicts its formula: 84 − 0.10 × 100 × 0.84 = 75.6, which rounds to 76. The formula wins; the test asserts 76.
 - **Filler words** live in `Rules/FillerRules.cs` as two static arrays (40 adjectives, 40 nouns). Filler ids come from `AllocateId` so they are unique across the save.
 
 ## File structure
@@ -197,10 +199,10 @@ FillerRules.Adjectives / Nouns (≥ 40 each); PopularityRange(int tier); Replace
 ```
 
 - [ ] **Step 1: Write the failing tests** with these exact expectations:
-  - `Economy`: 1996-04-01 → 1.00; 1999-01-01 → 1.015; 2030-01-01 → `1.18 × 1.02^4` (within 1e-9).
+  - `Economy`: 1996-04-01 → 1.00; 1999-07-01 → 1.015; 2030-01-01 → `1.18 × 1.02^4` (within 1e-9).
   - `TrendRules`: `slice of life` 2002-07-02 (midway 2000→2005) → 0.60; 2025 holds 1.00 for slice of life; `Crowding` for 0..8 → 1, 1, 1, 0.97, 0.94, 0.91, 0.88, 0.85, 0.85; `Normalise("  Sci-Fi ")` → `sci-fi`, `"isekai"` → `other`.
-  - `QualityRules`: skill 80 everywhere → 84; Tones skipped → 74; Pencils with 20% overtime → Pencils contribution 30 × 0.84 × 0.9 = 22.68 and chapter quality 82; `SkillFactor(80, 4) == 1.0` (0.84 + 0.20 capped); `SkillFactor(0) == 0.2`, `(50) == 0.6`, `(100) == 1.0`.
-  - `PitchRules`: tier 1, quality 84, rep 25, affinity 1.2, trend 1.3: qf 1.248, rf 0.85, raw 0.15 × 1.248 × 0.85 × 1.2 × 1.3 = 0.2482… → chance 0.248208 (6 dp); tier 3, quality 100, rep 100, 1.25, 1.8 clamps to 0.95; quality 40 → qf 0.28 and chance clamps to 0.02 in a cold slot; `WeakestFactor(84, 25, 1.2, 1.3) == "reputation"`, `(84, 90, 0.8, 1.3) == "fit"`; fee rep 50 at `tokiwa-jump` index 1.00 → 14,500; index 1.18 → 17,100.
+  - `QualityRules`: skill 80 everywhere → 84; Tones skipped → 76 (see decisions); Pencils with 20% overtime → Pencils contribution 30 × 0.84 × 0.9 = 22.68 and chapter quality 82; `SkillFactor(80, 4) == 1.0` (0.84 + 0.20 capped); `SkillFactor(0) == 0.2`, `(50) == 0.6`, `(100) == 1.0`.
+  - `PitchRules`: tier 1, quality 84, rep 25, affinity 1.2, trend 1.3: qf 1.248, rf 0.85, raw 0.15 × 1.248 × 0.85 × 1.2 × 1.3 = 0.2482272 → chance 0.248227 (6 dp); tier 3, quality 100, rep 100, 1.25, 1.8 clamps to 0.95; quality 40 → qf 0.28 and chance clamps to 0.02 in a cold slot; `WeakestFactor(84, 25, 1.2, 1.3) == "reputation"`, `(84, 90, 0.8, 1.3) == "fit"`; fee rep 50 at `tokiwa-jump` index 1.00 → 14,500; index 1.18 → 17,100.
   - `EditorRules`: threshold tier 1 rep 0 → 65; tier 1 rep 100 → 50; tier 2 rep 50 → 47.5; chance at threshold → 0.5, at +20 → 0.95, at −20 → 0.05.
   - `RankingRules`: `FanScore(200000, 1) == 50`; player score quality 84, fanbase 0, tier 1, 1.2, 1.3, 1.0 → 50.4 × 1.56 = 78.624.
   - `FanbaseRules`: rank 1 → 3.0, line → 0.5, roster → 0.2, above roster → 0.2; rank 8 with line 15 → 2.0 (halfway); gain tier 1 rf 3.0 quality 84 → 3000 × 3 × 1.2 = 10800.
