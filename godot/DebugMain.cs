@@ -45,7 +45,16 @@ public partial class DebugMain : Control
     private Label _studioLabel = null!;
     private Label _trendsLabel = null!;
 
+    private OptionButton _personOption = null!;
     private Label _personLabel = null!;
+    private Label _moodLabel = null!;
+    private SpinBox _salarySpin = null!;
+    private readonly Dictionary<Stage, CheckBox> _stageBoxes = new();
+    private OptionButton _promotionOption = null!;
+    private VBoxContainer _hiringBox = null!;
+    private Label _studioPanelLabel = null!;
+    private HFlowContainer _premisesRow = null!;
+    private HFlowContainer _amenityRow = null!;
     private SpinBox _startSpin = null!;
     private SpinBox _endSpin = null!;
     private readonly Dictionary<DayOfWeek, CheckBox> _dayOffBoxes = new();
@@ -169,6 +178,9 @@ public partial class DebugMain : Control
             if (recap.ChaptersPublished > 0) lines.Add($"Chapters published: {recap.ChaptersPublished}");
             if (recap.IssuesMissed > 0) lines.Add($"Issues missed: {recap.IssuesMissed}");
             if (recap.YenEarned != 0) lines.Add($"Yen earned: {recap.YenEarned:N0}");
+            if (recap.YenSpent != 0) lines.Add($"Yen spent: {recap.YenSpent:N0}");
+            foreach (var m in recap.Moods)
+                lines.Add($"{m.Name}: happiness {m.Happiness:0}, fatigue {m.Fatigue:0}, breaks {m.Breaks}{(m.IsMoonlighting ? ", moonlighting" : "")}");
         }
         _recapDialog.DialogText = string.Join("\n", lines);
         _recapDialog.PopupCentered();
@@ -242,6 +254,7 @@ public partial class DebugMain : Control
         foreach (var ev in _state.Events.TakeLast(LogLinesOnLoad)) AppendLog(ev);
         _scanIndex = _state.Events.Count;
         LogLine("Loaded.");
+        RefreshPersonOption();
         ResetPersonInputs();
         _dirty = true;
         var recap = _state.Events.LastOrDefault(e => e.Type == EventType.DailyRecap);
@@ -391,11 +404,23 @@ public partial class DebugMain : Control
         var column = new VBoxContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
-            SizeFlagsStretchRatio = 1.1f,
+            SizeFlagsStretchRatio = 1.2f,
         };
+
+        var head = new HBoxContainer();
+        head.AddChild(new Label { Text = "Staff:" });
+        _personOption = new OptionButton { CustomMinimumSize = new Vector2(150, 0) };
+        _personOption.ItemSelected += _ => { ResetPersonInputs(); _dirty = true; };
+        head.AddChild(_personOption);
+        var fire = new Button { Text = "Fire" };
+        fire.Pressed += () => TryApply(new FireCommand(SelectedPerson().Id));
+        head.AddChild(fire);
+        column.AddChild(head);
 
         _personLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         column.AddChild(_personLabel);
+        _moodLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        column.AddChild(_moodLabel);
 
         var hours = new HBoxContainer();
         hours.AddChild(new Label { Text = "Start" });
@@ -419,23 +444,68 @@ public partial class DebugMain : Control
         var apply = new Button { Text = "Apply schedule" };
         apply.Pressed += () =>
         {
-            var person = _state.People[0];
+            var person = SelectedPerson();
             var daysOff = _dayOffBoxes.Where(kv => kv.Value.ButtonPressed).Select(kv => kv.Key).ToHashSet();
             TryApply(new SetScheduleCommand(person.Id, (int)_startSpin.Value, (int)_endSpin.Value, daysOff));
         };
         column.AddChild(apply);
 
         _overtimeBox = new CheckBox { Text = "Overtime allowed" };
-        _overtimeBox.Toggled += on => TryApply(new SetOvertimeAllowedCommand(_state.People[0].Id, on));
+        _overtimeBox.Toggled += on => TryApply(new SetOvertimeAllowedCommand(SelectedPerson().Id, on));
         column.AddChild(_overtimeBox);
 
+        var pay = new HBoxContainer();
+        pay.AddChild(new Label { Text = "Salary" });
+        _salarySpin = new SpinBox { MinValue = 0, MaxValue = 5_000_000, Step = 1000, CustomMinimumSize = new Vector2(110, 0) };
+        pay.AddChild(_salarySpin);
+        var setSalary = new Button { Text = "Set salary" };
+        setSalary.Pressed += () => TryApply(new SetSalaryCommand(SelectedPerson().Id, (int)_salarySpin.Value));
+        pay.AddChild(setSalary);
+        column.AddChild(pay);
+
+        var stages = new HFlowContainer();
+        stages.AddChild(new Label { Text = "May work:" });
+        foreach (var stage in StageOrder.All)
+        {
+            var box = new CheckBox { Text = stage.ToString()[..3] };
+            _stageBoxes[stage] = box;
+            stages.AddChild(box);
+        }
+        var applyStages = new Button { Text = "Apply stages" };
+        applyStages.Pressed += () => TryApply(new SetAllowedStagesCommand(SelectedPerson().Id,
+            _stageBoxes.Where(kv => kv.Value.ButtonPressed).Select(kv => kv.Key).ToHashSet()));
+        stages.AddChild(applyStages);
+        column.AddChild(stages);
+
+        var promotion = new HBoxContainer();
+        promotion.AddChild(new Label { Text = "Promote:" });
+        _promotionOption = new OptionButton { CustomMinimumSize = new Vector2(120, 0) };
+        promotion.AddChild(_promotionOption);
+        var setPromotion = new Button { Text = "Set promotion" };
+        setPromotion.Pressed += () =>
+        {
+            var id = _promotionOption.GetSelectedId();
+            TryApply(new SetPromotionCommand(SelectedPerson().Id, id < 0 ? null : id));
+        };
+        promotion.AddChild(setPromotion);
+        column.AddChild(promotion);
+
         column.AddChild(new Label { Text = "Queue (top = next):" });
-        var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
+        var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsStretchRatio = 1.4f };
         _queueBox = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         scroll.AddChild(_queueBox);
         column.AddChild(scroll);
+
+        column.AddChild(new Label { Text = "Candidates (skills N/P/I/B/T, asking):" });
+        var hiringScroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsStretchRatio = 1.0f };
+        _hiringBox = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        hiringScroll.AddChild(_hiringBox);
+        column.AddChild(hiringScroll);
         return column;
     }
+
+    private Person SelectedPerson() =>
+        (_personOption.ItemCount > 0 ? _state.FindPerson(_personOption.GetSelectedId()) : null) ?? _state.People[0];
 
     private Control BuildMarketColumn()
     {
@@ -456,6 +526,13 @@ public partial class DebugMain : Control
             FitContent = false,
         };
         column.AddChild(_rankingText);
+
+        _studioPanelLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        column.AddChild(_studioPanelLabel);
+        _premisesRow = new HFlowContainer();
+        column.AddChild(_premisesRow);
+        _amenityRow = new HFlowContainer();
+        column.AddChild(_amenityRow);
 
         var money = new HBoxContainer();
         money.AddChild(new Label { Text = "Ledger:" });
@@ -507,9 +584,86 @@ public partial class DebugMain : Control
         RefreshSeriesOption();
         RefreshSeriesStatus();
         RefreshChapterGrid();
+        RefreshPersonOption();
         RefreshPersonPanel();
+        RefreshHiringPanel();
+        RefreshStudioPanel();
         RefreshMarketColumn();
         RefreshStatusLines();
+    }
+
+    private void RefreshPersonOption()
+    {
+        var previous = _personOption.ItemCount > 0 ? _personOption.GetSelectedId() : -1;
+        _personOption.Clear();
+        foreach (var person in _state.People)
+            _personOption.AddItem($"{person.Name} ({person.Role})", person.Id);
+        var index = _personOption.GetItemIndex(previous);
+        _personOption.Selected = index >= 0 ? index : 0;
+
+        var person2 = SelectedPerson();
+        var promotionPrevious = _promotionOption.ItemCount > 0 ? _promotionOption.GetSelectedId() : -2;
+        _promotionOption.Clear();
+        _promotionOption.AddItem("off", -1);
+        _promotionOption.AddItem("whole studio", PromotionRules.WholeStudio);
+        foreach (var series in _state.Series.Where(s => s.Publishing == PublishingStatus.Unpublished && s.Status == SeriesStatus.Active))
+            _promotionOption.AddItem(series.Title, series.Id);
+        var wanted = promotionPrevious == -2 ? (person2.PromotionSeriesId ?? -1) : promotionPrevious;
+        var promotionIndex = _promotionOption.GetItemIndex(wanted);
+        _promotionOption.Selected = promotionIndex >= 0 ? promotionIndex : 0;
+    }
+
+    private void RefreshHiringPanel()
+    {
+        foreach (var child in _hiringBox.GetChildren()) child.QueueFree();
+        foreach (var candidate in _state.Candidates)
+        {
+            var row = new HBoxContainer();
+            var skills = string.Join("/", StageOrder.All.Select(st => candidate.Skill(st)));
+            row.AddChild(new Label
+            {
+                Text = $"{candidate.Name} {skills} {candidate.AskingSalary:N0}" + (candidate.IsScheduled ? " *" : "") + (candidate.IsReturning ? " (back)" : ""),
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            });
+            var offer = new SpinBox { MinValue = 0, MaxValue = 5_000_000, Step = 1000, Value = candidate.AskingSalary, CustomMinimumSize = new Vector2(100, 0) };
+            row.AddChild(offer);
+            var hire = new Button { Text = "Hire" };
+            var id = candidate.Id;
+            hire.Pressed += () => TryApply(new HireCommand(id, (int)offer.Value));
+            row.AddChild(hire);
+            _hiringBox.AddChild(row);
+        }
+        if (_state.Candidates.Count == 0) _hiringBox.AddChild(new Label { Text = $"Nobody yet; the pool refreshes at the first issue close of each month." });
+    }
+
+    private void RefreshStudioPanel()
+    {
+        var premises = _state.CurrentPremises;
+        var payroll = _state.People.Where(p => p.Role == PersonRole.Assistant).Sum(p => (long)p.Salary);
+        var charge = PremisesRules.Charge(premises, _state.OwnedAmenities, _state.HasInternet, _state.PriceIndexNow);
+        _studioPanelLabel.Text = $"Studio: {premises.Name}, {_state.People.Count}/{premises.Capacity} desks, atmosphere {_state.Atmosphere:+0;-0;0}, " +
+                                 $"monthly {charge.Total:N0} (rent {charge.Rent:N0}) + payroll {payroll:N0}";
+
+        foreach (var child in _premisesRow.GetChildren()) child.QueueFree();
+        _premisesRow.AddChild(new Label { Text = "Move:" });
+        foreach (var option in _state.StaffData.Premises.Where(p => p.Id != premises.Id))
+        {
+            var button = new Button { Text = $"{option.Name} ({option.Capacity}, {option.MonthlyRent:N0})" };
+            var id = option.Id;
+            button.Pressed += () => TryApply(new MovePremisesCommand(id));
+            _premisesRow.AddChild(button);
+        }
+
+        foreach (var child in _amenityRow.GetChildren()) child.QueueFree();
+        _amenityRow.AddChild(new Label { Text = "Owned: " + (_state.Studio.Amenities.Count == 0 ? "nothing" : string.Join(", ", _state.Studio.Amenities)) + " | Buy:" });
+        foreach (var amenity in _state.StaffData.Amenities.Where(a => !_state.Studio.Amenities.Contains(a.Id)))
+        {
+            var button = new Button { Text = $"{amenity.Name} {amenity.Cost:N0}" };
+            var id = amenity.Id;
+            button.Pressed += () => TryApply(new BuyAmenityCommand(id));
+            _amenityRow.AddChild(button);
+        }
     }
 
     private void RefreshSeriesOption()
@@ -583,6 +737,8 @@ public partial class DebugMain : Control
                 foreach (var stage in StageOrder.All)
                 {
                     var work = chapter.StageWork(stage);
+                    var assignee = work.AssignedTo is { } a ? _state.FindAnyPerson(a) : null;
+                    var cell = new VBoxContainer();
                     var bar = new ProgressBar
                     {
                         MinValue = 0,
@@ -590,9 +746,11 @@ public partial class DebugMain : Control
                         Value = work.IsDone ? work.HoursRequired : work.HoursDone,
                         ShowPercentage = true,
                         CustomMinimumSize = new Vector2(80, 0),
-                        TooltipText = $"{work.Status}: {work.HoursDone:0.0}/{work.HoursRequired:0.0}h, {work.OvertimeHours:0}h overtime, {work.Contribution:0.0} quality",
+                        TooltipText = $"{work.Status}: {work.HoursDone:0.0}/{work.HoursRequired:0.0}h, {work.OvertimeHours:0}h overtime, {work.Contribution:0.0} quality, {assignee?.Name ?? "unassigned"}",
                     };
-                    _chapterGrid.AddChild(bar);
+                    cell.AddChild(bar);
+                    cell.AddChild(new Label { Text = Initials(assignee) + (work.ManualAssignee is not null ? "!" : ""), HorizontalAlignment = HorizontalAlignment.Center });
+                    _chapterGrid.AddChild(cell);
                 }
                 _chapterGrid.AddChild(new Label { Text = chapter.DueDate.ToString("MM-dd HH:mm") });
                 var status = chapter.Status.ToString();
@@ -609,9 +767,14 @@ public partial class DebugMain : Control
 
     private void RefreshPersonPanel()
     {
-        var person = _state.People[0];
-        _personLabel.Text = $"{person.Name} (rep {person.Reputation:0.0})  today: {person.HoursWorkedToday}h (+{person.OvertimeHoursToday} OT)  " +
-                            $"current: {(person.CurrentTask is { } task ? Describe(task.ChapterId, task.Stage) : "idle")}";
+        var person = SelectedPerson();
+        var skills = string.Join("/", StageOrder.All.Select(st => person.Skill(st)));
+        _personLabel.Text = $"{person.Name} (rep {person.Reputation:0.0}, skills {skills}, {person.Salary:N0} yen)  today: {person.HoursWorkedToday}h (+{person.OvertimeHoursToday} OT, {person.BreaksToday} breaks)  " +
+                            $"current: {(person.OnBreak ? "on a break" : person.CurrentTask is { } task ? Describe(task.ChapterId, task.Stage) : person.PromotionSeriesId is not null ? "promoting" : "idle")}";
+        _moodLabel.Text = $"happiness {person.Happiness:0} (equilibrium {_state.EquilibriumOf(person):0}), fatigue {person.Fatigue:0}, " +
+                          $"hunger {person.Needs.Hunger:0} thirst {person.Needs.Thirst:0} comfort {person.Needs.Comfort:0}" +
+                          (person.IsMoonlighting ? ", MOONLIGHTING" : "") +
+                          (person.Role == PersonRole.Assistant ? $", {person.MonthsEmployed} months" : "");
 
         foreach (var child in _queueBox.GetChildren()) child.QueueFree();
         var queue = person.Queue;
@@ -706,11 +869,13 @@ public partial class DebugMain : Control
     /// <summary>Copies the person's schedule and overtime flag into the input widgets. Called on start and after Load only, so edits in progress are not clobbered.</summary>
     private void ResetPersonInputs()
     {
-        var person = _state.People[0];
+        var person = SelectedPerson();
         _startSpin.Value = person.Schedule.WorkStartHour;
         _endSpin.Value = person.Schedule.WorkEndHour;
         foreach (var (day, box) in _dayOffBoxes) box.ButtonPressed = person.Schedule.DaysOff.Contains(day);
         _overtimeBox.SetPressedNoSignal(person.OvertimeAllowed);
+        _salarySpin.Value = person.Salary;
+        foreach (var (stage, box) in _stageBoxes) box.ButtonPressed = person.AllowedStages.Contains(stage);
     }
 
     // ---------------------------------------------------------------- helpers
@@ -731,6 +896,9 @@ public partial class DebugMain : Control
         var text = $"{title} ch.{chapterNumber}";
         return stage is { } s ? $"{text} {s}" : text;
     }
+
+    private static string Initials(Person? person) =>
+        person is null ? "-" : string.Concat(person.Name.Split(' ').Where(w => w.Length > 0).Select(w => w[0]));
 
     private void AppendLog(GameEvent ev) => _log.AddText($"[{ev.Time:ddd MM-dd HH:mm}] {ev.Type}: {ev.Message}\n");
 

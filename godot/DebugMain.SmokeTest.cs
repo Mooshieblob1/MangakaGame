@@ -182,6 +182,7 @@ public partial class DebugMain
             await CaptureSmokeImage("debug-main");
 
             await RunPublishingSmoke();
+            await RunStudioSmoke();
 
             GD.Print($"GODOT SMOKE PASS: {_smokeChecks} checks");
             GetTree().Quit(0);
@@ -256,5 +257,99 @@ public partial class DebugMain
         Check(_state.Series[0].Publishing == PublishingStatus.Serialized, "Loaded series is still serialized");
         await SettleUi();
         await CaptureSmokeImage("debug-market");
+    }
+
+    /// <summary>A seed whose Tokiwa Jump pitch, made after the first doujin chapter, ends in an offer.</summary>
+    private static int FindJumpSeed()
+    {
+        for (var seed = 0; seed < 500; seed++)
+        {
+            var state = GameState.NewGame(seed);
+            state.Apply(new CreateSeriesCommand("Rush", "action", Cadence.Weekly, 19));
+            for (var i = 0; i < 24 * 30 && state.Series[0].Chapters[0].Status != ChapterStatus.Complete; i++) state.Advance(1);
+            state.Apply(new PitchSeriesCommand(state.Series[0].Id, "tokiwa-jump"));
+            for (var i = 0; i < 24 * 90 && state.Series[0].Publishing == PublishingStatus.Pitching; i++) state.Advance(1);
+            if (state.Series[0].Publishing == PublishingStatus.Offered) return seed;
+        }
+        throw new InvalidOperationException("no seed produced a Jump offer");
+    }
+
+    /// <summary>Sub-project 3: hire, move, furnish, hold a weekly Jump slot with three people, pay and reload.</summary>
+    private async Task RunStudioSmoke()
+    {
+        _state = GameState.NewGame(FindJumpSeed());
+        _scanIndex = 0;
+        _log.Clear();
+        _recapDialog.Hide();
+        RefreshPersonOption();
+        ResetPersonInputs();
+        _titleEdit.Text = "Rush";
+        _genreEdit.Text = "action";
+        _cadenceOption.Selected = (int)Cadence.Weekly;
+        _pagesSpin.Value = 19;
+        Press("Create");
+        await SettleUi();
+        var series = _state.Series.Single();
+        Check(_hiringBox.GetChildren().OfType<Label>().Any(), "Hiring panel shows the empty pool");
+
+        RunUntil(() => series.Chapters[0].Status == ChapterStatus.Complete, 24 * 30, "the first doujin chapter");
+        _magazineOption.Selected = _state.Publishers.Magazines.ToList().FindIndex(m => m.Id == "tokiwa-jump");
+        Press("Pitch");
+        RunUntil(() => series.Publishing != PublishingStatus.Pitching, 24 * 120, "the Jump pitch to resolve");
+        Check(series.Publishing == PublishingStatus.Offered, "Jump makes an offer");
+        Press("Accept");
+        Check(series.Publishing == PublishingStatus.Serialized && series.Contract?.MagazineId == "tokiwa-jump", "Signed with Jump");
+
+        RunUntil(() => _state.Candidates.Count >= 4, 24 * 60, "the first candidate pool");
+        await SettleUi();
+        Check(_hiringBox.GetChildren().OfType<HBoxContainer>().Count() == _state.Candidates.Count, "Hiring panel lists the pool");
+        Press("Two-room apartment (4, 80,000)");
+        Check(_state.Studio.PremisesId == "apartment", "Moved to the apartment");
+        Press("Fridge 90,000");
+        Press("Office chairs 120,000");
+        Check(_state.Studio.Amenities.Contains("fridge") && _state.Studio.Amenities.Contains("office-chairs"), "Bought a fridge and chairs");
+        await SettleUi();
+        for (var i = 0; i < 2; i++)
+        {
+            var row = _hiringBox.GetChildren().OfType<HBoxContainer>().First();
+            row.GetChildren().OfType<Button>().First(b => b.Text == "Hire").EmitSignal(BaseButton.SignalName.Pressed);
+            await SettleUi();
+        }
+        Check(_state.People.Count == 3 && _state.People.Count(p => p.Role == PersonRole.Assistant) == 2, "Two assistants hired at asking");
+        Check(_personOption.ItemCount == 3, "Staff dropdown lists everyone");
+
+        var publishedBefore = series.ChaptersPublished;
+        var missedBefore = _state.Events.Count(e => e.Type == EventType.IssueMissed);
+        RunUntil(() => _state.Clock.Now >= _state.Clock.Now.AddDays(0) && series.ChaptersPublished >= publishedBefore + 12, 24 * 7 * 16, "twelve more chapters");
+        Check(_state.Events.Count(e => e.Type == EventType.IssueMissed) - missedBefore <= 1, "At most one miss with three people on a weekly");
+        Check(_state.Ledger.Any(l => l.Reason == "salary") && _state.Ledger.Any(l => l.Reason == "rent") && _state.Ledger.Any(l => l.Reason == "upkeep"), "Payroll, rent and upkeep in the ledger");
+        Check(_state.Events.Any(e => e.Type == EventType.PayrollPaid), "Payroll event");
+        await SettleUi();
+        Check(_studioPanelLabel.Text.Contains("Two-room apartment") && _studioPanelLabel.Text.Contains("3/4 desks"), "Studio panel shows the premises");
+        var assistantIds = _state.People.Where(p => p.Role == PersonRole.Assistant).Select(p => p.Id).ToHashSet();
+        Check(series.Chapters.SelectMany(c => c.Stages).Any(w => w.HoursByPerson.Keys.Any(assistantIds.Contains)), "The assistants have drawn on the series");
+        Check(_chapterGrid.GetChildren().OfType<VBoxContainer>().SelectMany(c => c.GetChildren().OfType<Label>()).Select(l => l.Text).Distinct().Count(t => t != "-") >= 2, "Two different assignees' initials on the stage bars");
+
+        _personOption.Selected = 1;
+        ResetPersonInputs();
+        await SettleUi();
+        var assistant = SelectedPerson();
+        Check(assistant.Role == PersonRole.Assistant && _moodLabel.Text.Contains("happiness"), "Staff panel follows the dropdown");
+        var happinessBefore = assistant.Happiness;
+        _salarySpin.Value = assistant.Salary / 2;
+        Press("Set salary");
+        Check(assistant.Salary == (int)_salarySpin.Value && assistant.Happiness == Math.Max(0, happinessBefore - 15), "Pay cut applied with its shock");
+        _stageBoxes[Stage.Pencils].ButtonPressed = false;
+        Press("Apply stages");
+        Check(!assistant.AllowedStages.Contains(Stage.Pencils), "Allowed stages applied");
+
+        Press("Save");
+        var saved = _state.ToJson();
+        AdvanceAndScan(24 * 2);
+        Press("Load");
+        Check(_state.ToJson() == saved && _state.People.Count == 3, "Studio state survives save and load");
+        if (_recapDialog.Visible) OnRecapContinue();
+        await SettleUi();
+        await CaptureSmokeImage("debug-studio");
     }
 }

@@ -87,7 +87,7 @@ public class AssignmentTests
         Assert.Equal(aki.Id, rush.StageWork(Stage.Name).AssignedTo);
         Assert.Equal(aki.Id, dash.StageWork(Stage.Name).AssignedTo);
         Assert.Equal(aki.Id, rush.StageWork(Stage.Pencils).AssignedTo);       // queued 32h at the time: under 40
-        Assert.Equal(assistant.Id, dash.StageWork(Stage.Pencils).AssignedTo); // queued 61h: buried
+        Assert.Equal(assistant.Id, dash.StageWork(Stage.Pencils).AssignedTo); // queued 46h of names and pencils: buried
         Assert.Equal(assistant.Id, rush.StageWork(Stage.Inks).AssignedTo);
     }
 

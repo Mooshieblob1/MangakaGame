@@ -47,7 +47,7 @@ public class NeedsTests
         Assert.Equal(13, aki.HoursWorkedToday);        // no work this hour
         Assert.Equal(2, aki.OvertimeHoursToday);        // but the hour still counts against the cap
         Assert.Equal(19 + 20, aki.Needs.Thirst, 6);     // bare recovery without a kettle
-        Assert.Equal(aki.Needs.Hunger, 100 - 12 * 5 - 8 + 10, 6);
+        Assert.Equal(100 - 12 * 5 - 8 + 10, aki.Needs.Hunger, 6);
         var took = Assert.Single(state.Events, e => e.Type == EventType.TookBreak);
         Assert.Equal(aki.Id, took.PersonId);
         Assert.Contains("thirst", took.Message);

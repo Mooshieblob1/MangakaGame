@@ -1,7 +1,7 @@
 # Sub-project 3: Staff and Studio — Design
 
 Date: 2026-09-22
-Status: approved on 2026-09-22 with every recommended default; plan `../plans/2026-09-22-staff-studio.md`
+Status: implemented on 2026-09-22 (plan `../plans/2026-09-22-staff-studio.md`, completion notes `../sub-project-3-completion.md`)
 Roadmap: `2026-09-22-roadmap.md`
 Builds on: `2026-09-22-publishing-market-design.md` and the sub-project 2 code
 on branch `claude/sp2-plan-implementation-z2feyy`

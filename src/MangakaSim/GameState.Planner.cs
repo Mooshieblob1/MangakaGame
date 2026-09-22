@@ -114,12 +114,15 @@ public partial class GameState
     /// <summary>
     /// Hands every unfinished stage of every active series to a person: manual assignments win, a stage in
     /// progress keeps its assignee, the lead writes the Name and pencils unless buried, and everything else goes
-    /// to the best available person by skill discounted by the work already queued for them.
+    /// to the best available person by skill discounted by the work already queued for them. The lead's own
+    /// stages across every open chapter are counted first, so the next chapter's Name and Pencils weigh on the
+    /// lead before this chapter's inks, backgrounds and tones are shared out.
     /// </summary>
     private void AssignStages()
     {
         var queued = People.ToDictionary(p => p.Id, _ => 0.0);
         var mangaka = Mangaka;
+        var shared = new List<(StageWork Work, Person Lead)>();
         foreach (var series in Series.Where(s => s.Status == SeriesStatus.Active))
         {
             var lead = FindPerson(series.LeadId) ?? mangaka;
@@ -127,13 +130,22 @@ public partial class GameState
             {
                 foreach (var work in chapter.Stages.Where(w => !w.IsDone))
                 {
-                    var chosen = ChooseAssignee(work, lead, queued) ?? mangaka;
-                    work.AssignedTo = chosen.Id;
-                    var multiplier = Settings.Balance.SkillMultiplier(chosen.Skill(work.Stage));
-                    queued[chosen.Id] = queued.GetValueOrDefault(chosen.Id) + Math.Max(0, work.HoursRequired - work.HoursDone) / multiplier;
+                    var fixedAssignee = work.Stage is Stage.Name or Stage.Pencils || work.ManualAssignee is not null ||
+                                        (work.Status == StageStatus.InProgress && work.AssignedTo is not null);
+                    if (fixedAssignee) Assign(work, lead, queued, mangaka);
+                    else shared.Add((work, lead));
                 }
             }
         }
+        foreach (var (work, lead) in shared) Assign(work, lead, queued, mangaka);
+    }
+
+    private void Assign(StageWork work, Person lead, Dictionary<int, double> queued, Person mangaka)
+    {
+        var chosen = ChooseAssignee(work, lead, queued) ?? mangaka;
+        work.AssignedTo = chosen.Id;
+        var multiplier = Settings.Balance.SkillMultiplier(chosen.Skill(work.Stage));
+        queued[chosen.Id] = queued.GetValueOrDefault(chosen.Id) + Math.Max(0, work.HoursRequired - work.HoursDone) / multiplier;
     }
 
     private Person? ChooseAssignee(StageWork work, Person lead, Dictionary<int, double> queued)

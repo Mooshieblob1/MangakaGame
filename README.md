@@ -1,12 +1,15 @@
 # Mangaka Studio
 
-A real-time manga studio management simulation. Sub-projects 1 and 2 are
+A real-time manga studio management simulation. Sub-projects 1 to 3 are
 implemented: one mangaka, chapter production, schedules and overtime, queue
 overrides, deadline tracking, daily recaps, save/load, and a Godot debug
-screen; then six magazines with generated rosters, pitching and serialization,
-an editor gate on the Name stage, chapter quality, weekly rankings, fanbase and
+screen; six magazines with generated rosters, pitching and serialization, an
+editor gate on the Name stage, chapter quality, weekly rankings, fanbase and
 cultural impact, tankobon and doujin sales into a ledger, genre trends,
-reputation, warnings and cancellation, withdraw and end, and going online.
+reputation, warnings and cancellation, withdraw and end, going online; and a
+studio with a monthly candidate pool, hiring, salaries and payroll, premises
+and amenities, needs and breaks, fatigue, happiness, moonlighting, quitting,
+and a planner that shares a chapter across several desks.
 
 ## Run the debug screen
 
@@ -55,8 +58,22 @@ $godot = Join-Path $env:LOCALAPPDATA 'Microsoft\WinGet\Packages\GodotEngine.Godo
    reputation, and every genre's effective trend multiplier (`+` is the
    studio's own influence, `!` marks a boom).
 
-The screen is a functional debug harness. Costs, hiring, the 3D office, and
-the finished management UI belong to later sub-projects.
+10. The **Staff** column has a dropdown over everyone in the studio. The
+    schedule controls, salary field, allowed-stage boxes, promotion dropdown
+    and **Fire** button act on the selected person; the mood line shows
+    happiness (and its equilibrium), fatigue, needs and moonlighting. Below
+    the queue, the **Candidates** list shows the monthly pool with skills
+    (Name/Pencils/Inks/Backgrounds/Tones) and asking salary; adjust the offer
+    and press **Hire** (offers under 80% of the asking salary are refused;
+    the garage holds two people).
+11. The **Studio** line at the top of the market column shows the premises,
+    desks, atmosphere and monthly charges, with **Move** and **Buy** buttons
+    for premises and amenities. Rent and upkeep are charged on the 1st,
+    payroll on the 25th, both at 09:00. The stage bars carry the assignee's
+    initials (`!` marks a manual assignment).
+
+The screen is a functional debug harness. The 3D office, the historical
+timeline and the finished management UI belong to later sub-projects.
 
 ## Validate
 
@@ -71,8 +88,11 @@ New-Item -ItemType Directory -Force TestResults | Out-Null
 The automated Godot walkthrough tests the actual scene controls, timing,
 automatic pauses, recaps, queue editing, and save/load, then runs a doujin
 chapter, pitches to Monthly Hoshigaku Flowers under a seed that succeeds,
-accepts, publishes, sells a tankobon, gets online, and reloads. It writes a
-separate test save under `TestResults`, leaving the normal debug save alone.
+accepts, publishes, sells a tankobon, gets online, and reloads; then it
+pitches a weekly series to Tokiwa Jump, hires two assistants from the pool,
+moves to the apartment, buys a fridge and chairs, publishes twelve chapters
+with at most one miss, cuts a salary, and reloads. It writes a separate test
+save under `TestResults`, leaving the normal debug save alone.
 
 To run with graphics and capture screenshots:
 
@@ -80,8 +100,8 @@ To run with graphics and capture screenshots:
 & $godot --path godot -- --smoke-test --capture
 ```
 
-This produces `TestResults/debug-main.png`, `TestResults/debug-recap.png` and
-`TestResults/debug-market.png`.
+This produces `TestResults/debug-main.png`, `TestResults/debug-recap.png`,
+`TestResults/debug-market.png` and `TestResults/debug-studio.png`.
 
 On Linux without a display, the same run works under a virtual X server with
 software OpenGL:
@@ -106,3 +126,6 @@ Test outputs, build products, and Godot caches are ignored by Git.
 - Sub-project 2: [design](docs/superpowers/specs/2026-09-22-publishing-market-design.md),
   [plan](docs/superpowers/plans/2026-09-22-publishing-market.md),
   [completion notes](docs/superpowers/sub-project-2-completion.md)
+- Sub-project 3: [design](docs/superpowers/specs/2026-09-22-staff-studio-design.md),
+  [plan](docs/superpowers/plans/2026-09-22-staff-studio.md),
+  [completion notes](docs/superpowers/sub-project-3-completion.md)

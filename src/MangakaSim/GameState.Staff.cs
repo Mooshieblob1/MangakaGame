@@ -4,11 +4,11 @@ public partial class GameState
 {
     // ---------------------------------------------------------------- studio helpers
 
-    internal Premises CurrentPremises => StaffData.RequirePremises(Studio.PremisesId);
+    public Premises CurrentPremises => StaffData.RequirePremises(Studio.PremisesId);
 
-    internal List<Amenity> OwnedAmenities => Studio.Amenities.Select(StaffData.RequireAmenity).ToList();
+    public List<Amenity> OwnedAmenities => Studio.Amenities.Select(StaffData.RequireAmenity).ToList();
 
-    internal double Atmosphere =>
+    public double Atmosphere =>
         HappinessRules.Atmosphere(CurrentPremises, OwnedAmenities, People.Count, CurrentPremises.Capacity);
 
     internal void AdjustHappiness(Person person, double delta) =>
@@ -108,7 +108,7 @@ public partial class GameState
     internal double PayFactorOf(Person person) =>
         person.IsMangaka ? 1.0 : PayRules.PayFactor(person.Salary, PayRules.MarketSalary(person.Skills.Values, PriceIndexNow));
 
-    internal double EquilibriumOf(Person person) =>
+    public double EquilibriumOf(Person person) =>
         HappinessRules.Equilibrium(PayFactorOf(person), Atmosphere, OvertimeShare(person), BreaksPerDay(person), StudioTrackRecord);
 
     /// <summary>Daily: everyone drifts a tenth of the way toward their equilibrium.</summary>
