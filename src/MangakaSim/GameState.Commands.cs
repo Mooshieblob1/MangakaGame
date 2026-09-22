@@ -17,6 +17,7 @@ public partial class GameState
         {
             ReorderQueueCommand c when c.OrderedRefs is not null => c with { OrderedRefs = c.OrderedRefs.ToList() },
             SetScheduleCommand c when c.DaysOff is not null => c with { DaysOff = new(c.DaysOff) },
+            SetAllowedStagesCommand c when c.Stages is not null => c with { Stages = new(c.Stages) },
             _ => command,
         };
         switch (command)
@@ -38,6 +39,15 @@ public partial class GameState
             case WithdrawSeriesCommand c: ApplyWithdrawSeries(c); break;
             case EndSeriesCommand c: ApplyEndSeries(c); break;
             case GetOnlineCommand c: ApplyGetOnline(c); break;
+            case HireCommand c: ApplyHire(c); break;
+            case FireCommand c: ApplyFire(c); break;
+            case SetSalaryCommand c: ApplySetSalary(c); break;
+            case SetAllowedStagesCommand c: ApplySetAllowedStages(c); break;
+            case SetSeriesLeadCommand c: ApplySetSeriesLead(c); break;
+            case AssignStageCommand c: ApplyAssignStage(c); break;
+            case SetPromotionCommand c: ApplySetPromotion(c); break;
+            case MovePremisesCommand c: ApplyMovePremises(c); break;
+            case BuyAmenityCommand c: ApplyBuyAmenity(c); break;
             default:
                 throw new InvalidCommandException($"Unsupported command {command.GetType().Name}.");
         }

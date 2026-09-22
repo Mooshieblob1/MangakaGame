@@ -24,6 +24,15 @@ namespace MangakaSim;
 [JsonDerivedType(typeof(WithdrawSeriesCommand), "WithdrawSeries")]
 [JsonDerivedType(typeof(EndSeriesCommand), "EndSeries")]
 [JsonDerivedType(typeof(GetOnlineCommand), "GetOnline")]
+[JsonDerivedType(typeof(HireCommand), "Hire")]
+[JsonDerivedType(typeof(FireCommand), "Fire")]
+[JsonDerivedType(typeof(SetSalaryCommand), "SetSalary")]
+[JsonDerivedType(typeof(SetAllowedStagesCommand), "SetAllowedStages")]
+[JsonDerivedType(typeof(SetSeriesLeadCommand), "SetSeriesLead")]
+[JsonDerivedType(typeof(AssignStageCommand), "AssignStage")]
+[JsonDerivedType(typeof(SetPromotionCommand), "SetPromotion")]
+[JsonDerivedType(typeof(MovePremisesCommand), "MovePremises")]
+[JsonDerivedType(typeof(BuyAmenityCommand), "BuyAmenity")]
 public interface ICommand
 {
 }
@@ -58,3 +67,16 @@ public record DeclineOfferCommand(int SeriesId) : ICommand;
 public record WithdrawSeriesCommand(int SeriesId) : ICommand;
 public record EndSeriesCommand(int SeriesId) : ICommand;
 public record GetOnlineCommand : ICommand;
+
+// Sub-project 3: staff and studio.
+public record HireCommand(int CandidateId, int Salary) : ICommand;
+public record FireCommand(int PersonId) : ICommand;
+public record SetSalaryCommand(int PersonId, int Salary) : ICommand;
+public record SetAllowedStagesCommand(int PersonId, HashSet<Stage> Stages) : ICommand;
+public record SetSeriesLeadCommand(int SeriesId, int PersonId) : ICommand;
+/// <summary>PersonId null clears the manual assignment.</summary>
+public record AssignStageCommand(int ChapterId, Stage Stage, int? PersonId) : ICommand;
+/// <summary>SeriesId null turns promotion off; 0 promotes the whole studio.</summary>
+public record SetPromotionCommand(int PersonId, int? SeriesId) : ICommand;
+public record MovePremisesCommand(string PremisesId) : ICommand;
+public record BuyAmenityCommand(string AmenityId) : ICommand;

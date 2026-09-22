@@ -188,6 +188,11 @@ public partial class GameState
             LastTrendUpdateMonth = month;
             UpdateTrendsMonthly();
         }
+        if (month > LastPoolRefreshMonth)
+        {
+            LastPoolRefreshMonth = month;
+            RefreshCandidatePool();
+        }
     }
 
     private void PublishChapter(Series series, Chapter chapter, Magazine magazine, DateTime closeTime)

@@ -45,6 +45,8 @@ public class Candidate
     public int AskingSalary { get; set; }
     public DateTime AvailableUntil { get; set; }
     public bool IsScheduled { get; set; }
+    /// <summary>A former assistant back on the market; not counted against the pool size.</summary>
+    public bool IsReturning { get; set; }
     public string? Note { get; set; }
 
     public int Skill(Stage stage) => Skills.TryGetValue(stage, out var v) ? v : 0;

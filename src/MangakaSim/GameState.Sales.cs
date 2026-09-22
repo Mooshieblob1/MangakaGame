@@ -183,4 +183,8 @@ public partial class GameState
             $"The studio is online for {cost:N0} yen. Doujin sales reach further and word of mouth starts to spread.",
             new EventContext(Amount: -cost));
     }
+
+    private void ApplySetPromotion(SetPromotionCommand c) => throw new InvalidCommandException("SetPromotion is not available yet.");
+    private void ApplyMovePremises(MovePremisesCommand c) => throw new InvalidCommandException("MovePremises is not available yet.");
+    private void ApplyBuyAmenity(BuyAmenityCommand c) => throw new InvalidCommandException("BuyAmenity is not available yet.");
 }

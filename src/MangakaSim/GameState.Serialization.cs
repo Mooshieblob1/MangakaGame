@@ -308,7 +308,7 @@ public partial class GameState
         {
             checkId(candidate.Id);
             check(!string.IsNullOrWhiteSpace(candidate.Name) && names.Add(candidate.Name) && candidate.AskingSalary > 0 &&
-                  candidate.AvailableUntil > Clock.Now && candidate.Skills is not null &&
+                  candidate.AvailableUntil.Ticks % TimeSpan.TicksPerHour == 0 && candidate.Skills is not null &&
                   StageOrder.All.All(s => candidate.Skills.TryGetValue(s, out var v) && v is >= 0 and <= 100), "candidate details");
         }
         check(ScheduledCandidatesShown is not null && Departures is not null && Departures.All(d => d is not null &&
