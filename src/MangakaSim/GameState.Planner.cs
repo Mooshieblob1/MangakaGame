@@ -35,27 +35,68 @@ public partial class GameState
         }
     }
 
-    internal Chapter CreateNextChapter(Series series)
+    internal Chapter CreateNextChapter(Series series) => CreateNextChapter(series, pitchMagazine: null, dueOverride: null);
+
+    /// <summary>
+    /// Creates the next chapter. A pitched one-shot has 31 pages and is due at the magazine's first close at least
+    /// 14 days out; a Serialized chapter is due at the first close strictly after the previous chapter's due date;
+    /// doujin chapters follow the cadence rule.
+    /// </summary>
+    internal Chapter CreateNextChapter(Series series, Magazine? pitchMagazine, DateTime? dueOverride)
     {
         var previous = series.Chapters.LastOrDefault();
         var number = previous is null ? 1 : previous.Number + 1;
-        var from = previous?.DueDate ?? series.StartDate;
+        var oneShot = pitchMagazine is not null;
+        var pages = oneShot ? PitchRules.OneShotPages : series.PagesPerChapter;
+
+        DateTime due;
+        if (dueOverride is { } forced) due = forced;
+        else if (pitchMagazine is { } target)
+            due = NextCloseAtOrAfter(target, Clock.Now.AddDays(PitchRules.MinDaysBeforeDue));
+        else if (series.Contract is { } contract)
+        {
+            var from = previous is null ? Clock.Now : (previous.DueDate > Clock.Now ? previous.DueDate : Clock.Now);
+            due = NextCloseAfter(Publishers.Require(contract.MagazineId), from);
+        }
+        else due = CadenceRules.NextDue(previous?.DueDate ?? series.StartDate, series.Cadence);
+
         var chapter = new Chapter
         {
             Id = AllocateId(),
             Number = number,
-            DueDate = CadenceRules.NextDue(from, series.Cadence),
+            Pages = pages,
+            DueDate = due,
+            IsOneShot = oneShot,
+            PitchMagazineId = pitchMagazine?.Id,
             Stages = StageOrder.All.Select(stage => new StageWork
             {
                 Stage = stage,
-                HoursRequired = Settings.Balance.HoursRequired(stage, series.PagesPerChapter),
+                HoursRequired = Settings.Balance.HoursRequired(stage, pages),
             }).ToList(),
         };
         series.Chapters.Add(chapter);
         Emit(EventType.ChapterCreated,
-            $"{series.Title} ch.{number} created, due {chapter.DueDate:ddd d MMM HH:mm}.",
-            seriesId: series.Id, chapterNumber: number);
+            oneShot
+                ? $"{series.Title} one-shot (ch.{number}) for {pitchMagazine!.Name} created, due {chapter.DueDate:ddd d MMM HH:mm}."
+                : $"{series.Title} ch.{number} created, due {chapter.DueDate:ddd d MMM HH:mm}.",
+            new EventContext(SeriesId: series.Id, ChapterNumber: number, MagazineId: pitchMagazine?.Id));
         return chapter;
+    }
+
+    /// <summary>The magazine's first issue close strictly after the given time.</summary>
+    internal DateTime NextCloseAfter(Magazine magazine, DateTime after)
+    {
+        var close = MarketOf(magazine.Id).NextIssueClose;
+        while (close <= after) close = close.AddDays(magazine.CadenceDays);
+        return close;
+    }
+
+    /// <summary>The magazine's first issue close at or after the given time.</summary>
+    internal DateTime NextCloseAtOrAfter(Magazine magazine, DateTime atOrAfter)
+    {
+        var close = MarketOf(magazine.Id).NextIssueClose;
+        while (close < atOrAfter) close = close.AddDays(magazine.CadenceDays);
+        return close;
     }
 
     private void AssignStages()

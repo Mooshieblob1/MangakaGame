@@ -61,4 +61,7 @@ public partial class GameState
             if (FindPerson(personId) is { } person) AdjustReputation(person, delta);
         }
     }
+
+    private void ApplyWithdrawSeries(WithdrawSeriesCommand c) => throw new InvalidCommandException("WithdrawSeries is not available yet.");
+    private void ApplyEndSeries(EndSeriesCommand c) => throw new InvalidCommandException("EndSeries is not available yet.");
 }

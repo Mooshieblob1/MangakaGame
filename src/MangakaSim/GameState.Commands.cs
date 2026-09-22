@@ -32,6 +32,12 @@ public partial class GameState
             case SkipStageCommand c: ApplySkipStage(c); break;
             case SetScheduleCommand c: ApplySetSchedule(c); break;
             case SetOvertimeAllowedCommand c: ApplySetOvertimeAllowed(c); break;
+            case PitchSeriesCommand c: ApplyPitchSeries(c); break;
+            case AcceptOfferCommand c: ApplyAcceptOffer(c); break;
+            case DeclineOfferCommand c: ApplyDeclineOffer(c); break;
+            case WithdrawSeriesCommand c: ApplyWithdrawSeries(c); break;
+            case EndSeriesCommand c: ApplyEndSeries(c); break;
+            case GetOnlineCommand c: ApplyGetOnline(c); break;
             default:
                 throw new InvalidCommandException($"Unsupported command {command.GetType().Name}.");
         }

@@ -42,6 +42,8 @@ public class Chapter
 {
     public int Id { get; set; }
     public int Number { get; set; }
+    /// <summary>Pages in this chapter; the series default or 31 for a one-shot.</summary>
+    public int Pages { get; set; }
     public DateTime DueDate { get; set; }
     public ChapterStatus Status { get; set; } = ChapterStatus.NotStarted;
     public DateTime? CompletedAt { get; set; }

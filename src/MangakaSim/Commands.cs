@@ -18,6 +18,12 @@ namespace MangakaSim;
 [JsonDerivedType(typeof(SkipStageCommand), "SkipStage")]
 [JsonDerivedType(typeof(SetScheduleCommand), "SetSchedule")]
 [JsonDerivedType(typeof(SetOvertimeAllowedCommand), "SetOvertimeAllowed")]
+[JsonDerivedType(typeof(PitchSeriesCommand), "PitchSeries")]
+[JsonDerivedType(typeof(AcceptOfferCommand), "AcceptOffer")]
+[JsonDerivedType(typeof(DeclineOfferCommand), "DeclineOffer")]
+[JsonDerivedType(typeof(WithdrawSeriesCommand), "WithdrawSeries")]
+[JsonDerivedType(typeof(EndSeriesCommand), "EndSeries")]
+[JsonDerivedType(typeof(GetOnlineCommand), "GetOnline")]
 public interface ICommand
 {
 }
@@ -44,3 +50,11 @@ public record ReorderQueueCommand(int PersonId, List<QueueRef> OrderedRefs) : IC
 public record SkipStageCommand(int ChapterId, Stage Stage) : ICommand;
 public record SetScheduleCommand(int PersonId, int WorkStartHour, int WorkEndHour, HashSet<DayOfWeek> DaysOff) : ICommand;
 public record SetOvertimeAllowedCommand(int PersonId, bool Allowed) : ICommand;
+
+// Sub-project 2: publishing and market.
+public record PitchSeriesCommand(int SeriesId, string MagazineId) : ICommand;
+public record AcceptOfferCommand(int SeriesId) : ICommand;
+public record DeclineOfferCommand(int SeriesId) : ICommand;
+public record WithdrawSeriesCommand(int SeriesId) : ICommand;
+public record EndSeriesCommand(int SeriesId) : ICommand;
+public record GetOnlineCommand : ICommand;

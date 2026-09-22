@@ -98,6 +98,7 @@ public partial class GameState
         WorkStep();
         EditorStep();
         IssueCloseStep();
+        PitchStep();
         RiskStep();
         DayEndStep();
         if (Clock.Hour == 0) StartNewDay();

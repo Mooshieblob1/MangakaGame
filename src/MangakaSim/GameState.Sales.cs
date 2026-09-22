@@ -39,4 +39,6 @@ public partial class GameState
             new EventContext(SeriesId: series.Id, VolumeId: volume.Id));
         if (volume.AverageQuality >= 75) AdjustTrackRecord(ReputationRules.DoujinQualityVolume);
     }
+
+    private void ApplyGetOnline(GetOnlineCommand c) => throw new InvalidCommandException("GetOnline is not available yet.");
 }
