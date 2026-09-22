@@ -9,4 +9,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="MangakaSim.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\*.json" LogicalName="MangakaSim.Data.%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>
