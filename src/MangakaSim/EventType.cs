@@ -2,6 +2,8 @@ namespace MangakaSim;
 
 public enum EventType
 {
+    IndustryNews,
+    IndustryDecision,
     DayStarted,
     WeekStarted,
     StageStarted,
@@ -20,4 +22,6 @@ public enum EventType
     SeriesWithdrawn, SeriesEnded, SeriesBecameIconic, VolumeScheduled,
     VolumeReleased, VolumeMilestone, ConventionRecap, GenreTrendShifted,
     WentOnline,
+    StaffHired, StaffNotice, StaffDeparted, RecruitmentCompleted, WageArrears,
+    AwardNomination, AwardResult, LicenseOffered, LicenseDecision, LicenseReleased, CareerMilestone,
 }

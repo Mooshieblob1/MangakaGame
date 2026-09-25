@@ -10,6 +10,8 @@ public class SalesTests
         var state = PublishingTests.Started();
         PublishingTests.Until(state, () => state.Series[0].Volumes.Count == 1);
         state.Apply(new PauseSeriesCommand(state.Series[0].Id));
+        state.Apply(new StudioActionCommand(StudioAction.Print,state.Series[0].Volumes[0].Id,Amount:100));
+        state.Advance(24);
         return state;
     }
     [Theory]
@@ -77,7 +79,7 @@ public class SalesTests
         // Controlled sales fixture: two already-released commercial editions.
         // Edition overlap is intentionally not loaded as a save; production
         // collection and membership validation are covered by separate tests.
-        var second = new Volume { Id = state.AllocateId(), Number = series.Volumes.Count + 1, IsDoujin = false,
+        var second = new Volume { BusinessId = state.ControlledBusinessId, Id = state.AllocateId(), Number = series.Volumes.Count + 1, IsDoujin = false,
             AverageQuality = 70, ReleaseDate = first.ReleaseDate, ReleasedAt = first.ReleasedAt, SalesWindowWeeks = 52 };
         series.Volumes.Add(second);
         first.WeeksOnSale = 0;
@@ -89,13 +91,14 @@ public class SalesTests
         state.Clock.Now = monday;
         var copies = SalesRules.CommercialCopies(3000000, 70, state.GenrePopularity(series.Genre), 1);
         var record = state.StudioTrackRecord;
+        var influence=state.Trends.Single(t=>t.Genre=="drama").PlayerInfluence;
         state.SalesStep();
         Assert.Equal(copies + 99990, first.CopiesSold);
         Assert.Equal(copies, second.CopiesSold);
         Assert.True(series.MillionCopyInfluenceAwarded);
         Assert.Equal(Math.Min(100, record + 26), state.StudioTrackRecord);
         Assert.Equal(4, state.Events.Count(e => e.Type == EventType.VolumeMilestone));
-        Assert.Equal(.25, state.Trends.Single(t => t.Genre == "drama").PlayerInfluence, 10);
+        Assert.Equal(influence+.25, state.Trends.Single(t => t.Genre == "drama").PlayerInfluence, 10);
         state.Clock.Now = monday.AddDays(7);
         state.SalesStep();
         Assert.Equal(4, state.Events.Count(e => e.Type == EventType.VolumeMilestone));
@@ -110,11 +113,13 @@ public class SalesTests
             foreach (var stage in StageOrder.All) state.Apply(new SkipStageCommand(chapter.Id, stage));
         }
         state.Apply(new PauseSeriesCommand(state.Series[0].Id));
+        state.Apply(new StudioActionCommand(StudioAction.Print,state.Series[0].Volumes[0].Id,Amount:100));
+        state.Advance(24);
         var volume = state.Series[0].Volumes.Single();
         PublishingTests.Until(state, () => volume.SalesClosed);
         Assert.Equal(0, volume.CopiesSold);
         Assert.Equal(4, volume.WeeksOnSale);
-        Assert.Equal(500000, state.Money);
+        Assert.Equal(300000 + state.Ledger.Where(e => e.Kind == AccountEntryKind.Expense).Sum(e => e.Amount), state.Money);
         Assert.DoesNotContain(state.Events, e => e.Type == EventType.ConventionRecap);
     }
     [Fact]

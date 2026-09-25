@@ -10,6 +10,7 @@ internal static class SimulationFixture
         var state = PublishingTests.Started(2, 19);
         state.Apply(new GetOnlineCommand());
         PublishingTests.Until(state, () => state.Series[0].Volumes.Count == 1);
+        state.Apply(new StudioActionCommand(StudioAction.Print,state.Series[0].Volumes[0].Id,Amount:100));
         state.Apply(new PitchSeriesCommand(state.Series[0].Id, "hoshigaku-flowers"));
         PublishingTests.Until(state, () => state.Series[0].Publishing != PublishingStatus.Pitching);
         Xunit.Assert.Equal(PublishingStatus.Offered, state.Series[0].Publishing);

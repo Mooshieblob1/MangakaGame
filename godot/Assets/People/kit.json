@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "height_m": 1.2,
+  "standing_offset": -0.14,
+  "pelvis_bottom": 0.38,
+  "forward": "-Z",
+  "hair": [
+    "HairShort",
+    "HairBob",
+    "HairTied"
+  ],
+  "wardrobe": [
+    "Cardigan",
+    "CollaredShirt",
+    "Sweater"
+  ],
+  "materials": {
+    "Skin": "#ebba91",
+    "Hair": "#252332",
+    "Cloth": "#4c7382",
+    "Undershirt": "#eee8d9",
+    "Trousers": "#343b4c",
+    "Shoes": "#282c39",
+    "EyeWhite": "#f8f6ee",
+    "Iris": "#536d94",
+    "Ink": "#242635",
+    "Glasses": "#292d3a",
+    "Sole": "#454959",
+    "HairHighlight": "#484252"
+  },
+  "joint_names": [
+    "Body",
+    "Torso",
+    "Head",
+    "LeftArm",
+    "RightArm",
+    "LeftForearm",
+    "RightForearm",
+    "LeftLeg",
+    "RightLeg",
+    "LeftKnee",
+    "RightKnee"
+  ],
+  "all_module_triangles": 23976,
+  "bytes": 642344
+}

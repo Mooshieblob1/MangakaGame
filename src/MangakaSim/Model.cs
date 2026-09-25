@@ -27,6 +27,7 @@ public partial class StageWork
     public Stage Stage { get; set; }
     public double HoursRequired { get; set; }
     public double HoursDone { get; set; }
+    public bool SandboxCompleted { get; set; }
     public int? AssignedTo { get; set; }
     public StageStatus Status { get; set; } = StageStatus.NotStarted;
 
@@ -54,6 +55,7 @@ public partial class Chapter
 
 public partial class Series
 {
+    public bool StandaloneDoujin { get; set; }
     public int Id { get; set; }
     public string Title { get; set; } = "";
     public string Genre { get; set; } = "";

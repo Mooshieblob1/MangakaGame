@@ -19,7 +19,8 @@ public partial class DebugMain
     }
 
     private Button ButtonNamed(string text) => FindChildren("*", "Button", true, false)
-        .OfType<Button>().First(button => button.Text == text && !button.IsQueuedForDeletion());
+        .OfType<Button>().Where(button => button.Text == text && !button.IsQueuedForDeletion()).OrderByDescending(button=>button.IsVisibleInTree()).FirstOrDefault()
+        ?? (_navigation.TryGetValue(text,out var navigation)?navigation:throw new InvalidOperationException("No action named "+text));
 
     private void Press(string text) => ButtonNamed(text).EmitSignal(BaseButton.SignalName.Pressed);
 
@@ -33,11 +34,15 @@ public partial class DebugMain
     private async Task CaptureSmokeImage(string name)
     {
         if (!OS.GetCmdlineUserArgs().Contains("--capture")) return;
+        const string filterPrefix="--capture-only=";
+        var filter=OS.GetCmdlineUserArgs().FirstOrDefault(arg=>arg.StartsWith(filterPrefix));
+        if(filter is not null&&name!=filter[filterPrefix.Length..]){await SettleUi();return;}
         await SettleUi();
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
-        var output = ProjectSettings.GlobalizePath($"res://../TestResults/{name}.png");
-        var error = GetViewport().GetTexture().GetImage().SavePng(output);
-        Check(error == Error.Ok, $"Screenshot failed: {error}");
+        var output = System.IO.Path.Combine(SmokeOutput,name+".avif");
+        using var captured = GetViewport().GetTexture().GetImage();
+        ScreenshotCapture.SaveAvif(captured,output);
+        Check(System.IO.File.Exists(output), $"Screenshot missing: {output}");
     }
 
     private async void RunSmokeTest()
@@ -54,23 +59,23 @@ public partial class DebugMain
             Check(_state.ToJson() == beforeInvalid && _log.GetParsedText().Contains("Command rejected"), "Blank title validation");
 
             _titleEdit.Text = "Rush";
-            _genreEdit.Text = "action";
+            SelectGenre(_genreOption,"action");
             Press("Create");
             await SettleUi();
             var series = _state.Series.Single();
             var chapter = series.Chapters.Single();
             Check(chapter.DueDate == GameClock.Start.AddDays(7) && chapter.Stages.Count == 5, "Create series and chapter");
-            Check(_state.People[0].Queue.Count == 5 && chapter.IsAtRisk, "Queue and initial risk");
+            Check(_state.People[0].Queue.Count == 5 && !chapter.IsAtRisk, "Self-published queue has no publisher deadline risk");
             Press("1x");
             _Process(1.25);
             Check(_state.Clock.Now == GameClock.Start, "Fractional time stays in driver");
             _Process(1.25);
             Check(_state.Clock.Now == GameClock.Start.AddHours(1), "1x advances one hour in 2.5 seconds");
-            Check(Math.Abs(chapter.StageWork(Stage.Name).HoursDone - 1.6) < 0.0001, "Work bar progress");
+            Check(Math.Abs(chapter.StageWork(Stage.Name).HoursDone - 1.9) < 0.0001, "Work bar progress");
 
             AdvanceAndScan(200);
-            Check(_state.Clock.Now == GameClock.Start.AddHours(12), "Large advance stops exactly at first recap");
-            Check(_speed == 0 && _recapDialog.Visible && _state.People[0].OvertimeHoursToday == 2, "Overtime recap pauses");
+            Check(_state.Clock.Now == GameClock.Start.AddHours(10), "Large advance stops exactly at first recap");
+            Check(_speed == 0 && _recapDialog.Visible && _state.People[0].OvertimeHoursToday == 0, "Self-publishing recap pauses without deadline overtime");
             await CaptureSmokeImage("debug-recap");
             _recapDialog.GetOkButton().EmitSignal(BaseButton.SignalName.Pressed);
             Check(_state.Clock.Now == new DateTime(1996, 4, 2, 8, 0, 0) && _speed == 1, "Continue skips night and restores speed");
@@ -78,7 +83,7 @@ public partial class DebugMain
             await SettleUi();
 
             // Pin a blocked later stage: queue priority must not bypass prerequisites.
-            var tonesRow = _queueBox.GetChildren().OfType<HBoxContainer>().Last();
+            var tonesRow = _queueBox.GetChildren().OfType<Container>().Last();
             tonesRow.GetChildren().OfType<Button>().First(b => b.Text == "Pin").EmitSignal(BaseButton.SignalName.Pressed);
             await SettleUi();
             Check(_state.People[0].Queue[0].Stage == Stage.Tones && _state.People[0].CurrentTask?.Stage == Stage.Name, "Pin respects prerequisites");
@@ -137,7 +142,7 @@ public partial class DebugMain
             TryApply(new CreateSeriesCommand("Rush", "action", Cadence.Weekly, 19));
             SetSpeed(8);
             _Process(1000); // Simulated slow frame: it must not skip through multiple days.
-            Check(_state.Clock.Hour == 20 && _speed == 0, "Slow frame respects recap boundary");
+            Check(_state.Clock.Hour == 18 && _speed == 0, "Slow frame respects recap boundary");
             Save();
             var recapSave = _state.ToJson();
             OnRecapContinue();
@@ -154,6 +159,10 @@ public partial class DebugMain
             await CaptureSmokeImage("debug-main");
 
             await RunPublishingSmoke();
+            await RunStaffSmoke();
+            await RunOperationsSmoke();
+            await RunOfficeSmoke();
+            await RunIndustrySmoke();
 
             GD.Print($"GODOT SMOKE PASS: {_smokeChecks} checks");
             GetTree().Quit(0);

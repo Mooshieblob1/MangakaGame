@@ -55,12 +55,14 @@ public partial class GameState
                 {
                     var contract = series.Contract!;
                     chapter.PublishedAt = Clock.Now;
+                    chapter.PublishedBusinessId = series.BusinessId;
                     chapter.PublishedMagazineId = magazine.Id;
                     chapter.PublishedContractId = contract.Id;
                     series.ChaptersPublished++;
                     contract.ChaptersPublished++;
                     var amount = checked(chapter.Pages * contract.FeePerPage);
                     PostLedger(amount, "chapter fee", series.Id);
+                    AddBill(series.BusinessId, (long)(amount*.2m), "creator share", chapter.CreatorPersonId ?? series.LeadPersonId);
                     Emit(EventType.ChapterPublished, $"{series.Title} ch.{chapter.Number} published in {magazine.Name}.", series.Id, chapter.Number,
                         context: new(MagazineId: magazine.Id, Amount: amount));
                     published[series.Id] = chapter;
@@ -68,9 +70,12 @@ public partial class GameState
                 }
                 else
                 {
-                    if (!grace[series.Id] && !series.IsIconic) series.Strikes.Add(Clock.Now);
-                    if (!series.IsIconic) series.Fanbase *= .97;
-                    ChangeTrackRecord(-1);
+                    if (!DeadlineProtected(series))
+                    {
+                        if (!grace[series.Id] && !series.IsIconic) series.Strikes.Add(Clock.Now);
+                        if (!series.IsIconic) series.Fanbase *= .97;
+                        ChangeTrackRecord(-1, series.BusinessId);
+                    }
                     var waiting = series.Chapters.Where(c => !c.IsOneShot && !c.DoujinEligible && c.PublishedAt is null &&
                         c.DueDate >= close.CloseTime).OrderBy(c => c.DueDate).ToArray();
                     foreach (var buffered in waiting) buffered.DueDate = IssueSchedule.AddIssues(magazine, buffered.DueDate, 1);
@@ -82,7 +87,7 @@ public partial class GameState
             var genres = market.Fillers.Select(f => f.Genre).Concat(competitors.Where(s => published.ContainsKey(s.Id))
                 .Select(s => TrendRules.Normalise(s.Genre, TrendCatalog))).GroupBy(g => g).ToDictionary(g => g.Key, g => g.Count());
             var rows = market.Fillers.Select(f => new RankEntry(0, f.Title, null, f.Id,
-                f.Popularity * TrendRules.Crowding(genres[f.Genre] - 1))).ToList();
+                (HistoricalFiller(f.Id)?.Phase == RivalPhase.Hiatus ? 0 : f.Popularity) * TrendRules.Crowding(genres[f.Genre] - 1))).ToList();
             foreach (var series in competitors.Where(s => published.ContainsKey(s.Id)))
             {
                 var genre = TrendRules.Normalise(series.Genre, TrendCatalog);
@@ -92,6 +97,7 @@ public partial class GameState
             }
             market.LastRanking = rows.OrderByDescending(r => r.Score).ThenBy(r => r.FillerId is null ? 1 : 0)
                 .ThenBy(r => r.FillerId ?? r.SeriesId).Select((r, i) => r with { Rank = i + 1 }).ToList();
+            Career.Rankings.Add(new(close.CloseTime,market.MagazineId,market.LastRanking.ToList()));
             foreach (var row in market.LastRanking.Where(r => r.SeriesId is not null))
             {
                 var series = FindSeries(row.SeriesId!.Value)!;
@@ -101,6 +107,9 @@ public partial class GameState
                     row.Rank, magazine.CancellationRank, magazine.RosterSize, series.IsIconic);
                 CheckIconic(series);
                 series.CulturalImpact = Math.Min(100, series.CulturalImpact + .05);
+                if (chapter.Quality >= 70 && series.ChaptersPublished - series.LastBreakthroughChapter >= 12 &&
+                    StaffRng.NextDouble() < (FindPerson(chapter.CreatorPersonId ?? series.LeadPersonId)!.IsProdigy ? .03 : .01))
+                { series.LastBreakthroughChapter = series.ChaptersPublished; series.CulturalImpact = Math.Min(100,series.CulturalImpact+2); StudioMessage($"Creative breakthrough: {series.Title} earns lasting cultural impact."); }
                 CheckIconic(series);
                 if (row.Rank <= 3 && !series.IsIconic)
                 {
@@ -108,7 +117,7 @@ public partial class GameState
                     CheckIconic(series);
                     if (!series.IsIconic)
                     {
-                        ChangeTrackRecord(row.Rank == 1 ? .5 : .3);
+                        ChangeTrackRecord(row.Rank == 1 ? .5 : .3, series.BusinessId);
                         AwardShares(ChapterHours(chapter), .5);
                         if (chapter.Quality >= 80) AddInfluence(series, .01);
                     }
@@ -120,6 +129,8 @@ public partial class GameState
             foreach (var series in competitors) CancellationStep(series, magazine, grace[series.Id]);
             foreach (var filler in market.Fillers.OrderBy(f => f.Id).ToArray())
             {
+                // Keep the established per-slot market draw; historical outcomes use their own timeline.
+                if (HistoricalFiller(filler.Id) is not null) { Rng.NextInt(-3, 4); continue; }
                 var rank = market.LastRanking.Single(r => r.FillerId == filler.Id).Rank;
                 filler.IssuesBelowLine = rank > magazine.CancellationRank ? filler.IssuesBelowLine + 1 : 0;
                 filler.Popularity = Math.Clamp(filler.Popularity + Rng.NextInt(-3, 4), 5, 100);

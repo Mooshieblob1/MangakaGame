@@ -7,6 +7,9 @@ public partial class GameState
     private void ApplyPitch(PitchSeriesCommand command)
     {
         var series = RequireSeries(command.SeriesId);
+        if (series.StandaloneDoujin) throw new InvalidCommandException("This is a complete one-shot doujin. Use Continue as ongoing series before pitching a serialization.");
+        if (Progression.Manuscripts.Any(m => m.SeriesId == series.Id && !m.Released))
+            throw new InvalidCommandException("Release the contest manuscript before pitching this title.");
         var magazine = PublisherCatalog.Magazines.FirstOrDefault(m => m.Id == command.MagazineId)
             ?? throw new InvalidCommandException("Choose an existing magazine.");
         if (series.Publishing != PublishingStatus.Unpublished || series.Status != SeriesStatus.Active)
@@ -14,10 +17,8 @@ public partial class GameState
         if (series.PitchCooldowns.TryGetValue(magazine.Id, out var until) && until > Clock.Now)
             throw new InvalidCommandException($"This magazine will consider another pitch after {until:d MMM yyyy}.");
         var open = series.Chapters.Where(c => c.Status != ChapterStatus.Complete).ToArray();
-        if (open.Length > 1 || open.Any(c => c.Stages.Any(w => w.Status != StageStatus.NotStarted ||
-            w.HoursDone != 0 || w.OvertimeHours != 0 || w.HoursByPerson.Count != 0)))
-            throw new InvalidCommandException("Finish the current chapter before pitching.");
-        foreach (var chapter in open) DropChapter(series, chapter);
+        // Preserve started doujin chapters; only untouched drafts are replaced by the sample.
+        foreach (var chapter in open.Where(c=>c.Stages.All(w=>w.Status==StageStatus.NotStarted&&w.HoursDone==0&&w.OvertimeHours==0&&w.HoursByPerson.Count==0)))DropChapter(series,chapter);
         series.Publishing = PublishingStatus.Pitching;
         var sample = CreateNextChapter(series, 31, IssueSchedule.FirstCloseAtOrAfter(magazine, Clock.Now.AddDays(14)));
         sample.IsOneShot = true;
@@ -44,7 +45,7 @@ public partial class GameState
             var magazine = PublisherCatalog.Get(chapter.EditorMagazineId!);
             var name = chapter.StageWork(Stage.Name);
             var quality = name.Contribution / QualityRules.Weight(Stage.Name);
-            var approved = chapter.RedoCount >= 2 || Rng.NextDouble() < EditorRules.Chance(magazine.Tier, quality, EffectiveReputation);
+            var approved = chapter.RedoCount >= 2 || Rng.NextDouble() < EditorRules.Chance(magazine.Tier, quality, BusinessReputation(series.BusinessId));
             chapter.EditorDecisionAt = null;
             if (approved)
             {
@@ -58,9 +59,10 @@ public partial class GameState
                 chapter.Editor = EditorStatus.RedoRequested;
                 chapter.RedoCount++;
                 name.Status = StageStatus.NotStarted;
-                name.HoursDone = name.Contribution = name.OvertimeHours = 0;
+                name.SandboxCompleted = false;
+                name.HoursDone = name.Contribution = name.OvertimeHours = name.QualityWeightedWork = 0;
                 if (name.AssignedTo is { } id) ChangeReputation(FindPerson(id)!, -.5);
-                ChangeTrackRecord(-.25);
+                ChangeTrackRecord(-.25, series.BusinessId);
                 Emit(EventType.EditorRedoRequested, $"{series.Title} ch.{chapter.Number}: revise Name (quality {quality:F0}).", series.Id, chapter.Number,
                     context: new(MagazineId: magazine.Id));
             }
@@ -86,9 +88,10 @@ public partial class GameState
             var affinity = series.IsIconic ? 1 : magazine.Affinity(genre);
             var trend = series.IsIconic ? 1 : GenrePopularity(genre);
             var quality = sample.Quality!.Value;
-            var reputation = EffectiveReputation;
+            var reputation = BusinessReputation(series.BusinessId);
             sample.PitchResolved = true;
-            if (Rng.NextDouble() < PitchRules.Chance(magazine.Tier, quality, reputation, affinity, trend))
+            var recognition = Progression.Awards.Any(a => a.SeriesId == series.Id && a.Prize > 0 && a.ResolvedAt >= Clock.Now.AddDays(-365)) ? .1 : 0;
+            if (Rng.NextDouble() < Math.Min(.95, PitchRules.Chance(magazine.Tier, quality, reputation, affinity, trend) + recognition))
             {
                 var first = IssueSchedule.AddIssues(magazine, Clock.Now, 4);
                 series.PendingOffer = new(magazine.Id, ReputationRules.Fee(magazine.FeePerPageMin, magazine.FeePerPageMax,
@@ -102,7 +105,7 @@ public partial class GameState
                 series.Publishing = PublishingStatus.Unpublished;
                 sample.DoujinEligible = true;
                 series.PitchCooldowns[magazine.Id] = Clock.Now.AddDays(26 * 7);
-                if (quality >= 70) ChangeTrackRecord(.25);
+                if (quality >= 70) ChangeTrackRecord(.25, series.BusinessId);
                 Emit(EventType.PitchRejected, $"{series.Title}: pitch rejected; weakest factor: {PitchRules.WeakestFactor(quality, reputation, affinity, trend)}.",
                     series.Id, sample.Number, context: new(MagazineId: magazine.Id));
                 CollectDoujin(series);

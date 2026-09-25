@@ -13,8 +13,10 @@ namespace MangakaGame;
 /// </summary>
 public partial class DebugMain : Control
 {
-    private const double SecondsPerHourAt1x = 2.5;
-    private string _savePath = "user://debug.json";
+    // Ten-hour default workday: 10 * 36 / 8 = 45 real seconds at 8x.
+    // This stretches the clock only; actor movement still receives the chosen speed.
+    private const double SecondsPerHourAt1x = 36;
+    private string _savePath = "user://debug-v6.json";
     private const int LogLinesOnLoad = 200;
 
     private GameState _state = GameState.NewGame();
@@ -30,7 +32,7 @@ public partial class DebugMain : Control
     private AcceptDialog _recapDialog = null!;
 
     private LineEdit _titleEdit = null!;
-    private LineEdit _genreEdit = null!;
+    private OptionButton _genreOption = null!;
     private OptionButton _cadenceOption = null!;
     private SpinBox _pagesSpin = null!;
     private OptionButton _seriesOption = null!;
@@ -48,6 +50,7 @@ public partial class DebugMain : Control
 
     public override void _Ready()
     {
+        if(OS.GetCmdlineUserArgs().Contains("--smoke-test")) ManagementInterface=false;
         var margin = new MarginContainer();
         margin.SetAnchorsPreset(LayoutPreset.FullRect);
         foreach (var edge in new[] { "left", "top", "right", "bottom" })
@@ -67,6 +70,11 @@ public partial class DebugMain : Control
         production.AddChild(BuildLogColumn());
         _mainTabs.AddChild(production);
         _mainTabs.AddChild(BuildPublishingPanel());
+        _mainTabs.AddChild(BuildStaffPanel());
+        _mainTabs.AddChild(BuildOperationsPanel());
+        _mainTabs.AddChild(BuildTokyoPanel());
+        _mainTabs.AddChild(BuildOfficePanel());
+        _mainTabs.AddChild(BuildIndustryPanel());
 
         _recapDialog = new AcceptDialog { Title = "Daily recap", OkButtonText = "Continue", Exclusive = true };
         _recapDialog.Confirmed += OnRecapContinue;
@@ -77,12 +85,26 @@ public partial class DebugMain : Control
         _scanIndex = _state.Events.Count;
         ResetPersonInputs();
         Refresh();
+        if (ManagementInterface) BuildManagementShell(margin);
         if (OS.GetCmdlineUserArgs().Contains("--smoke-test")) CallDeferred(nameof(RunSmokeTest));
+        if (OS.GetCmdlineUserArgs().Contains("--management-smoke")) CallDeferred(nameof(RunManagementSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--progression-smoke")) CallDeferred(nameof(RunProgressionSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--alpha-smoke")) CallDeferred(nameof(RunAlphaSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--usability-smoke")) CallDeferred(nameof(RunUsabilitySmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--production-smoke")) CallDeferred(nameof(RunProductionSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--office-life-smoke")) CallDeferred(nameof(RunOfficeLifeSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--convenience-smoke")) CallDeferred(nameof(RunConvenienceSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--series-status-smoke")) CallDeferred(nameof(RunSeriesStatusSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--atmosphere-smoke")) CallDeferred(nameof(RunAtmosphereSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--family-home-smoke")) CallDeferred(nameof(RunFamilyHomeSmoke));
     }
 
     public override void _Process(double delta)
     {
-        if (_speed > 0)
+        if(_managementReady)PanWithKeys(delta);
+        if(_managementReady)_audio.Update(delta,!_inMenu&&GetWindow().HasFocus(),_speed>0&&!OfficeEditing,_presentation.AmbienceVolume,_presentation.EffectsVolume);
+        if (_overnightTarget is not null) TickOvernight(delta);
+        else if (_speed > 0)
         {
             _accumulator += delta * _speed / SecondsPerHourAt1x;
             var whole = (int)Math.Floor(_accumulator);
@@ -93,7 +115,11 @@ public partial class DebugMain : Control
             }
         }
 
+        if(_managementReady)TickMoneyFeedback(delta);
         if (_dirty) Refresh();
+        var visualSpeed=OfficePlaybackSpeed;
+        if (_managementReady){_homeOffice.Speed=visualSpeed;_homeOffice.HourFraction=_accumulator;}
+        if (_officeView is not null){_officeView.Speed = OfficeEditing ? 0 : visualSpeed;_officeView.HourFraction=_accumulator;}
     }
 
     // ---------------------------------------------------------------- simulation driving
@@ -120,6 +146,7 @@ public partial class DebugMain : Control
         foreach (var ev in fresh)
         {
             AppendLog(ev);
+            if (_managementReady) QueueImportantEvent(ev,_state.Events.IndexOf(ev));
             if (ev.Type == EventType.DailyRecap ||
                 (_state.Settings.AutoPause.TryGetValue(ev.Type, out var pause) && pause))
             {
@@ -128,6 +155,8 @@ public partial class DebugMain : Control
             }
         }
 
+        // Overnight bookkeeping still runs, but notices wait for the following morning.
+        if(_overnightTarget is not null)return false;
         if (shouldPause) Pause();
         if (recap != null) ShowRecap(recap);
         return shouldPause;
@@ -135,19 +164,24 @@ public partial class DebugMain : Control
 
     private void SetSpeed(double speed)
     {
+        if(_overnightTarget is not null)
+        {
+            // Pause the presentation without discarding its destination or daytime speed.
+            var playback=speed>0?OvernightSpeed:0;
+            var playbackChanged=_speed!=playback;_speed=playback;
+            RefreshOvernightCaption();RefreshSpeedFeedback(playbackChanged);_dirty=true;return;
+        }
+        CancelOvernight();
+        var changed=_speed!=speed;
         if (speed > 0) _resumeSpeed = speed;
         _speed = speed;
+        RefreshSpeedFeedback(changed);
         _accumulator = 0;
         _dirty = true;
     }
 
-    private void Pause()
-    {
-        if (_speed > 0) _resumeSpeed = _speed;
-        _speed = 0;
-        _accumulator = 0;
-        _dirty = true;
-    }
+    private void Pause() => SetSpeed(0);
+    private void TogglePause() => SetSpeed(_speed>0?0:_resumeSpeed);
 
     private void ShowRecap(GameEvent ev)
     {
@@ -166,13 +200,16 @@ public partial class DebugMain : Control
             foreach (var id in recap.IssuesMissed) lines.Add($"Issue missed: {_state.FindSeries(id)?.Title}");
         }
         _recapDialog.DialogText = string.Join("\n", lines);
-        _recapDialog.PopupCentered();
+        // The headless display has no native desktop rectangle to centre within.
+        if (DisplayServer.GetName() == "headless") _recapDialog.Popup(new Rect2I(20, 20, 800, 450));
+        else _recapDialog.PopupCentered();
     }
 
     private void OnRecapContinue()
     {
         _recapDialog.Hide();
-        if (!AdvanceAndScan(_state.HoursUntilNextWork())) SetSpeed(_resumeSpeed);
+        if(_managementReady)BeginOvernight();
+        else if (!AdvanceAndScan(_state.HoursUntilNextWork())) SetSpeed(_resumeSpeed);
     }
 
     private void TryApply(ICommand command)
@@ -187,6 +224,7 @@ public partial class DebugMain : Control
         catch (InvalidCommandException ex)
         {
             LogLine($"Command rejected: {ex.Message}");
+            if(_managementReady)Notify(ex.Message);
         }
     }
 
@@ -208,6 +246,7 @@ public partial class DebugMain : Control
             LogLine($"Save failed: {file.GetError()}");
             return;
         }
+        SaveOfficePreferences();
         LogLine($"Saved to {ProjectSettings.GlobalizePath(_savePath)}");
     }
 
@@ -231,7 +270,8 @@ public partial class DebugMain : Control
             return;
         }
 
-        _state = loaded;
+        CancelOvernight();_state = loaded;
+        LoadOfficePreferences();
         _recapDialog.Hide();
         Pause();
         _log.Clear();
@@ -280,6 +320,7 @@ public partial class DebugMain : Control
             SizeFlagsStretchRatio = 2.8f,
         };
 
+        column.AddChild(new Label{Text="Ongoing series: one chapter = one printable issue; five chapters = a collected book. Cadence is a personal target until you accept a publisher contract.",AutowrapMode=TextServer.AutowrapMode.WordSmart});
         column.AddChild(BuildSeriesForm());
         column.AddChild(BuildSeriesControls());
 
@@ -293,18 +334,18 @@ public partial class DebugMain : Control
     private Control BuildSeriesForm()
     {
         var row = new HBoxContainer();
-        row.AddChild(new Label { Text = "New series:" });
+        row.AddChild(new Label { Text = "New ongoing series:" });
         _titleEdit = new LineEdit { PlaceholderText = "Title", CustomMinimumSize = new Vector2(140, 0) };
         row.AddChild(_titleEdit);
-        _genreEdit = new LineEdit { PlaceholderText = "Genre", CustomMinimumSize = new Vector2(100, 0) };
-        row.AddChild(_genreEdit);
+        _genreOption = MakeGenreOption();
+        row.AddChild(_genreOption);
         _cadenceOption = MakeCadenceOption();
         row.AddChild(_cadenceOption);
         _pagesSpin = new SpinBox { MinValue = 1, MaxValue = 200, Value = 19, Step = 1 };
         row.AddChild(_pagesSpin);
         var create = new Button { Text = "Create" };
         create.Pressed += () => TryApply(new CreateSeriesCommand(
-            _titleEdit.Text, _genreEdit.Text, (Cadence)_cadenceOption.GetSelectedId(), (int)_pagesSpin.Value));
+            _titleEdit.Text, _genreOption.GetItemText(_genreOption.Selected), (Cadence)_cadenceOption.GetSelectedId(), (int)_pagesSpin.Value,true));
         row.AddChild(create);
         return row;
     }
@@ -354,6 +395,9 @@ public partial class DebugMain : Control
             SizeFlagsStretchRatio = 1.3f,
         };
 
+        _personOption = new OptionButton();
+        _personOption.ItemSelected += _ => { _selectedPersonId = _personOption.GetSelectedId(); ResetPersonInputs(); _dirty = true; };
+        column.AddChild(_personOption);
         _personLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
         column.AddChild(_personLabel);
 
@@ -379,14 +423,14 @@ public partial class DebugMain : Control
         var apply = new Button { Text = "Apply schedule" };
         apply.Pressed += () =>
         {
-            var person = _state.People[0];
+            var person = SelectedPerson;
             var daysOff = _dayOffBoxes.Where(kv => kv.Value.ButtonPressed).Select(kv => kv.Key).ToHashSet();
             TryApply(new SetScheduleCommand(person.Id, (int)_startSpin.Value, (int)_endSpin.Value, daysOff));
         };
         column.AddChild(apply);
 
         _overtimeBox = new CheckBox { Text = "Overtime allowed" };
-        _overtimeBox.Toggled += on => TryApply(new SetOvertimeAllowedCommand(_state.People[0].Id, on));
+        _overtimeBox.Toggled += on => TryApply(new SetOvertimeAllowedCommand(SelectedPerson.Id, on));
         column.AddChild(_overtimeBox);
 
         column.AddChild(new Label { Text = "Queue (top = next):" });
@@ -421,17 +465,18 @@ public partial class DebugMain : Control
         RefreshChapterGrid();
         RefreshPersonPanel();
         RefreshPublishing();
+        RefreshStaff();
+        RefreshOperations();
+        RefreshOffice();
+        RefreshTokyo();
+        RefreshIndustry();
+        if (_managementReady) RefreshManagement();
     }
 
     private void RefreshSeriesOption()
     {
         var previous = _seriesOption.ItemCount > 0 ? _seriesOption.GetSelectedId() : -1;
-        _seriesOption.Clear();
-        foreach (var series in _state.Series)
-            _seriesOption.AddItem($"{series.Title} ({series.Status})", series.Id);
-        if (_seriesOption.ItemCount == 0) return;
-        var index = _seriesOption.GetItemIndex(previous);
-        _seriesOption.Selected = index >= 0 ? index : 0;
+        SyncOptions(_seriesOption,_state.Series.Where(s=>!ManagementInterface||s.BusinessId==_state.ControlledBusinessId&&(_state.Control==ControlMode.OwnerDirector||s.LeadPersonId==_state.ProtagonistPersonId)).Select(s=>(s.Id,$"{s.Title} ({s.Status})")),previous);
     }
 
     private void WithSelectedSeries(Action<int> action)
@@ -448,7 +493,7 @@ public partial class DebugMain : Control
     {
         foreach (var child in _chapterGrid.GetChildren()) child.QueueFree();
 
-        foreach (var header in new[] { "Series", "Ch", "Name", "Pencils", "Inks", "Backgrounds", "Tones", "Due", "Status", "Late" })
+        foreach (var header in new[] { "Series", "Ch", "Name", "Pencils", "Inks", "Backgrounds", "Tones", "Target / deadline", "Status", "Late" })
             _chapterGrid.AddChild(new Label { Text = header });
 
         foreach (var series in _state.Series)
@@ -471,7 +516,7 @@ public partial class DebugMain : Control
                     };
                     _chapterGrid.AddChild(bar);
                 }
-                _chapterGrid.AddChild(new Label { Text = chapter.DueDate.ToString("MM-dd HH:mm") });
+                _chapterGrid.AddChild(new Label { Text = (_state.HasPublisherDeadline(chapter)?"Deadline ":"Target ")+chapter.DueDate.ToString("MM-dd HH:mm") });
                 var status = chapter.Status.ToString();
                 if (chapter.IsAtRisk && chapter.Status != ChapterStatus.Complete) status += " (at risk)";
                 _chapterGrid.AddChild(new Label { Text = status });
@@ -482,17 +527,20 @@ public partial class DebugMain : Control
 
     private void RefreshPersonPanel()
     {
-        var person = _state.People[0];
+        var person = SelectedPerson;
+        SyncOptions(_personOption,_state.ControlledStaff.Select(p=>(p.Id,p.Name)),person.Id);
         _personLabel.Text = $"{person.Name}  today: {person.HoursWorkedToday}h (+{person.OvertimeHoursToday} OT)  " +
                             $"current: {(person.CurrentTask is { } task ? Describe(task.ChapterId, task.Stage) : "idle")}";
 
-        foreach (var child in _queueBox.GetChildren()) child.QueueFree();
         var queue = person.Queue;
+        var queueKey=person.Id+":"+string.Join(";",queue.Select(q=>$"{q.ChapterId}:{q.Stage}:{person.Pins.Contains(q)}"));
+        if(_queueBox.HasMeta("queue")&&_queueBox.GetMeta("queue").AsString()==queueKey)return;
+        _queueBox.SetMeta("queue",queueKey);Empty(_queueBox);
         for (var i = 0; i < queue.Count; i++)
         {
             var reference = queue[i];
             var index = i;
-            var row = new HBoxContainer();
+            var row = new HFlowContainer();
             var pinned = person.Pins.Contains(reference);
             row.AddChild(new Label
             {
@@ -533,7 +581,7 @@ public partial class DebugMain : Control
     /// <summary>Copies the person's schedule and overtime flag into the input widgets. Called on start and after Load only, so edits in progress are not clobbered.</summary>
     private void ResetPersonInputs()
     {
-        var person = _state.People[0];
+        var person = SelectedPerson;
         _startSpin.Value = person.Schedule.WorkStartHour;
         _endSpin.Value = person.Schedule.WorkEndHour;
         foreach (var (day, box) in _dayOffBoxes) box.ButtonPressed = person.Schedule.DaysOff.Contains(day);

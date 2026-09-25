@@ -25,8 +25,8 @@ public class PublishingSerializationTests
     }
 
     [Theory]
-    [InlineData("Money")] [InlineData("Ledger")] [InlineData("StudioTrackRecord")]
-    [InlineData("Markets")] [InlineData("Trends")] [InlineData("HasInternet")]
+    [InlineData("Businesses")] [InlineData("Locations")] [InlineData("Candidates")]
+    [InlineData("Markets")] [InlineData("Trends")] [InlineData("Ownership")]
     [InlineData("LastTrendUpdateMonth")] [InlineData("LastSalesAt")]
     [InlineData("DoujinCopiesThisMonth")] [InlineData("DoujinFansThisMonth")]
     public void Every_new_root_field_is_required(string field)
@@ -52,7 +52,7 @@ public class PublishingSerializationTests
         var published = chapters.First(c => c!["PublishedAt"] is not null)!;
         switch (mutation)
         {
-            case "money": json["Money"] = 1; break;
+            case "money": json["Businesses"]![0]!["Account"]!["Balance"] = 1; break;
             case "calendar": json["Markets"]![0]!["NextIssueClose"] = GameClock.Start; break;
             case "filler-id": json["Markets"]![0]!["Fillers"]![0]!["Id"] = 1; break;
             case "rank-target": json["Markets"]![0]!["LastRanking"]![0]!["FillerId"] = -7; break;

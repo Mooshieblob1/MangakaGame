@@ -147,7 +147,8 @@ public class PlannerTests
         chapter.StageWork(Stage.Name).Status = StageStatus.Complete;
         chapter.StageWork(Stage.Pencils).Status = StageStatus.Skipped;
         state.RunPlanner();
-        Assert.Equal(3, state.People[0].Queue.Count);
+        Assert.Equal(3, state.People[0].Queue.Count(r => r.ChapterId == chapter.Id));
+        Assert.Equal(2,state.Series[0].Chapters.Count);
         Assert.Equal(new QueueRef(chapter.Id, Stage.Inks), state.People[0].CurrentTask);
     }
 }

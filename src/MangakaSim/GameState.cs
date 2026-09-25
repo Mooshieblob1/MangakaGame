@@ -4,7 +4,7 @@ namespace MangakaSim;
 
 public partial class GameState
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 10;
 
     public int Version { get; set; } = CurrentVersion;
     public GameClock Clock { get; set; } = GameClock.AtStart();
@@ -21,19 +21,27 @@ public partial class GameState
     [JsonIgnore]
     public DateTime TickStart => Clock.Now.AddHours(-1);
 
-    public static GameState NewGame(int seed = 0)
+    public static GameState NewGame(int seed = 0, OwnershipMode ownership = OwnershipMode.StudioRetention, string? protagonistName = null)
     {
+        if (!Enum.IsDefined(ownership)) throw new ArgumentOutOfRangeException(nameof(ownership));
+        var name=string.IsNullOrWhiteSpace(protagonistName)?"Aki":protagonistName.Trim();
+        if(name.Length>40||name.Any(char.IsControl))throw new ArgumentException("Choose a name of up to 40 characters without control characters.",nameof(protagonistName));
         var state = new GameState { RngSeed = seed, Rng = Rng.FromSeed(seed) };
         var mangaka = new Person
         {
             Id = state.AllocateId(),
-            Name = "Aki",
+            Name = name,
             Schedule = new Schedule { WorkStartHour = 8, WorkEndHour = 18, DaysOff = { DayOfWeek.Sunday } },
             OvertimeAllowed = true,
         };
-        foreach (var stage in StageOrder.All) mangaka.Skills[stage] = 80;
+        foreach (var stage in StageOrder.All) mangaka.Skills[stage] = 95;
         state.People.Add(mangaka);
+        state.InitializeStudio(ownership);
         state.InitializeMarket();
+        state.RefreshOfficeAssignments();
+        state.InitializeTimeline();
+        state.InitializeCareer();
+        state.InitializeProgression();
         return state;
     }
 
@@ -50,14 +58,32 @@ public partial class GameState
         Clock.Advance();
         var closes = Markets.Where(m => m.NextIssueClose <= Clock.Now)
             .Select(m => new IssueCloseContext(m.MagazineId, m.NextIssueClose, m.IssuesClosed + 1)).ToArray();
+        StartOfficeHour();
+        OutsideJobStep();
+        WellbeingStep();
+        ConventionStep();
+        SpareHoursStep();
+        LicensingConsultationStep();
         WorkStep();
+        SandboxProductionStep();
         EditorStep();
+        TimelineMarketStep();
         IssueCloseStep(closes);
+        PrintingStep();
         SalesStep();
+        StudioStep();
+        ProgressionStep();
+        FinanceStep();
+        CareerStep();
+        TimelineStaffStep();
+        CareerNarrativeStep();
+        RefreshOfficeAssignments();
+        OfficeRevision++;
         PitchStep(closes);
         RiskStep();
         DayEndStep();
         if (Clock.Hour == 0) StartNewDay();
+        else RunPlanner();
     }
 
     private void StartNewDay()

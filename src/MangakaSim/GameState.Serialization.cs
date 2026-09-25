@@ -29,15 +29,20 @@ public partial class GameState
                 element.ValueKind != JsonValueKind.Number || !element.TryGetInt32(out version))
                 throw new InvalidDataException("Save file has no Version number.");
 
-            if (version == CurrentVersion)
+            if (version == CurrentVersion || version is 5 or 6 or 7 or 8 or 9)
             {
                 foreach (var property in new[] { nameof(Clock), nameof(People), nameof(Series), nameof(Events),
                              nameof(Rng), nameof(RngSeed), nameof(Settings), nameof(NextId), nameof(CommandLog),
-                             nameof(RecapWindowStart), nameof(RecapFiredToday), nameof(Money), nameof(Ledger),
-                             nameof(StudioTrackRecord), nameof(Markets), nameof(Trends), nameof(HasInternet),
+                             nameof(RecapWindowStart), nameof(RecapFiredToday),
+                             nameof(Businesses), nameof(Locations), nameof(Markets), nameof(Trends),
                              nameof(DoujinCopiesThisMonth), nameof(DoujinFansThisMonth) })
                     if (!document.RootElement.TryGetProperty(property, out var value) || value.ValueKind == JsonValueKind.Null)
                         throw new InvalidDataException($"Save file is missing {property}.");
+                if(document.RootElement.GetProperty(nameof(Locations)).ValueKind==JsonValueKind.Array)
+                    foreach(var location in document.RootElement.GetProperty(nameof(Locations)).EnumerateArray())
+                        foreach(var field in new[]{"PropertyOfferId","FloorPlanId","OfficeRevision","BaseAtmosphere","FixedBreakSeats"})
+                            if(location.ValueKind!=JsonValueKind.Object||!location.TryGetProperty(field,out var officeValue)||officeValue.ValueKind==JsonValueKind.Null)
+                                throw new InvalidDataException($"Save file is missing location {field}.");
                 foreach (var property in new[] { nameof(LastTrendUpdateMonth), nameof(LastSalesAt) })
                     if (!document.RootElement.TryGetProperty(property, out _)) throw new InvalidDataException($"Save file is missing {property}.");
             }
@@ -48,7 +53,7 @@ public partial class GameState
                 $"Save file version {version} is newer than the supported version {CurrentVersion}. Update the game to load it.");
 
         if (version != CurrentVersion)
-            throw new InvalidDataException($"Save file version {version} is not supported.");
+            throw new InvalidDataException($"Save file version {version} is not supported. Use Import for version 3, 4, 5, 6, 7, 8 or 9 and keep the original file. Older saves require a new game.");
 
         GameState state;
         try
@@ -58,9 +63,9 @@ public partial class GameState
         }
         catch (JsonException ex) { throw new InvalidDataException($"Save data is malformed: {ex.Message}", ex); }
         try { state.ValidateSave(); }
-        catch (Exception ex) when (ex is OverflowException or ArgumentOutOfRangeException)
+        catch (Exception ex) when (ex is OverflowException or ArgumentException or InvalidOperationException or NullReferenceException or JsonException or KeyNotFoundException)
         {
-            throw new InvalidDataException("Save file has out-of-range numeric totals or dates.", ex);
+            throw new InvalidDataException("Save file contains malformed state, references, numeric totals or dates.", ex);
         }
         return state;
     }
@@ -73,7 +78,7 @@ public partial class GameState
         }
 
         Check(Clock is not null && Clock.Now >= GameClock.Start && Clock.Now.Ticks % TimeSpan.TicksPerHour == 0, "clock");
-        Check(People is { Count: 1 } && People[0] is not null, "people (one mangaka is required)");
+        Check(People is { Count: > 0 } && People.All(p => p is not null), "people");
         Check(Series is not null && Events is not null && Rng is not null && CommandLog is not null, "state");
         Check(Settings?.Balance is not null && Settings.AutoPause is not null, "settings");
         var balance = Settings!.Balance;
@@ -86,17 +91,19 @@ public partial class GameState
 
         var ids = new HashSet<int>();
         void CheckId(int id) => Check(id > 0 && ids.Add(id), "unique id");
-        var person = People![0];
-        CheckId(person.Id);
-        Check(person.Name is not null && person.Skills is not null && StageOrder.All.All(stage =>
-            person.Skills.TryGetValue(stage, out var skill) && skill is >= 0 and <= 100), "person skills");
-        Check(person.Schedule is not null && person.Schedule.DaysOff is not null &&
-            person.Schedule.DaysOff.All(Enum.IsDefined) && person.Schedule.WorkStartHour >= 0 &&
-            person.Schedule.WorkStartHour < person.Schedule.WorkEndHour &&
-            person.Schedule.WorkEndHour <= 24 - balance.OvertimeCap, "schedule");
-        Check(person.HoursWorkedToday is >= 0 and <= 24 && person.OvertimeHoursToday >= 0 &&
-            person.OvertimeHoursToday <= person.HoursWorkedToday, "work counters");
-        Check(person.Queue is not null && person.Pins is not null, "queue");
+        foreach (var person in People!)
+        {
+            CheckId(person.Id);
+            Check(person.Name is not null && person.Skills is not null && StageOrder.All.All(stage =>
+                person.Skills.TryGetValue(stage, out var skill) && skill is >= 0 and <= 100), "person skills");
+            Check(person.Schedule is not null && person.Schedule.DaysOff is not null &&
+                person.Schedule.DaysOff.All(Enum.IsDefined) && person.Schedule.WorkStartHour >= 0 &&
+                person.Schedule.WorkStartHour < person.Schedule.WorkEndHour &&
+                person.Schedule.WorkEndHour <= 24 - balance.OvertimeCap, "schedule");
+            Check(person.HoursWorkedToday is >= 0 and <= 24 && person.OvertimeHoursToday >= 0 &&
+                person.OvertimeHoursToday <= person.HoursWorkedToday, "work counters");
+            Check(person.Queue is not null && person.Pins is not null, "queue");
+        }
 
         foreach (var series in Series!)
         {
@@ -106,6 +113,7 @@ public partial class GameState
                 Enum.IsDefined(series.Cadence) && Enum.IsDefined(series.Status) && series.PagesPerChapter > 0 &&
                 series.Chapters is not null, "series details");
             Check(series.StartDate.Ticks % TimeSpan.TicksPerHour == 0, "series start date");
+            Check(!series.StandaloneDoujin || series.Chapters!.Count <= 1 && series.Publishing == PublishingStatus.Unpublished, "standalone doujin");
             var number = 0;
             foreach (var chapter in series.Chapters!)
             {
@@ -119,20 +127,29 @@ public partial class GameState
                 foreach (var work in chapter.Stages!)
                     Check(Enum.IsDefined(work.Status) && double.IsFinite(work.HoursRequired) && work.HoursRequired > 0 &&
                         double.IsFinite(work.HoursDone) && work.HoursDone >= 0 && work.HoursDone <= work.HoursRequired &&
-                        (work.AssignedTo is null || work.AssignedTo == person.Id), "stage work");
+                        (work.AssignedTo is null || People.Any(p => p.Id == work.AssignedTo)), "stage work");
                 Check((chapter.Status != ChapterStatus.Complete || (chapter.IsFinished &&
                     (chapter.EditorMagazineId is null || chapter.Editor == EditorStatus.Approved))) &&
                     (chapter.Status == ChapterStatus.Complete) == chapter.CompletedAt.HasValue, "chapter completion");
             }
         }
+        ValidateStudioSave(ids);
         ValidateMarketSave(ids);
+        ValidateOperationsSave(ids);
+        if(Version >= 4) ValidateOfficeSave();
+        if(Version >= 5) ValidateTimelineSave(ids);
+        if(Version >= 6) ValidateCareer();
+        if(Version >= 7) ValidateProgression(ids);
         Check(NextId > ids.Max(), "next id");
         bool ValidRef(QueueRef reference) => Enum.IsDefined(reference.Stage) && FindChapter(reference.ChapterId) is not null;
-        Check(person.Queue!.All(r => ValidRef(r) && IsStartableOrPending(r, person.Id)) &&
-            person.Queue.Distinct().Count() == person.Queue.Count, "queue references");
-        Check(person.Pins!.All(ValidRef) && person.Pins.Distinct().Count() == person.Pins.Count, "pins");
-        Check(person.ManualOrder is null || person.ManualOrder.All(ValidRef), "manual queue");
-        Check(person.CurrentTask is null || (person.Queue.Contains(person.CurrentTask.Value) && IsStartable(person.CurrentTask.Value)), "current task");
+        foreach (var person in People!)
+        {
+            Check(person.Queue!.All(r => ValidRef(r) && IsStartableOrPending(r, person.Id)) &&
+                person.Queue.Distinct().Count() == person.Queue.Count, "queue references");
+            Check(person.Pins!.All(ValidRef) && person.Pins.Distinct().Count() == person.Pins.Count, "pins");
+            Check(person.ManualOrder is null || person.ManualOrder.All(ValidRef), "manual queue");
+            Check(person.CurrentTask is null || (person.Queue.Contains(person.CurrentTask.Value) && IsStartable(person.CurrentTask.Value)), "current task");
+        }
         Check(Events!.All(e => e is not null && Enum.IsDefined(e.Type) && e.Message is not null), "events");
         foreach (var ev in Events.Where(e => e.Type == EventType.DailyRecap))
         {

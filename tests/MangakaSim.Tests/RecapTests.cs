@@ -8,9 +8,11 @@ public class RecapTests
     private static GameState WithSeries(Cadence cadence, bool overtimeAllowed = true)
     {
         var state = GameState.NewGame();
+        foreach(var stage in StageOrder.All) state.Protagonist.Skills[stage]=80;
         state.People[0].OvertimeAllowed = overtimeAllowed;
         state.CreateSeries("S", "g", cadence, 19);
         state.RunPlanner();
+        DeadlineFixture.Attach(state);
         return state;
     }
 
@@ -41,14 +43,14 @@ public class RecapTests
         var seriesId = state.Series[0].Id;
         Assert.Equal(new[] { new StageRef(seriesId, 1, Stage.Name) }, payload.StagesStarted);
         Assert.Empty(payload.StagesCompleted);
-        Assert.Equal(new[] { new PersonHours(person.Id, person.Name, 10, 0) }, payload.HoursPerPerson);
+        Assert.Equal(new[] { new PersonHours(person.Id, person.Name, 9, 0) }, payload.HoursPerPerson);
         Assert.Empty(payload.ChaptersAtRisk);
         Assert.Empty(payload.ChaptersCompleted);
         Assert.Empty(payload.DeadlinesMissed);
     }
 
     [Fact]
-    public void Recap_fires_at_20_after_full_overtime_and_omits_resolved_risk()
+    public void Recap_fires_at_20_after_overtime_and_includes_remaining_risk()
     {
         var state = WithSeries(Cadence.Weekly);
         state.Advance(10);
@@ -57,8 +59,8 @@ public class RecapTests
         var recap = Assert.Single(Recaps(state));
         Assert.Equal(new DateTime(1996, 4, 1, 20, 0, 0), recap.Time);
         var payload = recap.Recap!;
-        Assert.Equal(new[] { new PersonHours(state.People[0].Id, state.People[0].Name, 12, 2) }, payload.HoursPerPerson);
-        Assert.Empty(payload.ChaptersAtRisk);
+        Assert.Equal(new[] { new PersonHours(state.People[0].Id, state.People[0].Name, 11, 2) }, payload.HoursPerPerson);
+        Assert.Single(payload.ChaptersAtRisk);
     }
 
     [Fact]
@@ -123,6 +125,7 @@ public class RecapTests
     public void HoursUntilNextWork_overnight()
     {
         var state = GameState.NewGame();
+        foreach(var stage in StageOrder.All) state.Protagonist.Skills[stage]=80;
         state.Advance(10); // 18:00
         Assert.Equal(14, state.HoursUntilNextWork());
         state.Advance(14);
@@ -134,6 +137,7 @@ public class RecapTests
     public void HoursUntilNextWork_skips_day_off()
     {
         var state = GameState.NewGame();
+        foreach(var stage in StageOrder.All) state.Protagonist.Skills[stage]=80;
         state.Advance(5 * 24 + 10); // Saturday 18:00
         Assert.Equal(38, state.HoursUntilNextWork());
     }
@@ -142,6 +146,7 @@ public class RecapTests
     public void HoursUntilNextWork_skips_multi_day_gap()
     {
         var state = GameState.NewGame();
+        foreach(var stage in StageOrder.All) state.Protagonist.Skills[stage]=80;
         state.People[0].Schedule.DaysOff = new HashSet<DayOfWeek> { DayOfWeek.Saturday, DayOfWeek.Sunday };
         state.Advance(4 * 24 + 10); // Friday 18:00
         Assert.Equal(62, state.HoursUntilNextWork());
@@ -155,6 +160,6 @@ public class RecapTests
         state.Advance(state.HoursUntilNextWork());
         Assert.Equal(1, state.Events.Count(e => e.Type == EventType.DayStarted));
         state.Advance(1);
-        Assert.Equal(17.6, state.Series[0].Chapters[0].StageWork(Stage.Name).HoursDone, 6);
+        Assert.Equal(16.0, state.Series[0].Chapters[0].StageWork(Stage.Name).HoursDone, 6);
     }
 }

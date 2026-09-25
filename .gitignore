@@ -9,4 +9,6 @@ TestResults/
 .godot/
 *.import
 export_presets.cfg
+!godot/export_presets.cfg
+builds/
 .mono/

@@ -1,0 +1,318 @@
+{
+  "Revision": 1,
+  "Rivals": [
+    {
+      "Id": "conan",
+      "Title": "Casebook Kento",
+      "Genre": "mystery",
+      "Magazine": "hoshigaku-sunday",
+      "Start": "1994-01-01T00:00:00",
+      "End": null,
+      "Precision": "month",
+      "Sources": [
+        "https://www.shogakukan.co.jp/news/476148",
+        "https://shogakukan-comic.jp/news/58182",
+        "https://shogakukan-comic.jp/magazine?cd=2066301126"
+      ],
+      "Hiatus": null,
+      "Breakthrough": null
+    },
+    {
+      "Id": "onepiece",
+      "Title": "Two Piece",
+      "Genre": "adventure",
+      "Magazine": "tokiwa-jump",
+      "Start": "1997-07-01T00:00:00",
+      "End": null,
+      "Precision": "month",
+      "Sources": [
+        "https://www.shueisha.co.jp/history/",
+        "https://adnavi.shueisha.co.jp/wp-content/uploads/2019/03/WJ_2508-v2.pdf",
+        "https://books.shueisha.co.jp/info/comics/3861.html"
+      ],
+      "Hiatus": null,
+      "Breakthrough": null
+    },
+    {
+      "Id": "fruits",
+      "Title": "Zodiac House",
+      "Genre": "romance",
+      "Magazine": "hoshigaku-flowers",
+      "Start": "1998-07-01T00:00:00",
+      "End": "2006-07-01T00:00:00",
+      "Precision": "year",
+      "Sources": [
+        "https://fruba.jp/introduction/"
+      ],
+      "Hiatus": null,
+      "Breakthrough": null
+    },
+    {
+      "Id": "naruto",
+      "Title": "Naruka",
+      "Genre": "action",
+      "Magazine": "tokiwa-jump",
+      "Start": "1999-07-01T00:00:00",
+      "End": "2014-07-01T00:00:00",
+      "Precision": "year",
+      "Sources": [
+        "https://naruto-official.com/about"
+      ],
+      "Hiatus": null,
+      "Breakthrough": "2002-07-01T00:00:00"
+    },
+    {
+      "Id": "mushishi",
+      "Title": "Spirit Wanderer",
+      "Genre": "drama",
+      "Magazine": "kaidan-afternoon",
+      "Start": "1999-07-01T00:00:00",
+      "End": "2008-07-01T00:00:00",
+      "Precision": "year",
+      "Sources": [
+        "https://www.mushishi-anime.com/comics/",
+        "https://www.kodansha.co.jp/comic/products/0000044526"
+      ],
+      "Hiatus": null,
+      "Breakthrough": null
+    },
+    {
+      "Id": "bleach",
+      "Title": "Blanch",
+      "Genre": "action",
+      "Magazine": "tokiwa-jump",
+      "Start": "2001-08-07T00:00:00",
+      "End": "2016-08-22T00:00:00",
+      "Precision": "day",
+      "Sources": [
+        "https://prtimes.jp/a/?c=35304&f=d35304-2-pdf-0.pdf&r=2",
+        "https://prtimes.jp/a/?c=35304&f=d35304-2-pdf-0.pdf&r=2"
+      ],
+      "Hiatus": null,
+      "Breakthrough": "2004-10-01T00:00:00"
+    },
+    {
+      "Id": "chihaya",
+      "Title": "Hundred Verse Hearts",
+      "Genre": "sports",
+      "Magazine": "hoshigaku-flowers",
+      "Start": "2007-12-01T00:00:00",
+      "End": "2022-08-01T00:00:00",
+      "Precision": "month",
+      "Sources": [
+        "https://frontend.cstation.kodansha.co.jp/article/514",
+        "https://be-love.jp/bn/2022/9.html",
+        "https://be-love.jp/bn/2022/9.html"
+      ],
+      "Hiatus": null,
+      "Breakthrough": null
+    },
+    {
+      "Id": "titan",
+      "Title": "Beyond the Walls",
+      "Genre": "horror",
+      "Magazine": "kaidan-magazine",
+      "Start": "2009-09-01T00:00:00",
+      "End": "2021-04-01T00:00:00",
+      "Precision": "month",
+      "Sources": [
+        "https://cstation.kodansha.co.jp/article/2150"
+      ],
+      "Hiatus": null,
+      "Breakthrough": null
+    },
+    {
+      "Id": "haikyu",
+      "Title": "High Serve!!",
+      "Genre": "sports",
+      "Magazine": "tokiwa-jump",
+      "Start": "2012-02-01T00:00:00",
+      "End": "2020-07-20T00:00:00",
+      "Precision": "month",
+      "Sources": [
+        "https://haikyu.jp/",
+        "https://www.shonenjump.com/j/notice/2020/11/26/201126_oshirase001.html",
+        "https://haikyu.jp/",
+        "https://www.shonenjump.com/j/notice/2020/11/26/201126_oshirase001.html"
+      ],
+      "Hiatus": null,
+      "Breakthrough": null
+    },
+    {
+      "Id": "hero",
+      "Title": "Hero Homeroom",
+      "Genre": "action",
+      "Magazine": "tokiwa-jump",
+      "Start": "2014-07-07T00:00:00",
+      "End": "2024-08-05T00:00:00",
+      "Precision": "day",
+      "Sources": [
+        "https://heroaca.com/thank_you_horikoshi_sensei/"
+      ],
+      "Hiatus": null,
+      "Breakthrough": null
+    },
+    {
+      "Id": "demon",
+      "Title": "Demon Lantern",
+      "Genre": "fantasy",
+      "Magazine": "tokiwa-jump",
+      "Start": "2016-07-01T00:00:00",
+      "End": "2020-05-01T00:00:00",
+      "Precision": "year",
+      "Sources": [
+        "https://sp.shonenjump.com/j/rensai/kimetsu/",
+        "https://kimetsu.com/stage/2021/about/",
+        "https://kimetsu.com/stage/2021/about/"
+      ],
+      "Hiatus": null,
+      "Breakthrough": "2019-07-01T00:00:00"
+    },
+    {
+      "Id": "spy",
+      "Title": "Secret Household",
+      "Genre": "comedy",
+      "Magazine": "tokiwa-square",
+      "Start": "2019-03-25T00:00:00",
+      "End": null,
+      "Precision": "day",
+      "Sources": [
+        "https://sp.shonenjump.com/p/cp/spyfamily5th/",
+        "https://sp.shonenjump.com/p/sp/2509/vote_spyfamily/",
+        "https://shonenjumpplus.com/episode/17107094912731879193"
+      ],
+      "Hiatus": null,
+      "Breakthrough": null
+    },
+    {
+      "Id": "frieren",
+      "Title": "After the Hero",
+      "Genre": "fantasy",
+      "Magazine": "hoshigaku-sunday",
+      "Start": "2020-04-01T00:00:00",
+      "End": null,
+      "Precision": "month",
+      "Sources": [
+        "https://jinji.shogakukan.co.jp/project/06/",
+        "https://shogakukan-comic.jp/magazine?cd=2066111125",
+        "https://shogakukan-comic.jp/magazine?cd=2066301126"
+      ],
+      "Hiatus": "2025-10-22T00:00:00",
+      "Breakthrough": "2023-09-01T00:00:00"
+    }
+  ],
+  "Events": [
+    {
+      "Id": "overseas-print",
+      "At": "2002-11-01T00:00:00",
+      "Message": "Publishers expand overseas print partnerships. Licensed overseas editions can now be proposed.",
+      "Source": "https://www.shueisha.co.jp/history/",
+      "Precision": "month"
+    },
+    {
+      "Id": "mobile",
+      "At": "2006-05-01T00:00:00",
+      "Message": "Early mobile manga services create a new route for digital editions.",
+      "Source": "https://www.shueisha.co.jp/history/",
+      "Precision": "month"
+    },
+    {
+      "Id": "overseas-digital",
+      "At": "2012-01-30T00:00:00",
+      "Message": "Overseas digital distribution broadens access to licensed manga.",
+      "Source": "https://www.viz.com/blog/posts/viz-media-statement-on-the-weekly-shonen-jump-alpha-launch-132",
+      "Precision": "day"
+    },
+    {
+      "Id": "simulpub",
+      "At": "2013-01-21T00:00:00",
+      "Message": "Selected overseas partners begin simultaneous releases with Japan.",
+      "Source": "https://www.viz.com/blog/posts/news-all-new-shonen-jump-alpha-coming-soon-1270",
+      "Precision": "day"
+    },
+    {
+      "Id": "app",
+      "At": "2014-09-22T00:00:00",
+      "Message": "Domestic manga apps bring more readers to official digital editions.",
+      "Source": "https://www.shueisha.co.jp/history/",
+      "Precision": "day"
+    },
+    {
+      "Id": "piracy-news",
+      "At": "2018-07-01T00:00:00",
+      "Message": "Publishers join an industry campaign against unauthorized manga distribution.",
+      "Source": "https://www.shueisha.co.jp/history/",
+      "Precision": "year"
+    },
+    {
+      "Id": "global",
+      "At": "2019-01-01T00:00:00",
+      "Message": "A broader international manga platform opens new licensed readership opportunities.",
+      "Source": "https://www.shueisha.co.jp/history/",
+      "Precision": "month"
+    },
+    {
+      "Id": "digital-report",
+      "At": "2025-07-01T00:00:00",
+      "Message": "A 2025 industry report estimates Japanese electronic-comic sales at ¥512.2 billion for 2024. Digital editions are an increasingly important route to readers.",
+      "Source": "https://www.ajpea.or.jp/wp/wp-content/uploads/2025/06/%E2%97%8F2024%E5%B9%B4%E5%BA%A6-%E5%85%A8%E5%8D%94%E4%BA%8B%E6%A5%AD%E5%A0%B1%E5%91%8A.pdf",
+      "Precision": "year"
+    },
+    {
+      "Id": "adaptation-naruto",
+      "At": "2002-07-01T00:00:00",
+      "Message": "Naruka reaches television audiences. Interest in similar stories expands, alongside stronger competition for attention.",
+      "Source": "https://naruto-official.com/about",
+      "Precision": "year"
+    },
+    {
+      "Id": "adaptation-bleach",
+      "At": "2004-10-01T00:00:00",
+      "Message": "Blanch reaches television audiences. Interest in similar stories expands, alongside stronger competition for attention.",
+      "Source": "https://bleach-anime.com/stories/",
+      "Precision": "month"
+    },
+    {
+      "Id": "adaptation-demon",
+      "At": "2019-07-01T00:00:00",
+      "Message": "Demon Lantern reaches television audiences. Interest in similar stories expands, alongside stronger competition for attention.",
+      "Source": "https://www.shueisha.co.jp/history/",
+      "Precision": "year"
+    },
+    {
+      "Id": "adaptation-frieren",
+      "At": "2023-09-01T00:00:00",
+      "Message": "After the Hero reaches television audiences. Interest in similar stories expands, alongside stronger competition for attention.",
+      "Source": "https://jinji.shogakukan.co.jp/project/06/",
+      "Precision": "month"
+    }
+  ],
+  "Creators": [
+    {
+      "Id": "oga",
+      "Name": "Eiichido Oga",
+      "Start": "1996-04-01T00:00:00",
+      "Departure": "1997-04-01T00:00:00",
+      "Skills": [
+        66,
+        74,
+        56,
+        48,
+        42
+      ]
+    },
+    {
+      "Id": "enno",
+      "Name": "Tatsuya Enno",
+      "Start": "2006-01-01T00:00:00",
+      "Departure": "2007-01-01T00:00:00",
+      "Skills": [
+        62,
+        70,
+        59,
+        73,
+        46
+      ]
+    }
+  ]
+}

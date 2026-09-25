@@ -1,0 +1,40 @@
+/* Full-monitor review companion to gui-redesign.html. No game code. */
+html,body{margin:0!important;padding:0!important}
+#mangaka-gui-review{height:100vh;border-radius:0;font-size:16px;display:flex;flex-direction:column;--ms-gap:24px}
+#mangaka-gui-review .ms-review{min-height:38px;flex-shrink:0}
+#mangaka-gui-review .ms-shell{grid-template-columns:200px minmax(0,1fr);flex:1;min-height:0}
+#mangaka-gui-review .ms-shell>div{display:flex;flex-direction:column;min-height:0;min-width:0}
+#mangaka-gui-review .ms-rail{padding:28px 16px;gap:9px}
+#mangaka-gui-review .ms-rail button{padding:13px 16px}
+#mangaka-gui-review .ms-global{padding:16px 28px;gap:20px;flex-shrink:0}
+#mangaka-gui-review .ms-global small{font-size:12px}
+#mangaka-gui-review .ms-global>.ms-grow{flex:1}
+#mangaka-gui-review .ms-seriesbar{padding:13px 28px;gap:24px;flex-shrink:0}
+#mangaka-gui-review .ms-seriesbar>.ms-grow{max-width:540px;flex:1}
+#mangaka-gui-review .ms-seriesbar>.ms-row{margin-left:auto}
+#mangaka-gui-review .ms-content{width:100%;max-width:1480px;margin:0 auto;padding:30px 36px;flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable}
+#mangaka-gui-review .ms-title{margin-bottom:24px}
+#mangaka-gui-review h1{font-size:32px}
+#mangaka-gui-review .ms-form{gap:22px}
+#mangaka-gui-review .ms-form input,#mangaka-gui-review .ms-form select{min-height:44px}
+#mangaka-gui-review .ms-grid{align-items:start}
+#mangaka-gui-review .ms-card{padding:26px}
+#mangaka-gui-review[data-screen="print"] .ms-grid{grid-template-columns:minmax(0,1fr) minmax(320px,.8fr);max-width:1120px;margin:0 auto}
+#mangaka-gui-review[data-screen="event"] .ms-grid{max-width:1120px;margin:0 auto}
+#mangaka-gui-review[data-screen="office"] .ms-content{max-width:none;display:flex;flex-direction:column;padding:20px 26px}
+#mangaka-gui-review[data-screen="office"] .ms-content>.ms-stack{flex:1;min-height:0;grid-template-rows:minmax(250px,1fr) auto auto;gap:14px}
+#mangaka-gui-review .ms-office-layout{min-height:0}
+#mangaka-gui-review .ms-office{aspect-ratio:auto;height:100%;min-height:0}
+#mangaka-gui-review .ms-office-layout.ms-has-side{grid-template-columns:minmax(0,1fr) 340px}
+#mangaka-gui-review .ms-office svg{object-fit:contain}
+#mangaka-gui-review .ms-helper{padding:12px 20px;max-width:900px}
+#mangaka-gui-review .ms-dialog{max-width:1050px;margin:0 auto;grid-template-columns:240px minmax(0,1fr);padding:32px}
+#mangaka-gui-review .ms-dialog-art{height:360px}
+#mangaka-gui-review .ms-dialog-art img{width:355px;left:-58px}
+#mangaka-gui-review .ms-toast{flex-shrink:0}
+@media(min-width:2200px){
+  #mangaka-gui-review .ms-content{max-width:1660px}
+  #mangaka-gui-review .ms-global{padding-left:36px;padding-right:36px}
+  #mangaka-gui-review .ms-seriesbar{padding-left:36px;padding-right:36px}
+  #mangaka-gui-review[data-screen="office"] .ms-content{padding-left:36px;padding-right:36px}
+}

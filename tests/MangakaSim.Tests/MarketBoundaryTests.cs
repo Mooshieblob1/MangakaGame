@@ -185,6 +185,7 @@ public class MarketBoundaryTests
         var state = PublishingTests.Started();
         var series = state.Series[0];
         PublishingTests.Until(state, () => series.Volumes.Count == 1);
+        state.Apply(new StudioActionCommand(StudioAction.Print,series.Volumes[0].Id,Amount:100));
         state.Apply(new SetPagesPerChapterCommand(series.Id, 200));
         var shortChapter = series.Chapters.Last();
         PublishingTests.Until(state, () => shortChapter.Status == ChapterStatus.Complete);

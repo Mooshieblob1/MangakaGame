@@ -6,14 +6,15 @@ namespace MangakaSim;
 
 public enum PublishingStatus { Unpublished, Pitching, Offered, Serialized }
 public enum EditorStatus { NotRequired, AwaitingReview, Approved, RedoRequested }
-public enum VolumeFormat { Tankobon }
+public enum VolumeFormat { Tankobon, DoujinIssue }
 public sealed record Contract(int Id, string MagazineId, long FeePerPage, DateTime SignedAt, DateTime FirstIssueClose)
 {
     [JsonRequired]
     public int ChaptersPublished { get; set; }
 }
 public sealed record SerializationOffer(string MagazineId, long FeePerPage, DateTime FirstIssueClose, DateTime ExpiresAt);
-public sealed record LedgerEntry(DateTime Time, long Amount, string Reason, int? SeriesId);
+public sealed record LedgerEntry(DateTime Time, long Amount, string Reason, int? SeriesId,
+    AccountEntryKind Kind = AccountEntryKind.Publishing, int? TransferId = null);
 public sealed record RankEntry(int Rank, string Title, int? SeriesId, int? FillerId, double Score);
 internal sealed record IssueCloseContext(string MagazineId, DateTime CloseTime, int IssueNumber);
 
@@ -70,7 +71,7 @@ public class GenreTrend
     [JsonRequired]
     public double PlayerInfluence { get; set; }
 }
-public class Volume
+public sealed partial class Volume
 {
     [JsonRequired]
     public int Id { get; set; }
@@ -189,18 +190,18 @@ public partial class Person
 }
 public partial class GameState
 {
-    [JsonRequired]
-    public long Money { get; set; } = 500000;
-    [JsonRequired]
-    public List<LedgerEntry> Ledger { get; set; } = new();
-    [JsonRequired]
-    public double StudioTrackRecord { get; set; }
+    [JsonIgnore]
+    public long Money { get => ControlledBusiness.Account.Balance; set => ControlledBusiness.Account.Balance = value; }
+    [JsonIgnore]
+    public List<LedgerEntry> Ledger => ControlledBusiness.Account.Entries;
+    [JsonIgnore]
+    public double StudioTrackRecord { get => ControlledBusiness.TrackRecord; set => ControlledBusiness.TrackRecord = value; }
     [JsonRequired]
     public List<MagazineState> Markets { get; set; } = new();
     [JsonRequired]
     public List<GenreTrend> Trends { get; set; } = new();
-    [JsonRequired]
-    public bool HasInternet { get; set; }
+    [JsonIgnore]
+    public bool HasInternet { get => ControlledBusiness.HasInternet; set => ControlledBusiness.HasInternet = value; }
     [JsonRequired]
     public DateTime? LastTrendUpdateMonth { get; set; }
     [JsonRequired]
@@ -211,8 +212,8 @@ public partial class GameState
     public DateTime? LastSalesAt { get; set; }
     [JsonIgnore] public PublisherCatalog PublisherCatalog => PublisherCatalog.LoadDefault();
     [JsonIgnore] public TrendCatalog TrendCatalog => TrendCatalog.LoadDefault();
-    [JsonIgnore] public double EffectiveReputation => ReputationRules.Effective(StudioTrackRecord, People.Select(p => p.Reputation));
-    [JsonIgnore] public double StaffReputation => ReputationRules.StaffTerm(People.Select(p => p.Reputation));
+    [JsonIgnore] public double EffectiveReputation => ReputationRules.Effective(StudioTrackRecord, ControlledStaff.Select(p => p.Reputation));
+    [JsonIgnore] public double StaffReputation => ReputationRules.StaffTerm(ControlledStaff.Select(p => p.Reputation));
     public double GenrePopularity(string genre)
     {
         var key = TrendRules.Normalise(genre, TrendCatalog);

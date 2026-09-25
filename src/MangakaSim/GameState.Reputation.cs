@@ -5,7 +5,9 @@ namespace MangakaSim;
 
 public partial class GameState
 {
-    private void ChangeTrackRecord(double delta) => StudioTrackRecord = Math.Clamp(StudioTrackRecord + delta, 0, 100);
+    private void ChangeTrackRecord(double delta, int? businessId = null)
+    { var b = BusinessOf(businessId ?? ControlledBusinessId); b.TrackRecord = Math.Clamp(b.TrackRecord + delta, 0, 100); }
+    private double BusinessReputation(int business) => ReputationRules.Effective(BusinessOf(business).TrackRecord, People.Where(p => p.Employment?.BusinessId == business).Select(p => p.Reputation));
     private static void ChangeReputation(Person person, double delta) => person.Reputation = Math.Clamp(person.Reputation + delta, 0, 100);
     private static Dictionary<int, long> ChapterHours(Chapter chapter) => chapter.Stages.SelectMany(w => w.HoursByPerson)
         .GroupBy(p => p.Key).ToDictionary(g => g.Key, g => g.Sum(p => p.Value));
@@ -58,7 +60,7 @@ public partial class GameState
         if (!series.IsIconic) series.Fanbase *= .9;
         ClearCancellation(series);
         series.PitchCooldowns[magazine] = Clock.Now.AddDays(52 * 7);
-        ChangeTrackRecord(ReputationRules.Withdraw(series.ChaptersPublished));
+        ChangeTrackRecord(ReputationRules.Withdraw(series.ChaptersPublished), series.BusinessId);
         foreach (var chapter in series.Chapters.Where(c => !c.IsOneShot && c.PublishedAt is null).ToArray())
         {
             chapter.DoujinEligible = true;
@@ -77,6 +79,8 @@ public partial class GameState
     {
         var series = RequireSeries(command.SeriesId);
         if (series.Status == SeriesStatus.Ended) throw new InvalidCommandException("This series has already ended.");
+        if (Progression.Manuscripts.Any(m => m.SeriesId == series.Id && !m.Released))
+            throw new InvalidCommandException("Release the contest manuscript before ending its title. Active submissions must finish judging first.");
         if (series.Contract is { } contract)
         {
             if (series.ChaptersPublished >= 12)
@@ -84,10 +88,10 @@ public partial class GameState
                 var ranks = series.Chapters.Where(c => c.PublishedAt is not null && c.Rank is not null).Select(c => c.Rank!.Value).ToArray();
                 var bonus = ReputationRules.Ending(PublisherCatalog.Get(contract.MagazineId).CancellationRank,
                     ranks.Average(), series.Volumes.Sum(v => v.CopiesSold));
-                ChangeTrackRecord(bonus);
+                ChangeTrackRecord(bonus, series.BusinessId);
                 AwardShares(series.LifetimeHoursByPerson, bonus);
             }
-            else ChangeTrackRecord(ReputationRules.Withdraw(series.ChaptersPublished));
+            else ChangeTrackRecord(ReputationRules.Withdraw(series.ChaptersPublished), series.BusinessId);
         }
         FinishSeries(series);
         Emit(EventType.SeriesEnded, $"{series.Title} ended.", series.Id);
@@ -130,11 +134,11 @@ public partial class GameState
                 }
             }
         }
-        if (series.Strikes.Count < 3 && (series.WarningIssuedAt is not { } warning ||
+        if ((DeadlineProtected(series) || series.Strikes.Count < 3) && (series.WarningIssuedAt is not { } warning ||
             CancellationRules.IssueAge(warning, Clock.Now, magazine.Cadence) < clocks.Cancel)) return;
-        if (Rng.NextDouble() < CancellationRules.Chance(EffectiveReputation))
+        if (Rng.NextDouble() < CancellationRules.Chance(BusinessReputation(series.BusinessId)))
         {
-            ChangeTrackRecord(-8);
+            ChangeTrackRecord(-8, series.BusinessId);
             foreach (var pair in series.LifetimeHoursByPerson.Where(p => p.Value > 0)) ChangeReputation(FindPerson(pair.Key)!, -2);
             series.PitchCooldowns[magazine.Id] = Clock.Now.AddDays(52 * 7);
             FinishSeries(series);

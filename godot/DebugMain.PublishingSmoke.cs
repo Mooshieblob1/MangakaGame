@@ -41,7 +41,7 @@ public partial class DebugMain
         _publishingFeedback.Text = "";
         ResetPersonInputs();
         _titleEdit.Text = "Paper Garden";
-        _genreEdit.Text = "drama";
+        SelectGenre(_genreOption,"drama");
         _cadenceOption.Selected = (int)Cadence.Monthly;
         _pagesSpin.Value = 19;
         Press("Create");
@@ -49,15 +49,12 @@ public partial class DebugMain
         _magazineOption.Selected = 5;
         await SettleUi();
         _onlineButton.EmitSignal(BaseButton.SignalName.Pressed);
-        Check(_state.HasInternet && _state.Money == 380000, "Get online control debits starting cost");
+        Check(_state.HasInternet && _state.Money == 180000, "Get online control debits starting cost");
         AdvanceAndScan(1);
-        var before = _state.ToJson();
+        var draft=_state.Series[0].Chapters[0];var progress=draft.Stages.Sum(w=>w.HoursDone);
         Press("Pitch one-shot");
-        Check(_state.ToJson() == before && _publishingFeedback.Text.Contains("Finish the current chapter"), "Partial-work pitch rejection is visible and atomic");
-        await DrivePublishingUntil(() => _state.Series[0].Volumes.Count == 1);
-        Check(_state.Series[0].Volumes[0].IsDoujin, "First five actual completions release doujin");
-        Press("Pitch one-shot");
-        Check(_state.Series[0].Publishing == PublishingStatus.Pitching && _state.Series[0].Chapters.Last().Pages == 31, "Pitch creates 31-page sample");
+        Check(_state.Series[0].Chapters.Contains(draft)&&draft.Stages.Sum(w=>w.HoursDone)==progress,"Pitch preserves partially drawn work");
+        Check(_state.Series[0].Publishing == PublishingStatus.Pitching && _state.Series[0].Chapters.Last().Pages == 31, "Pitch creates 31-page sample without requiring a book");
         await DrivePublishingUntil(() => _state.Series[0].Chapters.Last().Editor == EditorStatus.AwaitingReview);
         Save();
         var reviewSave = _state.ToJson();
@@ -94,7 +91,7 @@ public partial class DebugMain
         Check(_state.Markets[5].LastRanking.Any(r => r.SeriesId == _state.Series[0].Id), "Publication appears in magazine ranking");
         await DrivePublishingUntil(() => _state.Series[0].Volumes.Any(v => !v.IsDoujin && v.CopiesSold > 0));
         Check(_state.Ledger.Any(e => e.Reason == "royalties" && e.Amount > 0), "Commercial volume releases and earns royalties");
-        Check(_state.Money == 500000 + _state.Ledger.Sum(e => e.Amount), "Displayed balance reconciles with ledger");
+        Check(_state.Money == _state.ControlledBusiness.Account.OpeningBalance + _state.Ledger.Sum(e => e.Amount), "Displayed balance reconciles with ledger");
         _titleEdit.Text = "Draft input kept";
         _magazineOption.Selected = 5;
         await SettleUi();

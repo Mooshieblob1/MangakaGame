@@ -12,16 +12,61 @@ public partial class GameState
     public void Apply(ICommand command)
     {
         if (command is null) throw new InvalidCommandException("Command must not be null.");
+        if (command is DifficultyCommand or RecognitionCommand or AdoptManuscriptCommand or LicenseCommand)
+        {
+            var probe = System.Text.Json.JsonSerializer.Deserialize<GameState>(ToJson(), JsonOptions)!;
+            switch (command)
+            {
+                case DifficultyCommand c: probe.ApplyDifficulty(c); break;
+                case RecognitionCommand c: probe.ApplyRecognition(c); break;
+                case AdoptManuscriptCommand c: probe.AdoptManuscript(c.ChapterId); break;
+                case LicenseCommand c: probe.ApplyLicense(c); break;
+            }
+        }
+        if(command is StoryCommand story)
+        {
+            ApplyStory(story);
+            CommandLog.Add(new CommandEntry(Clock.Now,story));
+            Emit(EventType.CommandApplied,"Helper-Chan conversation updated.");
+            return; // Narrative choices do not replan work or invalidate furniture quotes.
+        }
         // Keep caller-owned collections out of the state and the replay log.
         command = command switch
         {
+            RelocateOfficeCommand c when c.Layout is not null => c with { Layout = c.Layout with { Placements=c.Layout.Placements?.ToList()!, Purchases=c.Layout.Purchases?.ToList()!, Sell=c.Layout.Sell?.ToList()!, Assignments=c.Layout.Assignments?.ToList() } },
+            ApplyOfficeLayoutCommand c => c with { Placements = c.Placements?.ToList()!, Purchases = c.Purchases?.ToList()!, Sell = c.Sell?.ToList()!, Assignments = c.Assignments?.ToList() },
+            StudioActionCommand c when c.Followers is not null => c with { Followers = c.Followers.ToList() },
             ReorderQueueCommand c when c.OrderedRefs is not null => c with { OrderedRefs = c.OrderedRefs.ToList() },
             SetScheduleCommand c when c.DaysOff is not null => c with { DaysOff = new(c.DaysOff) },
+            TimelineCommand c when c.Followers is not null => c with { Followers = c.Followers.ToList() },
             _ => command,
         };
         switch (command)
         {
+            case DifficultyCommand c: ApplyDifficulty(c); break;
+            case RecognitionCommand c: ApplyRecognition(c); break;
+            case AdoptManuscriptCommand c: AdoptManuscript(c.ChapterId); break;
+            case LicenseCommand c: ApplyLicense(c); break;
+            case RelocateOfficeCommand c: ApplyOfficeRelocation(c); break;
+            case ApplyOfficeLayoutCommand c: ApplyOffice(c); break;
+            case AssignDeskCommand c: AssignDesk(c); break;
+            case SetAppearanceCommand c:
+                if (c.Appearance is null || !c.Appearance.Valid) throw new InvalidCommandException("Choose a valid appearance.");
+                if (Clock.Now != GameClock.Start) throw new InvalidCommandException("Set the starting appearance before time advances.");
+                Protagonist.Appearance = c.Appearance; break;
+            case TimelineCommand c: ApplyTimeline(c); break;
+            case StudioActionCommand c: ApplyStudioAction(c); break;
             case CreateSeriesCommand c: ApplyCreateSeries(c); break;
+            case SetOutsideJobCommand c: SetOutsideJob(c); break;
+            case SetDoujinIssuesCommand c: SetDoujinIssues(c); break;
+            case ContinueOneShotCommand c: ContinueOneShot(c); break;
+            case ReserveConventionStockCommand c: ReserveConventionStock(c); break;
+            case PublishDoujinOnlineCommand c: PublishDoujinOnline(c); break;
+            case CreateDoujinCommand c:
+                if (string.IsNullOrWhiteSpace(c.Title) || c.Title.Length > 120 || c.Genre is null || c.Genre.Length > 80 || c.Pages is < 8 or > 64 || c.Pages % 4 != 0)
+                    throw new InvalidCommandException("Give your doujin a title and choose 8–64 pages in multiples of four.");
+                CreateSeries(c.Title.Trim(), c.Genre.Trim(), Cadence.Monthly, c.Pages).StandaloneDoujin = true;
+                break;
             case PauseSeriesCommand c: ApplyPauseSeries(c); break;
             case ResumeSeriesCommand c: ApplyResumeSeries(c); break;
             case SetCadenceCommand c: ApplySetCadence(c); break;
@@ -38,10 +83,18 @@ public partial class GameState
             case WithdrawSeriesCommand c: ApplyWithdraw(c); break;
             case EndSeriesCommand c: ApplyEnd(c); break;
             case GetOnlineCommand: ApplyGetOnline(); break;
+            case ContributeFundsCommand c: ApplyContribution(c); break;
+            case RecruitStaffCommand c: ApplyRecruit(c); break;
+            case HireStaffCommand c: ApplyHire(c); break;
+            case DismissStaffCommand c: ApplyDismiss(c); break;
+            case AssignStaffCommand c: ApplyAssignStaff(c); break;
+            case AssignStageCommand c: ApplyAssignStage(c); break;
             default:
                 throw new InvalidCommandException($"Unsupported command {command.GetType().Name}.");
         }
 
+        RefreshOfficeAssignments();
+        OfficeRevision++;
         CommandLog.Add(new CommandEntry(Clock.Now, command));
         Emit(EventType.CommandApplied, command.ToString() ?? command.GetType().Name);
         RunPlanner();
@@ -49,7 +102,8 @@ public partial class GameState
     }
 
     private Series RequireSeries(int seriesId) =>
-        FindSeries(seriesId) ?? throw new InvalidCommandException($"No series with id {seriesId}.");
+        FindSeries(seriesId) is { } series && !series.AwaitingCreatorDestination && series.BusinessId == ControlledBusinessId && (Control == ControlMode.OwnerDirector || series.LeadPersonId == ProtagonistPersonId) ? series :
+            throw new InvalidCommandException("This series is outside your business's authority.");
 
     private void ApplyCreateSeries(CreateSeriesCommand c)
     {
@@ -57,7 +111,7 @@ public partial class GameState
         if (c.Genre is null) throw new InvalidCommandException("Genre must not be null.");
         if (!Enum.IsDefined(c.Cadence)) throw new InvalidCommandException($"Unknown cadence {c.Cadence}.");
         if (c.PagesPerChapter < 1) throw new InvalidCommandException("Pages per chapter must be at least 1.");
-        CreateSeries(c.Title.Trim(), c.Genre.Trim(), c.Cadence, c.PagesPerChapter);
+        CreateSeries(c.Title.Trim(), c.Genre.Trim(), c.Cadence, c.PagesPerChapter).ReleaseShortIssues=c.ShortIssues;
     }
 
     private void ApplyPauseSeries(PauseSeriesCommand c)
@@ -93,10 +147,12 @@ public partial class GameState
     }
 
     private Person RequirePerson(int personId) =>
-        FindPerson(personId) ?? throw new InvalidCommandException($"No person with id {personId}.");
+        FindPerson(personId) is { } person && person.Employment?.BusinessId == ControlledBusinessId ? person :
+            throw new InvalidCommandException("This person is not employed by your business.");
 
     private Chapter RequireChapter(int chapterId) =>
-        FindChapter(chapterId) ?? throw new InvalidCommandException($"No chapter with id {chapterId}.");
+        FindChapter(chapterId) is { } chapter && !SeriesOf(chapter).AwaitingCreatorDestination && SeriesOf(chapter).BusinessId == ControlledBusinessId && (Control == ControlMode.OwnerDirector || SeriesOf(chapter).LeadPersonId == ProtagonistPersonId) ? chapter :
+            throw new InvalidCommandException("This chapter is outside your business's authority.");
 
     private void ApplyPinStage(PinStageCommand c)
     {
@@ -143,6 +199,7 @@ public partial class GameState
         var series = SeriesOf(chapter);
         work.Status = StageStatus.Skipped;
         work.HoursDone = 0;
+        work.QualityWeightedWork = 0;
         work.Contribution = 0;
         work.OvertimeHours = 0;
         if (chapter.Status == ChapterStatus.NotStarted) chapter.Status = ChapterStatus.InProgress;
@@ -163,6 +220,9 @@ public partial class GameState
             throw new InvalidCommandException($"Work end {c.WorkEndHour} plus overtime cap {cap} must not pass midnight.");
         if (c.DaysOff is null || c.DaysOff.Any(day => !Enum.IsDefined(day)))
             throw new InvalidCommandException("Days off must contain valid weekdays.");
+        if (person.Id != ProtagonistPersonId &&
+            (c.WorkEndHour - c.WorkStartHour > 9 || (c.WorkEndHour - c.WorkStartHour - 1) * (7 - c.DaysOff.Count) > 40))
+            throw new InvalidCommandException("Employee schedules allow eight paid hours plus a break, at most 40 hours/week.");
         person.Schedule.WorkStartHour = c.WorkStartHour;
         person.Schedule.WorkEndHour = c.WorkEndHour;
         person.Schedule.DaysOff = new HashSet<DayOfWeek>(c.DaysOff);

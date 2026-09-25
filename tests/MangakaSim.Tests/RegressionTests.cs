@@ -65,6 +65,8 @@ public class RegressionTests
     public void Commands_recompute_risk_immediately()
     {
         var state = Started();
+        foreach(var stage in StageOrder.All) state.Protagonist.Skills[stage]=80;
+        DeadlineFixture.Attach(state);state.RiskStep();
         Assert.True(state.Series[0].Chapters[0].IsAtRisk);
         state.Apply(new SetScheduleCommand(1, 8, 20, new() { DayOfWeek.Sunday }));
         Assert.False(state.Series[0].Chapters[0].IsAtRisk);
@@ -137,6 +139,8 @@ public class RegressionTests
     public void Changing_schedule_does_not_grant_more_than_the_daily_overtime_cap()
     {
         var state = Started();
+        foreach(var stage in StageOrder.All) state.Protagonist.Skills[stage]=80;
+        DeadlineFixture.Attach(state);state.RiskStep();
         state.Apply(new SetPagesPerChapterCommand(state.Series[0].Id, 200));
         state.Series[0].Chapters[0].DueDate = state.Clock.Now;
         state.Advance(12);
@@ -149,6 +153,8 @@ public class RegressionTests
     public void Midnight_work_is_in_previous_days_recap_before_counters_reset()
     {
         var state = Started();
+        foreach(var stage in StageOrder.All) state.Protagonist.Skills[stage]=80;
+        DeadlineFixture.Attach(state);state.RiskStep();
         state.Apply(new SetScheduleCommand(1, 20, 22, new()));
         state.Advance(16);
         var recap = Assert.Single(state.Events, e => e.Type == EventType.DailyRecap);

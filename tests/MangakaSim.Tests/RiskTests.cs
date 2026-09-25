@@ -8,9 +8,11 @@ public class RiskTests
     private static GameState WithSeries(Cadence cadence, bool overtimeAllowed = true)
     {
         var state = GameState.NewGame();
+        foreach(var stage in StageOrder.All) state.Protagonist.Skills[stage]=80;
         state.People[0].OvertimeAllowed = overtimeAllowed;
         state.CreateSeries("S", "g", cadence, 19);
         state.RunPlanner();
+        DeadlineFixture.Attach(state);
         return state;
     }
 
@@ -50,9 +52,11 @@ public class RiskTests
         Assert.Equal(1, ev.ChapterNumber);
         state.Advance(9); // Still at risk throughout the regular workday.
         Assert.Single(state.Events, e => e.Type == EventType.ChapterAtRisk);
-        state.Advance(2); // Overtime brings the chapter back within its time budget.
+        chapter.DueDate = chapter.DueDate.AddDays(7);
+        state.RiskStep();
         Assert.False(chapter.IsAtRisk);
-        state.Advance(15); // Finishing Name uses a whole tick, making the chapter at risk again.
+        chapter.DueDate = state.Clock.Now;
+        state.RiskStep();
         Assert.True(chapter.IsAtRisk);
         Assert.Equal(2, state.Events.Count(e => e.Type == EventType.ChapterAtRisk));
     }
@@ -81,12 +85,12 @@ public class RiskTests
         var state = WithSeries(Cadence.Weekly);
         state.Advance(12); // 08:00 -> 20:00
         var person = state.People[0];
-        Assert.Equal(12, person.HoursWorkedToday);
+        Assert.Equal(11, person.HoursWorkedToday);
         Assert.Equal(2, person.OvertimeHoursToday);
-        Assert.Equal(19.2, state.Series[0].Chapters[0].StageWork(Stage.Name).HoursDone, 6);
+        Assert.Equal(17.6, state.Series[0].Chapters[0].StageWork(Stage.Name).HoursDone, 6);
         state.Advance(1); // 21:00, past the cap
-        Assert.Equal(12, person.HoursWorkedToday);
-        Assert.Equal(19.2, state.Series[0].Chapters[0].StageWork(Stage.Name).HoursDone, 6);
+        Assert.Equal(11, person.HoursWorkedToday);
+        Assert.Equal(17.6, state.Series[0].Chapters[0].StageWork(Stage.Name).HoursDone, 6);
     }
 
     [Fact]
@@ -94,7 +98,7 @@ public class RiskTests
     {
         var state = WithSeries(Cadence.Weekly, overtimeAllowed: false);
         state.Advance(12);
-        Assert.Equal(10, state.People[0].HoursWorkedToday);
+        Assert.Equal(9, state.People[0].HoursWorkedToday);
         Assert.Equal(0, state.People[0].OvertimeHoursToday);
     }
 
@@ -103,7 +107,7 @@ public class RiskTests
     {
         var state = WithSeries(Cadence.Monthly);
         state.Advance(12);
-        Assert.Equal(10, state.People[0].HoursWorkedToday);
+        Assert.Equal(9, state.People[0].HoursWorkedToday);
         Assert.Equal(0, state.People[0].OvertimeHoursToday);
     }
 

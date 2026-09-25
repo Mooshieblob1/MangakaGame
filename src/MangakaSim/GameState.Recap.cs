@@ -8,8 +8,8 @@ public partial class GameState
     internal void DayEndStep()
     {
         if (RecapFiredToday) return;
-        if (!People.Any(p => p.HoursWorkedToday > 0)) return;
-        if (People.Any(HasWorkingHourLeftToday)) return;
+        if (!ControlledStaff.Any(p => p.HoursWorkedToday > 0)) return;
+        if (ControlledStaff.Any(HasWorkingHourLeftToday)) return;
         EmitDailyRecap();
     }
 
@@ -26,10 +26,10 @@ public partial class GameState
 
     internal GameEvent EmitDailyRecap()
     {
-        var window = Events.Skip(RecapWindowStart).Where(e => e.ActivityDate == TickStart.Date).ToList();
+        var window = Events.Skip(RecapWindowStart).Where(e => e.ActivityDate == TickStart.Date && (e.SeriesId is null || FindSeries(e.SeriesId.Value)?.BusinessId == ControlledBusinessId)).ToList();
         var payload = new DailyRecapPayload
         {
-            YenEarned = Ledger.Where(e => e.Time.Date == TickStart.Date && e.Amount > 0).Sum(e => e.Amount),
+            YenEarned = Ledger.Where(e => e.Time.Date == TickStart.Date && e.Amount > 0 && e.Kind == AccountEntryKind.Publishing).Sum(e => e.Amount),
             ChaptersPublished = window.Where(e => e.Type == EventType.ChapterPublished)
                 .Select(e => new ChapterRef(e.SeriesId!.Value, e.ChapterNumber!.Value)).ToList(),
             IssuesMissed = window.Where(e => e.Type == EventType.IssueMissed).Select(e => e.SeriesId!.Value).ToList(),
@@ -37,8 +37,8 @@ public partial class GameState
                 .Select(e => new StageRef(e.SeriesId!.Value, e.ChapterNumber!.Value, e.Stage!.Value)).ToList(),
             StagesCompleted = window.Where(e => e.Type == EventType.StageCompleted)
                 .Select(e => new StageRef(e.SeriesId!.Value, e.ChapterNumber!.Value, e.Stage!.Value)).ToList(),
-            HoursPerPerson = People.Select(p => new PersonHours(p.Id, p.Name, p.HoursWorkedToday, p.OvertimeHoursToday)).ToList(),
-            ChaptersAtRisk = Series.Where(s => s.Status == SeriesStatus.Active)
+            HoursPerPerson = ControlledStaff.Select(p => new PersonHours(p.Id, p.Name, p.HoursWorkedToday, p.OvertimeHoursToday)).ToList(),
+            ChaptersAtRisk = Series.Where(s => s.BusinessId == ControlledBusinessId && s.Status == SeriesStatus.Active)
                 .SelectMany(s => s.Chapters.Where(c => c.IsAtRisk).Select(c => new ChapterRef(s.Id, c.Number))).ToList(),
             ChaptersCompleted = window.Where(e => e.Type == EventType.ChapterCompleted)
                 .Select(e => new ChapterRef(e.SeriesId!.Value, e.ChapterNumber!.Value)).ToList(),
@@ -51,6 +51,8 @@ public partial class GameState
         var message = $"Day done. {hours}. Stages completed: {payload.StagesCompleted.Count}. " +
                       $"Chapters completed: {payload.ChaptersCompleted.Count}. At risk: {payload.ChaptersAtRisk.Count}.";
 
+        var industry = window.Where(e => e.Type is EventType.IndustryNews or EventType.IndustryDecision).Select(e=>e.Message).ToArray();
+        if(industry.Length>0) message += "\nIndustry: " + string.Join("\n",industry);
         var ev = Emit(EventType.DailyRecap, message, context: new(ActivityDate: TickStart.Date));
         ev.Recap = payload;
         RecapFiredToday = true;
@@ -77,7 +79,7 @@ public partial class GameState
         for (var n = 0; n < limit; n++)
         {
             var hour = Clock.Now.AddHours(n);
-            if (People.Any(p => p.Schedule.IsRegularHour(hour))) return n;
+            if (ControlledStaff.Any(p => p.Schedule.IsRegularHour(hour))) return n;
         }
         return 0;
     }

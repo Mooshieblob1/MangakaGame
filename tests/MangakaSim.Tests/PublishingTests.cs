@@ -18,11 +18,11 @@ public class PublishingTests
     }
 
     [Fact]
-    public void New_game_has_market_state_and_a_reconciled_empty_ledger()
+    public void New_game_has_market_state_and_a_reconciled_founding_transfer()
     {
         var state = GameState.NewGame(42);
-        Assert.Equal(500000, state.Money);
-        Assert.Empty(state.Ledger);
+        Assert.Equal(300000, state.Money);
+        Assert.Equal("founding contribution", Assert.Single(state.Ledger).Reason);
         Assert.Equal(6, state.Markets.Count);
         Assert.Equal(12, state.Trends.Count);
         Assert.Equal(10, state.People[0].Reputation);
@@ -55,9 +55,14 @@ public class PublishingTests
     {
         var state = Started();
         state.Advance(1);
-        var before = state.ToJson();
-        Assert.Throws<InvalidCommandException>(() => state.Apply(new PitchSeriesCommand(state.Series[0].Id, "hoshigaku-flowers")));
-        Assert.Equal(before, state.ToJson());
+        var draft=state.Series[0].Chapters[0];
+        var hours=draft.Stages.Sum(w=>w.HoursDone);
+        state.Apply(new PitchSeriesCommand(state.Series[0].Id, "hoshigaku-flowers"));
+        Assert.Contains(draft,state.Series[0].Chapters);
+        state.Advance(4);
+        Assert.Equal(hours,draft.Stages.Sum(w=>w.HoursDone));
+        Assert.Contains(state.Series[0].Chapters,c=>c.IsOneShot&&c.Pages==31&&c.Stages.Sum(w=>w.HoursDone)>0);
+        Assert.Equal(state.ToJson(),GameState.FromJson(state.ToJson()).ToJson());
     }
 
     [Fact]
@@ -86,6 +91,9 @@ public class PublishingTests
         var volume = series.Volumes[0];
         Assert.True(volume.IsDoujin);
         Assert.Equal(5, volume.ChapterIds.Count);
+        Assert.Null(volume.ReleasedAt);
+        state.Apply(new StudioActionCommand(StudioAction.Print,volume.Id,Amount:100));
+        state.Advance(24);
         Assert.NotNull(volume.ReleasedAt);
         Until(state, () => volume.WeeksOnSale > 0);
         Assert.True(volume.CopiesSold > 0);
@@ -97,7 +105,7 @@ public class PublishingTests
         var before = state.ToJson();
         Assert.Throws<InvalidCommandException>(() => state.Apply(new GetOnlineCommand()));
         Assert.Equal(before, state.ToJson());
-        Assert.Equal(500000 + state.Ledger.Sum(e => e.Amount), state.Money);
+        Assert.Equal(state.ControlledBusiness.Account.OpeningBalance + state.Ledger.Sum(e => e.Amount), state.Money);
     }
 
     [Fact]

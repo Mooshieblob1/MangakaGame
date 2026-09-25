@@ -13,34 +13,36 @@ public class ScenarioTests
         var state = GameState.NewGame(42);
         foreach (var stage in StageOrder.All) state.People[0].Skills[stage] = skill;
         state.Apply(new CreateSeriesCommand("Weekly", "shonen", Cadence.Weekly, 19));
+        state.Apply(new StudioActionCommand(StudioAction.AutoPrint,state.Series[0].Id,1,10000,10,true));
         return state;
     }
 
     [Fact]
-    public void Prodigy_on_a_weekly_hits_at_least_45_of_52_deadlines()
+    public void Solo_weekly_prodigy_has_material_time_and_cash_pressure()
     {
         var state = Weekly(80);
         state.Advance(52 * 24 * 7);
 
         var completed = state.Series[0].Chapters.Where(c => c.Status == ChapterStatus.Complete).ToList();
-        Assert.True(completed.Count >= 45, $"only {completed.Count} chapters completed in 52 weeks");
+        Assert.True(completed.Count >= 35, $"only {completed.Count} chapters completed in 52 weeks");
         var onTime = completed.Take(52).Count(c => !c.IsLate);
         _output.WriteLine($"Skill 80, 52 weeks: {completed.Count} completed; {onTime} of first 52 on time.");
-        Assert.True(onTime >= 45, $"only {onTime} of the first {Math.Min(52, completed.Count)} chapters were on time");
+        Assert.True(onTime < 45, $"only {onTime} of the first {Math.Min(52, completed.Count)} chapters were on time");
     }
 
     [Fact]
-    public void Average_artist_on_a_weekly_is_mostly_late()
+    public void Average_self_publisher_misses_personal_targets_without_penalties()
     {
         var state = Weekly(50);
         state.Advance(52 * 24 * 7);
 
         var completed = state.Series[0].Chapters.Where(c => c.Status == ChapterStatus.Complete).ToList();
         Assert.NotEmpty(completed);
-        var late = completed.Count(c => c.IsLate);
+        var late = completed.Count(c => c.CompletedAt > c.DueDate);
         _output.WriteLine($"Skill 50, 52 weeks: {completed.Count} completed; {late} late.");
         Assert.True(late > completed.Count / 2, $"{late} late of {completed.Count}");
-        Assert.Contains(state.Events, e => e.Type == EventType.DeadlineMissed);
+        Assert.DoesNotContain(state.Events, e => e.Type == EventType.DeadlineMissed);
+        Assert.All(completed,c=>Assert.False(c.IsLate));
     }
 
     [Fact]
@@ -48,6 +50,7 @@ public class ScenarioTests
     {
         var state = GameState.NewGame(42);
         state.Apply(new CreateSeriesCommand("Monthly", "seinen", Cadence.Monthly, 19));
+        state.Apply(new StudioActionCommand(StudioAction.AutoPrint,state.Series[0].Id,1,10000,10,true));
         state.Advance(12 * 24 * 31);
 
         var completed = state.Series[0].Chapters.Where(c => c.Status == ChapterStatus.Complete).ToList();
@@ -60,10 +63,16 @@ public class ScenarioTests
     public void A_year_of_weekly_play_emits_one_recap_per_working_day()
     {
         var state = Weekly(80);
-        state.Advance(52 * 24 * 7);
-
-        var recaps = state.Events.Count(e => e.Type == EventType.DailyRecap);
-        Assert.Equal(52 * 6, recaps); // six working days a week, Sunday off
+        var workedDates = new HashSet<DateTime>();
+        for(var hour=0;hour<52*24*7;hour++)
+        {
+            var before=state.Protagonist.ProductiveHours;
+            state.Advance(1);
+            if(state.Protagonist.ProductiveHours>before) workedDates.Add(state.TickStart.Date);
+        }
+        var recaps=state.Events.Where(e=>e.Type==EventType.DailyRecap).ToArray();
+        Assert.Equal(workedDates.Order(),recaps.Select(e=>e.ActivityDate).Order());
+        Assert.Equal(recaps.Length,recaps.Select(e=>e.ActivityDate).Distinct().Count());
     }
 
     [Fact]

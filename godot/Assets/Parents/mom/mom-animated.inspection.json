@@ -1,0 +1,41 @@
+{
+  "file": "godot\\Assets\\Parents\\mom\\mom-animated.glb",
+  "bytes": 3471404,
+  "glb_version": 2,
+  "mesh_count": 1,
+  "vertices": 8563,
+  "triangles": 11875,
+  "materials": 1,
+  "images": [
+    {
+      "mime_type": "image/png",
+      "embedded": true
+    },
+    {
+      "mime_type": "image/jpeg",
+      "embedded": true
+    },
+    {
+      "mime_type": "image/jpeg",
+      "embedded": true
+    }
+  ],
+  "skins": 1,
+  "animations": 3,
+  "extensions_required": [],
+  "external_resources": [],
+  "position_bounds": [
+    {
+      "min": [
+        -0.19701585173606873,
+        1.0271480022083779e-07,
+        -0.29627853631973267
+      ],
+      "max": [
+        0.19701585173606873,
+        1.0000001192092896,
+        0.296278715133667
+      ]
+    }
+  ]
+}

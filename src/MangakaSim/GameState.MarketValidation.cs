@@ -19,17 +19,17 @@ public partial class GameState
 
         Check(Range(StudioTrackRecord, 0, 100) && People.All(p => Range(p.Reputation, 0, 100)), "reputation");
         Check(Ledger is not null && Money >= 0, "ledger");
-        var total = 500000L;
+        var total = ControlledBusiness.Account.OpeningBalance;
         foreach (var entry in Ledger)
         {
             Check(entry is not null && Time(entry.Time) && (entry.SeriesId is null || FindSeries(entry.SeriesId.Value) is not null), "ledger reference");
-            Check(entry.Reason is "chapter fee" or "royalties" or "doujin sales" or "internet", "ledger reason");
-            Check(entry.Reason == "internet" ? entry.Amount < 0 && entry.SeriesId is null : entry.Amount >= 0 && entry.SeriesId is not null, "ledger amount");
+            Check(!string.IsNullOrWhiteSpace(entry.Reason), "ledger reason");
+            Check(entry.Kind != AccountEntryKind.Expense || entry.Amount < 0, "ledger amount");
             try { total = checked(total + entry.Amount); } catch (OverflowException ex) { throw new InvalidDataException("Ledger overflow.", ex); }
             Check(total >= 0, "ledger balance");
         }
         Check(total == Money && Ledger.Zip(Ledger.Skip(1)).All(p => p.First.Time <= p.Second.Time), "ledger reconciliation");
-        Check(Ledger.Count(e => e.Reason == "internet") == (HasInternet ? 1 : 0), "internet purchase");
+        Check(!HasInternet || Ledger.Any(e => e.Reason == "internet"), "internet purchase");
         Check(DoujinCopiesThisMonth >= 0 && Range(DoujinFansThisMonth, 0, double.MaxValue), "convention totals");
         Check(LastSalesAt is null || (Time(LastSalesAt.Value) && LastSalesAt.Value.Hour == 0 && LastSalesAt.Value.DayOfWeek == DayOfWeek.Monday), "sales timestamp");
         Check(LastTrendUpdateMonth is null || (LastTrendUpdateMonth.Value == new DateTime(LastTrendUpdateMonth.Value.Year, LastTrendUpdateMonth.Value.Month, 1) &&
@@ -83,7 +83,7 @@ public partial class GameState
             Check(series.Status != SeriesStatus.Ended || series.Publishing == PublishingStatus.Unpublished, "ended publishing status");
             Check((series.Publishing == PublishingStatus.Serialized) == (series.Contract is not null) &&
                 (series.Publishing == PublishingStatus.Offered) == (series.PendingOffer is not null), "contract/offer exclusivity");
-            Check(series.Chapters.Count(c => c.Status != ChapterStatus.Complete) <= 1, "open chapters");
+            Check(series.Chapters.Count(c => c.Status != ChapterStatus.Complete) <= 3, "open chapters");
             Check(series.Chapters.Count(c => c.IsOneShot && !c.PitchResolved) == (series.Publishing == PublishingStatus.Pitching ? 1 : 0), "unresolved pitch");
             Check(series.Strikes.All(Time) && series.Strikes.SequenceEqual(series.Strikes.Order()) && series.WeeksBelowLine >= 0 &&
                 (series.WarningIssuedAt is null || Time(series.WarningIssuedAt.Value)) &&
@@ -144,17 +144,20 @@ public partial class GameState
                     Hours(work.HoursByPerson);
                     Check(Range(work.OvertimeHours, 0, work.HoursByPerson.Values.Sum()) && Range(work.Contribution, 0, QualityRules.Weight(work.Stage) * 100) &&
                         (work.Status == StageStatus.Complete || work.Contribution == 0) &&
-                        (work.HoursDone == 0 || work.HoursByPerson.Count > 0), "stage contribution");
+                        (work.HoursDone == 0 || work.HoursByPerson.Count > 0 || work.SandboxCompleted) &&
+                        (!work.SandboxCompleted || Version >= 7 && Progression.EverSandbox && work.Status == StageStatus.Complete), "stage contribution");
                 }
             }
             var members = new HashSet<int>();
+            var issueMembers=new HashSet<int>();
             var number = 1;
             foreach (var volume in series.Volumes)
             {
                 Check(volume is not null && volume.Number == number++ && Enum.IsDefined(volume.Format) &&
                     volume.ChapterIds is { Count: > 0 } && volume.CopiesSold >= 0 && Range(volume.AverageQuality, 0, 100), "volume details");
                 Id(volume.Id);
-                Check(volume.ChapterIds.All(id => members.Add(id) && series.Chapters.Any(c => c.Id == id && c.Status == ChapterStatus.Complete)), "volume membership");
+                Check(volume.EditionNumber>=0&&(volume.Format!=VolumeFormat.DoujinIssue||volume.IsDoujin&&volume.ChapterIds.Count==1),"issue format");
+                Check(volume.ChapterIds.All(id => (volume.Format==VolumeFormat.DoujinIssue?issueMembers:members).Add(id) && series.Chapters.Any(c => c.Id == id && c.Status == ChapterStatus.Complete)), "volume membership");
                 var chapters = volume.ChapterIds.Select(id => series.Chapters.Single(c => c.Id == id)).ToArray();
                 Check(volume.FirstChapter == chapters.Min(c => c.Number) && volume.LastChapter == chapters.Max(c => c.Number) &&
                     Math.Abs(volume.AverageQuality - chapters.Average(c => c.Quality!.Value)) < 1e-9 &&
@@ -164,7 +167,7 @@ public partial class GameState
                     volume.SalesClosed == (volume.WeeksOnSale == volume.SalesWindowWeeks) &&
                     volume.ReleaseDate.Ticks % TimeSpan.TicksPerHour == 0 && volume.ReleaseDate >= GameClock.Start &&
                     (volume.ReleasedAt is { } released ? Time(released) && released >= volume.ReleaseDate :
-                    volume.ReleaseDate > Clock.Now && volume.WeeksOnSale == 0 && volume.CopiesSold == 0), "volume release");
+                    (volume.IsDoujin || volume.ReleaseDate > Clock.Now) && volume.WeeksOnSale == 0 && volume.CopiesSold == 0), "volume release");
             }
             foreach (var person in People)
                 Check(series.Chapters.SelectMany(c => c.Stages).Sum(w => w.HoursByPerson.GetValueOrDefault(person.Id)) <=

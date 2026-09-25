@@ -1,0 +1,41 @@
+{
+  "file": "godot\\Assets\\Parents\\dad\\dad-animated.glb",
+  "bytes": 4243712,
+  "glb_version": 2,
+  "mesh_count": 1,
+  "vertices": 7088,
+  "triangles": 11298,
+  "materials": 1,
+  "images": [
+    {
+      "mime_type": "image/png",
+      "embedded": true
+    },
+    {
+      "mime_type": "image/jpeg",
+      "embedded": true
+    },
+    {
+      "mime_type": "image/jpeg",
+      "embedded": true
+    }
+  ],
+  "skins": 1,
+  "animations": 3,
+  "extensions_required": [],
+  "external_resources": [],
+  "position_bounds": [
+    {
+      "min": [
+        -0.21476052701473236,
+        -4.363372596571935e-08,
+        -0.3900830149650574
+      ],
+      "max": [
+        0.21476037800312042,
+        0.9999997615814209,
+        0.3900830149650574
+      ]
+    }
+  ]
+}

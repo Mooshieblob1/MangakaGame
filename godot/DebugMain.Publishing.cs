@@ -54,10 +54,10 @@ public partial class DebugMain
             return button;
         }
         _pitchButton = Action("Pitch one-shot", () => PublishingCommand(id => new PitchSeriesCommand(id, SelectedMagazineId())));
-        _acceptButton = Action("Accept offer", () => PublishingCommand(id => new AcceptOfferCommand(id)));
-        _declineButton = Action("Decline offer", () => PublishingCommand(id => new DeclineOfferCommand(id)));
-        _withdrawButton = Action("Withdraw", () => PublishingCommand(id => new WithdrawSeriesCommand(id)));
-        _endButton = Action("End series", () => PublishingCommand(id => new EndSeriesCommand(id)));
+        _acceptButton = Action("Accept offer", () => ConfirmPublishing("Accept publishing offer",id => new AcceptOfferCommand(id)));
+        _declineButton = Action("Decline offer", () => ConfirmPublishing("Decline publishing offer",id => new DeclineOfferCommand(id)));
+        _withdrawButton = Action("Withdraw", () => ConfirmPublishing("Withdraw from serialization",id => new WithdrawSeriesCommand(id)));
+        _endButton = Action("End series", () => ConfirmPublishing("End this series",id => new EndSeriesCommand(id)));
         _onlineButton = Action("Get online", () => TryApply(new GetOnlineCommand()));
         panel.AddChild(actions);
         _publishingFeedback = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
@@ -107,21 +107,26 @@ public partial class DebugMain
         if (_publishingSeries.ItemCount == 0) { LogLine("Command rejected: no series selected."); return; }
         TryApply(command(_publishingSeries.GetSelectedId()));
     }
+    private void ConfirmPublishing(string title,Func<int,ICommand> command)
+    {
+        if(!ManagementInterface){PublishingCommand(command);return;}
+        var series=_state.FindSeries(_publishingSeries.GetSelectedId());if(series is null)return;
+        var request=command(series.Id);
+        ConfirmPlayerAction(title,series.Title+"\n"+PublishingStatusText(series)+"\n\n"+(request is AcceptOfferCommand?"Accepting begins publisher deadlines under these terms.":"This changes the title's publishing status. Existing books and their recorded sales are retained."),()=>TryApply(request));
+    }
     private void RefreshPublishing()
     {
         var selected = _publishingSeries.ItemCount == 0 ? -1 : _publishingSeries.GetSelectedId();
-        _publishingSeries.Clear();
-        foreach (var s in _state.Series) _publishingSeries.AddItem(s.Title, s.Id);
-        if (_publishingSeries.ItemCount > 0) _publishingSeries.Selected = Math.Max(0, _publishingSeries.GetItemIndex(selected));
+        SyncOptions(_publishingSeries,_state.Series.Where(s=>!ManagementInterface||s.BusinessId==_state.ControlledBusinessId&&(_state.Control==ControlMode.OwnerDirector||s.LeadPersonId==_state.ProtagonistPersonId)).Select(s=>(s.Id,s.Title)),selected);
         var series = _publishingSeries.ItemCount == 0 ? null : _state.FindSeries(_publishingSeries.GetSelectedId());
         var magazine = _state.PublisherCatalog.Get(SelectedMagazineId());
         var market = _state.Markets.Single(m => m.MagazineId == magazine.Id);
-        _studioSummary.Text = $"Balance ¥{_state.Money:N0}   •   Price index {Economy.PriceIndex(_state.TrendCatalog, _state.Clock.Now):F3}   •   " +
+        _studioSummary.Text = $"Business ¥{_state.Money:N0} • Personal ¥{_state.PersonalMoney:N0} • Price index {Economy.PriceIndex(_state.TrendCatalog, _state.Clock.Now):F3} • " +
             $"Track record {_state.StudioTrackRecord:F1}   •   Staff reputation {_state.StaffReputation:F1}   •   Effective reputation {_state.EffectiveReputation:F1}   •   " +
             (_state.HasInternet ? "Online" : "Offline");
         _onlineButton.Text = _state.HasInternet ? "Online" : $"Get online (¥{Economy.InternetCost(_state.TrendCatalog, _state.Clock.Now):N0})";
-        _onlineButton.Disabled = _state.HasInternet || _state.Money < Economy.InternetCost(_state.TrendCatalog, _state.Clock.Now);
-        _pitchButton.Disabled = series is null || series.Status != SeriesStatus.Active || series.Publishing != PublishingStatus.Unpublished;
+        _onlineButton.Disabled = _state.HasInternet || _state.AvailableBusinessCash < Economy.InternetCost(_state.TrendCatalog, _state.Clock.Now);
+        _pitchButton.Disabled = series is null || series.Status != SeriesStatus.Active || series.Publishing != PublishingStatus.Unpublished || series.StandaloneDoujin;
         _acceptButton.Disabled = _declineButton.Disabled = series?.Publishing != PublishingStatus.Offered;
         _withdrawButton.Disabled = series?.Publishing != PublishingStatus.Serialized;
         _endButton.Disabled = series is null || series.Status == SeriesStatus.Ended;
@@ -134,6 +139,7 @@ public partial class DebugMain
             var offer = series.PendingOffer;
             var lines = new List<string>
             {
+                series.StandaloneDoujin?"This is a self-published one-shot, not a magazine sample. Use Continue as ongoing series in its Series details to seek serialization.":"Pitching creates a separate 31-page magazine sample. Unfinished doujin chapters are preserved on hold. No completed book is required. Only an accepted serialization has publisher deadline penalties.",
                 $"{series.Title} — {series.Publishing}, {series.Status}{(series.IsIconic ? ", ICONIC" : "")}   •   Fans {series.Fanbase:N0}   •   Impact {series.CulturalImpact:F1}   •   Published {series.ChaptersPublished}",
                 $"Last quality {quality?.ToString() ?? "—"}   •   Rank {series.LastRank?.ToString() ?? "—"}   •   Strikes {series.Strikes.Count}   •   Protection {_state.Protection(series):P0}" +
                     (series.WarningIssuedAt is { } warning ? $"   •   WARNING since {warning:d MMM yyyy}" : ""),
@@ -141,7 +147,7 @@ public partial class DebugMain
             if (contract is not null) lines.Add($"Contract: {_state.PublisherCatalog.Get(contract.MagazineId).Name}, ¥{contract.FeePerPage:N0}/page; cancellation line #{_state.PublisherCatalog.Get(contract.MagazineId).CancellationRank}.");
             if (offer is not null) lines.Add($"Offer: {_state.PublisherCatalog.Get(offer.MagazineId).Name}, ¥{offer.FeePerPage:N0}/page; first issue / expiry {offer.FirstIssueClose:d MMM yyyy HH:mm}.");
             if (chapter is not null) lines.Add($"Current ch.{chapter.Number}, {chapter.Pages} pages: {chapter.Status}; editor {chapter.Editor}, redos {chapter.RedoCount}" +
-                (chapter.EditorDecisionAt is { } decision ? $"; decision {decision:d MMM yyyy HH:mm}" : "") + $"; due {chapter.DueDate:d MMM yyyy HH:mm}.");
+                (chapter.EditorDecisionAt is { } decision ? $"; decision {decision:d MMM yyyy HH:mm}" : "") + $"; {ProductionTarget(chapter)}.");
             if (series.PitchCooldowns.TryGetValue(magazine.Id, out var until) && until > _state.Clock.Now) lines.Add($"This magazine accepts another pitch after {until:d MMM yyyy}.");
             _publishingSummary.Text = string.Join("\n", lines);
         }

@@ -22,17 +22,43 @@ public partial class GameState
 
     internal bool ComputeAtRisk(Chapter chapter)
     {
-        var assignee = AssigneeOf(chapter);
-        var remaining = RemainingPersonHours(chapter);
-        if (remaining <= 0) return false;
-        return remaining > RegularHoursBefore(assignee, Clock.Now, chapter.DueDate);
+        if(!HasPublisherDeadline(chapter))return false;
+        var ready = Clock.Now;
+        var available = People.ToDictionary(p => p.Id, _ => Clock.Now);
+        // Earlier deadlines consume each worker's capacity before this chapter.
+        foreach (var other in Series.Where(s => s.Status == SeriesStatus.Active).SelectMany(s => s.Chapters)
+                     .Where(c => HasPublisherDeadline(c) && c.Status != ChapterStatus.Complete && (c.DueDate < chapter.DueDate || c.DueDate == chapter.DueDate && c.Id <= chapter.Id))
+                     .OrderBy(c => c.DueDate).ThenBy(c => c.Id))
+        {
+            ready = Clock.Now;
+            foreach (var work in other.Stages.Where(w => !w.IsDone))
+            {
+                var p = work.AssignedTo is { } id ? FindPerson(id) : null;
+                if (p is null || !CanProduce(p)) { ready = other.DueDate.AddHours(1); break; }
+                var start = available[p.Id] > ready ? available[p.Id] : ready;
+                if (p.BusyUntil > start) start = p.BusyUntil.Value;
+                if (work.Stage != Stage.Name && other.EditorDecisionAt > start) start = other.EditorDecisionAt.Value;
+                var hours = (int)Math.Ceiling(Math.Max(0,work.HoursRequired-work.HoursDone)/Settings.Balance.SkillMultiplier(p.Skill(work.Stage)));
+                var limit = start.AddDays(366);
+                while (hours > 0 && start < limit)
+                {
+                    var booked = Bookings.Any(b => !b.Cancelled && !b.Settled && (b.PersonId == p.Id || b.AssistantId == p.Id) &&
+                        start.Date >= b.Date && start.Date < b.Date.AddDays(b.Scale == 2 ? 2 : 1) && start.Hour >= 11-b.TravelHours && start.Hour < 16+b.TravelHours);
+                    if (p.Schedule.IsRegularHour(start) && !AtOutsideJob(p,start) && start.Hour != p.Schedule.WorkStartHour+4 && !booked) hours--;
+                    start = start.AddHours(1);
+                }
+                available[p.Id] = ready = start;
+            }
+            if (other.Id == chapter.Id) return ready > chapter.DueDate;
+        }
+        return false;
     }
 
     /// <summary>Person assigned to the first unfinished stage; falls back to the first person.</summary>
     internal Person AssigneeOf(Chapter chapter)
     {
         var firstOpen = chapter.Stages.FirstOrDefault(s => !s.IsDone);
-        return (firstOpen?.AssignedTo is { } id ? FindPerson(id) : null) ?? People[0];
+        return (firstOpen?.AssignedTo is { } id ? FindPerson(id) : null) ?? FindPerson(SeriesOf(chapter).LeadPersonId)!;
     }
 
     internal double RemainingPersonHours(Chapter chapter)
@@ -40,7 +66,7 @@ public partial class GameState
         double total = 0;
         foreach (var work in chapter.Stages.Where(s => !s.IsDone))
         {
-            var person = (work.AssignedTo is { } id ? FindPerson(id) : null) ?? People[0];
+            var person = (work.AssignedTo is { } id ? FindPerson(id) : null) ?? FindPerson(SeriesOf(chapter).LeadPersonId)!;
             var multiplier = Settings.Balance.SkillMultiplier(person.Skill(work.Stage));
             total += Math.Max(0, work.HoursRequired - work.HoursDone) / multiplier;
         }

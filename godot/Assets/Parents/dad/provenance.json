@@ -1,0 +1,27 @@
+{
+  "character": "dad",
+  "reference_method": "Built-in image_gen: chibi adaptation of user-provided parent artwork",
+  "generation": {
+    "task_id": "00edf771-5d74-40db-9bc3-c430f357fb76",
+    "status": "success",
+    "model": "dad.glb",
+    "credits_consumed": 30.0
+  },
+  "rig_check": {
+    "credits_consumed": 0.0,
+    "task_id": "78d89547-3f40-4060-9af7-9958fa4b9603",
+    "status": "success",
+    "output": {
+      "riggable": true,
+      "rig_type": "biped"
+    }
+  },
+  "rig": {
+    "task_id": "dab7db20-050f-43be-9b18-cc4c816b5f0a",
+    "status": "success",
+    "credits_consumed": 25.0,
+    "model": "dad-rigged.glb"
+  },
+  "animations": "Idle, Walk, Sit; locally authored; no animation API calls",
+  "in_game": false
+}

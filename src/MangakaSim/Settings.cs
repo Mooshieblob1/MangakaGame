@@ -12,6 +12,7 @@ public class Settings
         {
             settings.AutoPause[type] = false;
         }
+        settings.AutoPause[EventType.IndustryDecision] = true;
         settings.AutoPause[EventType.DailyRecap] = true;
         settings.AutoPause[EventType.ChapterCompleted] = true;
         settings.AutoPause[EventType.DeadlineMissed] = true;

@@ -1,0 +1,101 @@
+[
+  {
+    "asset": "godot/Assets/Manga/action.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-e0eafa58-3ae3-45d0-8c1c-d08d843ede06.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: action. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/adventure.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-15af5386-6eac-44b5-bce7-bfd04c077e26.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: adventure. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/comedy.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-5b024a1f-f2d9-4eb3-9d5a-c74af06e18df.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: comedy. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/sports.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-c3e4d990-69d0-4316-b0fd-cdf9255eb4b3.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: sports. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/romance.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-ac5e01c6-154c-4db8-b414-e8f27e0e1f26.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: romance. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/drama.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-36c6938c-49f3-40a0-a09e-2f1185ca2554.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: drama. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/slice-of-life.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-55956573-0f9f-41ad-8303-7a3b7e419dd4.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: slice of life. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/horror.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-e7f67ee6-00e4-496d-ac62-c054ffd57e67.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: horror. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/mystery.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-8c56dc62-3068-4656-8753-80ba60b3d7be.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: mystery. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/fantasy.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-a564b9b3-c79a-466a-98e1-d0f9a6f18234.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: fantasy. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/sci-fi.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-30572c65-8e13-4cb3-864c-a7ea07ceb228.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: sci-fi. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Manga/other.png",
+    "source": "C:/Users/moosh/.codex/generated_images/01a0c560-9c0a-7ca1-abc2-0d20c6b15b09/exec-fbf1780b-d424-46c5-8aa6-0166b947245a.png",
+    "prompt": "Create one production manga art atlas for an offline management game, genre: other. Original fictional characters and setting, no existing franchise. Portrait canvas 2:3 aspect. EXACTLY six equally sized rectangular illustration cells in a precise 2-column by 3-row grid; no gutters or borders. Top row: two distinct beautiful color manga cover compositions without lettering, room for a title overlay. Remaining four cells: monochrome ink and screentone interior manga moments featuring the same characters and setting. Each cell is a coherent standalone image. Readable polished linework, expressive character faces, detailed environments, classic Japanese manga publishing aesthetic. No words, letters, speech balloons, logos, watermarks or labels. Keep content suitable for a general audience.",
+    "tool": "built-in image_gen",
+    "layout": "2 columns, 3 rows; first row covers; remaining rows panels"
+  },
+  {
+    "asset": "godot/Assets/Helper/happy.png",
+    "prompt": "Edit the provided character portrait for a manga management game. Change ONLY her facial expression to happy warm smile. Preserve identity, blue eyes, black glasses, exact blonde gigantic extremely long curly twintails, collared white shirt, dark pencil skirt, stockings, shoes, clipboard, full-body pose, framing, proportions and detailed anime illustration style. Transparent background. No text. This is one expression asset, not a sheet.",
+    "tool": "built-in image_gen"
+  },
+  {
+    "asset": "godot/Assets/Helper/concerned.png",
+    "prompt": "Edit the provided character portrait for a manga management game. Change ONLY her facial expression to concerned supportive expression. Preserve identity, blue eyes, black glasses, exact blonde gigantic extremely long curly twintails, collared white shirt, dark pencil skirt, stockings, shoes, clipboard, full-body pose, framing, proportions and detailed anime illustration style. Transparent background. No text. This is one expression asset, not a sheet.",
+    "tool": "built-in image_gen"
+  },
+  {
+    "asset": "godot/Assets/Helper/determined.png",
+    "prompt": "Edit the provided character portrait for a manga management game. Change ONLY her facial expression to determined encouraging expression. Preserve identity, blue eyes, black glasses, exact blonde gigantic extremely long curly twintails, collared white shirt, dark pencil skirt, stockings, shoes, clipboard, full-body pose, framing, proportions and detailed anime illustration style. Transparent background. No text. This is one expression asset, not a sheet.",
+    "tool": "built-in image_gen"
+  }
+]

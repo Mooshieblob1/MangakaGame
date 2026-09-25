@@ -1,0 +1,27 @@
+{
+  "character": "mom",
+  "reference_method": "Built-in image_gen: chibi adaptation of user-provided parent artwork",
+  "generation": {
+    "task_id": "e0019b3f-a9f6-4d7e-9693-a91c9e2bd5d9",
+    "status": "success",
+    "model": "mom.glb",
+    "credits_consumed": 30.0
+  },
+  "rig_check": {
+    "credits_consumed": 0.0,
+    "task_id": "f87b1aa4-70fb-4794-a3ee-f128c47157c8",
+    "status": "success",
+    "output": {
+      "riggable": true,
+      "rig_type": "biped"
+    }
+  },
+  "rig": {
+    "task_id": "0d5aee57-f1d3-4a3f-ad29-80e9a03a9d5e",
+    "status": "success",
+    "credits_consumed": 25.0,
+    "model": "mom-rigged.glb"
+  },
+  "animations": "Idle, Walk, Sit; locally authored; no animation API calls",
+  "in_game": false
+}

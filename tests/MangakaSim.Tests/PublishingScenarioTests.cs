@@ -30,7 +30,7 @@ public class PublishingScenarioTests
         Assert.Contains(state.Ledger, e => e.Reason == "royalties" && e.Amount > 0);
         Assert.True(state.Series[0].ChaptersPublished >= 12);
         Assert.Contains(state.Series[0].Volumes, v => !v.IsDoujin && v.CopiesSold > 0);
-        Assert.Equal(500000 + state.Ledger.Sum(e => e.Amount), state.Money);
+        Assert.Equal(state.ControlledBusiness.Account.OpeningBalance + state.Ledger.Sum(e => e.Amount), state.Money);
         Assert.Contains(state.Markets, m => m.RetiredFillers.Count > 0);
     }
 
@@ -40,6 +40,7 @@ public class PublishingScenarioTests
         var state = SimulationFixture.Offered();
         var series = state.Series[0];
         state.Apply(new DeclineOfferCommand(series.Id));
+        state.Apply(new StudioActionCommand(StudioAction.SetPipeline,series.Id,2,3,2));
         var chapter = series.Chapters.Last();
         state.Apply(new PinStageCommand(state.People[0].Id, chapter.Id, Stage.Name));
         state.Apply(new UnpinStageCommand(state.People[0].Id, chapter.Id, Stage.Name));
@@ -72,6 +73,6 @@ public class PublishingScenarioTests
         }
         Assert.Equal(serialized.ToJson(), secondReplay.ToJson());
         var all = state.CommandLog.Concat(serialized.CommandLog).Select(e => e.Command.GetType()).Distinct();
-        Assert.Equal(17, all.Count());
+        Assert.Equal(18, all.Count());
     }
 }

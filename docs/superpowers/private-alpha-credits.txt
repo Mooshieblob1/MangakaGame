@@ -1,0 +1,12 @@
+Mangaka Studio — private alpha 0.8.0-private-alpha.9
+
+Game direction and Helper-Chan references supplied by the project owner.
+Helper-Chan portraits and the desk illustration use the supplied references;
+expression variants and manga showcase atlases were generated for this project.
+Customizable chibi employees, furniture and environments use original procedural geometry. Fixed Helper-Chan and parent models were generated and rigged with Tripo from the owner-supplied references and generated chibi adaptations. Their animation clips were authored locally for this project.
+Room tone, pencil activity and soft interface effects are original procedural
+audio authored for this project. No music or voice recordings are bundled.
+
+Built with Godot Engine and Microsoft .NET. See GODOT-LICENSES.txt for the engine's
+MIT license and full bundled third-party notices, and the .NET runtime's LICENSE
+and THIRD-PARTY-NOTICES files in the accompanying data directory.

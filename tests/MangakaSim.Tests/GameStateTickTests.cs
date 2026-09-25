@@ -12,8 +12,8 @@ public class GameStateTickTests
         Assert.Equal(GameState.CurrentVersion, state.Version);
         Assert.Equal(GameClock.Start, state.Clock.Now);
         Assert.Equal(5, state.RngSeed);
-        var person = Assert.Single(state.People);
-        Assert.All(StageOrder.All, s => Assert.Equal(80, person.Skill(s)));
+        var person = Assert.Single(state.ControlledStaff);
+        Assert.All(StageOrder.All, s => Assert.Equal(95, person.Skill(s)));
         Assert.Equal(8, person.Schedule.WorkStartHour);
         Assert.Equal(18, person.Schedule.WorkEndHour);
         Assert.Equal(new HashSet<DayOfWeek> { DayOfWeek.Sunday }, person.Schedule.DaysOff);
