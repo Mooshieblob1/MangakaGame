@@ -285,7 +285,21 @@ The GUI now has persistent navigation, full overview pages, focused action/quote
 cards, priority inbox views and transparent Helper-Chan guidance. It supports
 16:9 and 21:9 layouts, compact spacing and reduced interface motion.
 
-The user authorized compilation and packaging. The latest local Windows package
-is `builds/MangakaStudio-0.8.0-private-alpha.9-Windows.zip`. See the
-[build verification](docs/superpowers/alpha-9-build-verification.md) and
-[office-life change record](docs/superpowers/private-alpha-feedback-3.md).
+The [office-life change record](docs/superpowers/private-alpha-feedback-3.md)
+covers these changes.
+
+### Alpha.7 to alpha.11: characters, family home and pacing
+
+Later alphas add creator name and appearance setup, animated Helper-Chan and
+parents, modular chibi staff, family routines, a WC, genkan and rear stairs,
+residential surroundings, a weighted chapter progress bar, screen-space
+nametags, and a working day of about 45 seconds at 8x with a 32x overnight skip.
+See [family home refinement](docs/superpowers/family-home-refinement.md),
+[character integration and day length](docs/superpowers/character-integration-and-day-length.md)
+and the [UI and UX sweep](docs/superpowers/ui-ux-sweep-2026-09-25.md).
+
+The latest local Windows package is
+`builds/MangakaStudio-0.8.0-private-alpha.11-Windows.zip`. See the
+[alpha.11 build verification](docs/superpowers/alpha-11-build-verification.md).
+The [release plan](docs/superpowers/specs/2026-09-22-roadmap.md#release-plan)
+sets out what remains before Steam Early Access.

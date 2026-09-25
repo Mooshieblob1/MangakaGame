@@ -198,12 +198,12 @@ playtesting.
 
 ### Gaps identified on 2026-09-26
 
-1. **Version control.** Only 5 commits exist; the last is sub-project 2. All work from
-   sub-project 3 onward (about 244 changed or new files, including the design records)
-   was uncommitted at the time of writing. A safety commit has been offered to the
-   user but not yet approved.
-2. **No release checklist.** The roadmap ends at sub-project 9 with no definition of
-   done for release.
+1. **Version control.** Resolved 2026-09-26: safety commit `8f6e3f4` on `main`
+   captures all work through alpha.11 (not pushed). The remote branch
+   `origin/claude/sp2-plan-implementation-z2feyy` is an abandoned, superseded cloud
+   attempt at sub-projects 2 and 3; do not merge it.
+2. **Release checklist.** Resolved 2026-09-26: tiers and the Tier 1 checklist are in
+   the roadmap's Release plan section.
 3. **No real playtesting.** Balance values across sub-projects 3, 5 and 7 are marked
    "subject to playtesting". The feedback files record the user's own change requests,
    not external testers. The 15 to 20 minute opening target and mid-career pacing are
@@ -213,7 +213,7 @@ playtesting.
    Localization is undecided.
 5. **Drift toward cosmetic detail.** Recent work concentrated on small family-home
    visuals rather than release blockers. Use the release plan to keep focus.
-6. `README.md` still names alpha.9 as the latest package; alpha.11 is current.
+6. `README.md` now names alpha.11 as the latest package (fixed 2026-09-26).
 
 ### Environment notes
 
@@ -243,22 +243,27 @@ playtesting.
   - **Tier 2: Early Access ready (proposed).** Music and sound, native Steam
     integration and achievements, balance over 5 to 10 in-game years, clean-machine and
     lower-end hardware testing, store page and trailer material.
+    Planning answers Q1 to Q11 (AI lo-fi music, about 25 achievements, balance
+    for 1996 to 2006, laptops plus Steam Deck, outside testers, store art brief,
+    English only, gameplay trailer, US$9.99, about 12 months of Early Access)
+    are in `docs/superpowers/specs/2026-09-26-early-access-considerations.md`.
   - **Tier 3: Early Access updates (proposed).** More content, additional start dates,
     deeper late-game systems, localization, guided by player feedback.
-- **Open question (awaiting the user's answer):** what Tier 1 does with systems beyond
-  the core journey (awards, licensing, branches, loans, rivals, digital/overseas
-  deals):
-  1. Keep them in; only the core must be polished; hide any that cause real friction
-     (recommended).
-  2. Everything existing must be fully working and polished for Tier 1.
-  3. Switch them off for Tier 1 and restore them in Tier 2.
-- **Recommended next sub-project:** Sub-project 10, release plan and first full-career
-  playtest. Agree a finite release checklist (requirements versus optional), then run
-  a structured playtest from a new career through about three in-game years,
-  measuring real time, friction points and whether the economy makes sense. Use the
-  findings to drive remaining Tier 1 work.
-- Once the open question is answered, record the tiers and checklist in the roadmap
-  (`docs/superpowers/specs/2026-09-22-roadmap.md`) and keep this section in sync.
+- **Tier 1 scope (decided 2026-09-26, option 1):** systems beyond the core journey
+  (awards, licensing, branches, loans, rivals, digital/overseas deals) stay in; only
+  the core journey must be polished; any that cause real friction are hidden or
+  deferred to Tier 2 rather than rebuilt.
+- **Tier 1 checklist:** items T1.1 to T1.10 in the roadmap's Release plan section. The
+  roadmap is the source of truth; tick items only with linked evidence.
+- **Sub-project 10 (done 2026-09-26, automated):** guided playtest harness in
+  `tests/MangakaSim.Tests/CareerPlaytest.cs` (run with `--filter Category=Playtest`,
+  exclude with `Category!=Playtest`). Findings in
+  `docs/superpowers/full-career-playtest-findings.md`: guidance stops after the first
+  sale, the first hire is a cash trap, no setbacks ever occur and the economy is too
+  generous once serialized, about 4 real hours per in-game year. These fixes are the
+  next Tier 1 work.
+- Keep this section in sync with the roadmap
+  (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 
 ---
 
