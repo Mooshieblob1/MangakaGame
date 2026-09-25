@@ -146,7 +146,9 @@ public partial class DebugMain : Control
         foreach (var ev in fresh)
         {
             AppendLog(ev);
-            if (_managementReady) QueueImportantEvent(ev,_state.Events.IndexOf(ev));
+            // A missed payday becomes Helper-Chan's text; the pop-up remains only when her guidance is hidden.
+            var texted = ev.Type == EventType.WageArrears && CareerGuidance.ReportArrears(_state, _presentation.Guidance, ev) && _presentation.Guidance.Visible;
+            if (_managementReady && !texted) QueueImportantEvent(ev,_state.Events.IndexOf(ev));
             if (ev.Type == EventType.DailyRecap ||
                 (_state.Settings.AutoPause.TryGetValue(ev.Type, out var pause) && pause))
             {

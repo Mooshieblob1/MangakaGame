@@ -21,15 +21,18 @@ public partial class DebugMain
         BuildOfficeDashboard(_floatingUi);
         _floatingBottom=new PanelContainer{ThemeTypeVariation="FloatingPanel"};_floatingUi.AddChild(_floatingBottom);
         var bottom=new VBoxContainer();_floatingBottom.AddChild(bottom);
-        _guidanceCard.Reparent(bottom);_notice.Reparent(bottom);
+        _notice.Reparent(bottom);
         oldBody.GetParent().RemoveChild(oldBody);oldBody.QueueFree();
         _floatingTop=new PanelContainer{ThemeTypeVariation="HeaderPanel"};_floatingUi.AddChild(_floatingTop);_shell.Reparent(_floatingTop);
         oldMargin.Hide();oldMargin.QueueFree();
         _shell.Resized+=ResizeFloatingOffice;bottom.Resized+=ResizeFloatingOffice;
         _floatingRail.MinimumSizeChanged+=ResizeFloatingOffice;
-        _guidanceCard.VisibilityChanged+=ResizeFloatingOffice;
         _side.VisibilityChanged+=ResizeFloatingOffice;_report.VisibilityChanged+=ResizeFloatingOffice;
         _homeOffice.ShowNavigationHint=false;
+        // Helper-Chan's phone floats above every other panel.
+        _floatingUi.AddChild(_phone);_floatingUi.AddChild(_phoneIcon);
+        // Wrapped text measures tall before it has a width, so settle again once the real minimum is known.
+        _phone.MinimumSizeChanged+=ResizeFloatingOffice;
     }
     private void ResizeFloatingOffice()
     {
@@ -38,12 +41,7 @@ public partial class DebugMain
         try
         {
             var window=GetViewportRect().Size;var gap=12f;
-            // At larger text scales on short windows, keep the page usable while
-            // retaining the next-step action and the full guide in Help.
-            var compactGuidance=window.Y/Math.Max(1,_presentation.UiScale)<600;
             RefreshCompactHeader();
-            _guidanceText.Visible=!compactGuidance;_guidanceRoutes.Visible=!compactGuidance;
-            _guidancePortrait.CustomMinimumSize=compactGuidance?new(48,54):new(96,108);
             var railWidth=_floatingRail.GetCombinedMinimumSize().X;
             var left=16+railWidth+gap;var width=Math.Max(260,window.X-left-16);
             void Place(Control panel,float x,float y,float w,float h)
@@ -51,8 +49,19 @@ public partial class DebugMain
             Place(_floatingRail,16,16,railWidth,window.Y-32);
             Place(_floatingTop,left,16,width,_floatingTop.GetCombinedMinimumSize().Y);
             var bottomHeight=_floatingBottom.GetCombinedMinimumSize().Y;
-            Place(_floatingBottom,left,window.Y-16-bottomHeight,width,bottomHeight);
             var top=16+_floatingTop.Size.Y+gap;
+            // The phone and its icon share the bottom-right corner with the notice strip.
+            var s=(float)_presentation.UiScale;
+            var phoneWidth=Math.Min(300*s,width*.6f);var phoneHeight=Math.Max(200,Math.Min(440*s,window.Y-16-top));
+            var iconSize=new Vector2(56*s,64*s);
+            // _phoneSlide runs from 1 (below the window edge) to 0 while the phone slides up.
+            // Godot may grow the phone to its content minimum, so the top edge uses the size it actually took.
+            Place(_phone,window.X-16-phoneWidth,0,phoneWidth,phoneHeight);
+            var phoneTop=window.Y-16-_phone.Size.Y;
+            _phone.Position=new(_phone.Position.X,phoneTop+_phoneSlide*(window.Y-phoneTop));
+            Place(_phoneIcon,window.X-16-iconSize.X,window.Y-16-iconSize.Y,iconSize.X,iconSize.Y);
+            var corner=(_phoneOpen?phoneWidth:_phoneIcon.Visible?iconSize.X:0)+(_phoneOpen||_phoneIcon.Visible?gap:0);
+            Place(_floatingBottom,left,window.Y-16-bottomHeight,Math.Max(200,width-corner),bottomHeight);
             var available=Math.Max(160,_floatingBottom.Position.Y-gap-top);
             var sidebarWidth=Math.Min(460,width*.5f);
             var pageWidth=_officeSidebar?sidebarWidth:width;

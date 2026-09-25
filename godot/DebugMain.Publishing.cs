@@ -149,6 +149,8 @@ public partial class DebugMain
             if (chapter is not null) lines.Add($"Current ch.{chapter.Number}, {chapter.Pages} pages: {chapter.Status}; editor {chapter.Editor}, redos {chapter.RedoCount}" +
                 (chapter.EditorDecisionAt is { } decision ? $"; decision {decision:d MMM yyyy HH:mm}" : "") + $"; {ProductionTarget(chapter)}.");
             if (series.PitchCooldowns.TryGetValue(magazine.Id, out var until) && until > _state.Clock.Now) lines.Add($"This magazine accepts another pitch after {until:d MMM yyyy}.");
+            if (!series.StandaloneDoujin && series.Publishing == PublishingStatus.Unpublished)
+                lines.Add($"Helper-Chan's estimate for a pitch to this magazine: {CareerGuidance.Outlook(_state, series, magazine.Id).Chance:P0} chance.");
             _publishingSummary.Text = string.Join("\n", lines);
         }
         _magazineSummary.Text = $"{magazine.Name}   •   Tier {magazine.Tier} / {magazine.Demographic}   •   Close {market.NextIssueClose:ddd d MMM yyyy HH:mm}   •   Cancellation line #{magazine.CancellationRank}";

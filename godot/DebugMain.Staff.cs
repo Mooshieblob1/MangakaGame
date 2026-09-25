@@ -44,6 +44,10 @@ public partial class DebugMain
 
     private int _selectedPersonId;
     private Button _recruitButton = null!;
+    private Label _runwayLabel = null!;
+    private HBoxContainer _deskWarning = null!;
+    private Label _deskWarningText = null!;
+    private Button _deskWarningButton = null!;
 
     private Person SelectedPerson => _state.ControlledStaff.FirstOrDefault(p => p.Id == _selectedPersonId) ?? _state.Protagonist;
 
@@ -146,6 +150,12 @@ public partial class DebugMain
         _candidateOption = new OptionButton { CustomMinimumSize = new Vector2(240, 0) };
 
         _candidateOption.ItemSelected += _ => { SetCandidateOffer(); _dirty = true; };
+        _deskWarning = new HBoxContainer { Visible = false };
+        _deskWarningText = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        _deskWarning.AddChild(_deskWarningText);
+        _deskWarningButton = new Button { Text = "Add a desk in Furniture" };
+        _deskWarningButton.Pressed += OpenDeskFix;
+        _deskWarning.AddChild(_deskWarningButton);
 
         hiring.AddChild(_candidateOption);
 
@@ -157,7 +167,11 @@ public partial class DebugMain
 
             _workplaceChoice.GetSelectedId(), (long)_salaryOffer.Value));
 
+        _salaryOffer.ValueChanged += _ => RefreshRunway();
+        panel.AddChild(_deskWarning);
         panel.AddChild(hiring);
+        _runwayLabel = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        panel.AddChild(_runwayLabel);
 
         _candidateSummary = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
 
@@ -266,7 +280,9 @@ public partial class DebugMain
             try
             {
                 var request=command();
-                if(ManagementInterface&&request is DismissStaffCommand)
+                if(ManagementInterface&&request is HireStaffCommand hire&&_state.HiringRunway(hire.MonthlySalary) is{Safe:false} runway)
+                    ConfirmPlayerAction("Hire with a short runway",HireRunwayWarning(runway),()=>ApplyStaffCommand(request),"Hire","Cancel");
+                else if(ManagementInterface&&request is DismissStaffCommand)
                     ConfirmPlayerAction("Give paid notice",$"{SelectedPerson.Name} will receive 30 days' paid notice. The business remains responsible for those wages.",()=>ApplyStaffCommand(request));
                 else ApplyStaffCommand(request);
             }
@@ -294,6 +310,40 @@ public partial class DebugMain
 
 
 
+    private void RefreshRunway()
+    {
+        if(_runwayLabel is null)return;
+        var wage=(long)_salaryOffer.Value;var runway=_state.HiringRunway(wage);
+        _runwayLabel.Text=$"This wage ¥{wage:N0}/month • Monthly costs after hiring ¥{runway.MonthlyCosts:N0} • Confirmed page fees (90 days) ¥{runway.ConfirmedIncome:N0}\n"+
+            $"Runway: {RunwayMonthsText(runway)} of wages and costs{(runway.Safe?"":$". Below the safe level of {StudioRules.SafeRunwayMonths} months")}.";
+        _runwayLabel.Modulate=runway.Safe?Colors.White:new Color(1,.8f,.55f);
+    }
+    private static string RunwayMonthsText(HiringRunway runway)=>runway.Months switch
+    {
+        null=>"no monthly costs, so no limit",
+        >=12=>"over a year",
+        {} months=>$"about {months:0.#} months",
+    };
+    private static string HireRunwayWarning(HiringRunway runway)=>
+        $"Business funds cover {RunwayMonthsText(runway)} of wages and costs. If a payday is missed, this assistant may leave. Hire anyway?";
+    private void RefreshDeskWarning()
+    {
+        if(_deskWarning is null)return;
+        var places=_state.Locations.Where(l=>l.BusinessId==_state.ControlledBusinessId&&!l.Closed).ToArray();
+        var full=_state.WorkplaceWithFreeDesk is null&&places.Length>0;
+        _deskWarning.Visible=full;
+        if(!full)return;
+        var room=places.Any(l=>_state.UsableWorkspaces(l.Id)<l.Seats);
+        _deskWarningText.Text=room?"No desk is free for a new assistant. Add a desk and chair before hiring.":"Every desk is taken and the room is full. A larger workplace is needed before hiring.";
+        _deskWarningButton.Text=room?"Add a desk in Furniture":"See properties";
+    }
+    private void OpenDeskFix()
+    {
+        var place=_state.Locations.FirstOrDefault(l=>l.BusinessId==_state.ControlledBusinessId&&!l.Closed&&_state.UsableWorkspaces(l.Id)<l.Seats);
+        if(place is null){OpenWorkspace("Properties");return;}
+        _officeLocation.Select(Math.Max(0,_officeLocation.GetItemIndex(place.Id)));OpenWorkspace("Furniture");
+        try{BeginOfficeEditor();}catch(InvalidCommandException ex){Notify(ex.Message);}
+    }
     private void SetCandidateOffer()
 
     {
@@ -311,6 +361,10 @@ public partial class DebugMain
     {
 
         _recruitButton.Text=$"Recruit — ¥{_state.RecruitmentFee:N0} / 7 days";
+        _recruitButton.Disabled=_state.Recruitment is null&&_state.NextRecruitmentAt is not null;
+        if(_state.Recruitment is null&&_state.NextRecruitmentAt is{} nextSearch)_recruitButton.Text+=$" · next search from {nextSearch:d MMM yyyy}";
+        _recruitButton.TooltipText=_state.Recruitment is null&&_state.NextRecruitmentAt is{} next?$"Next search available from {next:d MMM yyyy}.":"";
+        RefreshDeskWarning();
         var home = _state.Locations.Single(l => l.Id == _state.Protagonist.Employment!.LocationId);
 
         _staffSummary.Text = $"{_state.ControlledBusiness.Name} • {home.Name}, {home.District} • Rent ¥{home.MonthlyRent:N0} • {_state.ControlledStaff.Count()}/{home.Seats} desks\n" +
@@ -340,6 +394,7 @@ public partial class DebugMain
         _candidateSummary.Text = candidate is null ? "No candidates currently available." : candidate.HiddenTalent ? $"Talent unknown • Expected ¥{candidate.ExpectedSalary:N0}/month • Available for seven days." :
 
             $"{string.Join(" • ", StageOrder.All.Select(s => $"{s}: {candidate.Skills[s]}"))}\nExpected ¥{candidate.ExpectedSalary:N0}/month • Expires {candidate.ExpiresAt:d MMM} • Seven days' pay reserved on hiring.";
+        RefreshRunway();
 
         SyncOptions(_teamOption,_state.Series.Where(s=>s.BusinessId==_state.ControlledBusinessId&&(!ManagementInterface||_state.Control==ControlMode.OwnerDirector||s.LeadPersonId==_state.ProtagonistPersonId)).Select(s=>(s.Id,s.Title)),_teamOption.GetSelectedId());
         var assignment=_assignmentOption.ItemCount==0?"":_assignmentOption.GetItemMetadata(_assignmentOption.Selected).AsString();

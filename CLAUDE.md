@@ -262,6 +262,13 @@ playtesting.
   sale, the first hire is a cash trap, no setbacks ever occur and the economy is too
   generous once serialized, about 4 real hours per in-game year. These fixes are the
   next Tier 1 work.
+- **Tier 1 fix 1, career guidance (done 2026-09-26, not committed):** one career path
+  from first doujin to first hire (Q12 to Q15), shown as texts on Helper-Chan's phone
+  (PHS to 2009, smartphone from 2010). Record: `docs/superpowers/career-guidance-completion.md`.
+- **Tier 1 fix 2, first-hire safety (done 2026-09-26, not committed):** runway shown
+  and confirmed below 3 months (Q16 to Q18), desk and cooldown explanations, missed-payday
+  text with "Cover from savings". Record: `docs/superpowers/first-hire-safety-completion.md`.
+  Next: fix 3, setbacks and economy balance.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

@@ -43,7 +43,7 @@ public partial class DebugMain
     private void ApplyUiTheme()
     {
         Theme=EditorialTheme();_backdrop.Color=Wash;
-        _guidanceCard.AddThemeStyleboxOverride("panel",Surface(Hover,8));
+        RefreshGuidance();
         foreach(var card in FindChildren("*","PanelContainer",true,false).OfType<PanelContainer>().Where(c=>c.HasMeta("card_surface")))
         {card.RemoveThemeStyleboxOverride("panel");card.ThemeTypeVariation="StudioCard";}
         foreach(var amount in FindChildren("*","Label",true,false).OfType<Label>().Where(l=>l.HasMeta("cash_sign")))

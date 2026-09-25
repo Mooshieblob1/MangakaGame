@@ -54,11 +54,11 @@ public class AlphaTests
         s.Apply(new StudioActionCommand(StudioAction.Print,v.Id,Amount:10,Value:0));
         Assert.Equal("delivery",CareerGuidance.Evaluate(s,p).Id);s.Advance(24);
         Assert.Equal("sell",CareerGuidance.Evaluate(s,p).Id);s.Advance(24*7);
-        Assert.Equal("direction",CareerGuidance.Evaluate(s,p).Id);CareerGuidance.Observe(s,p);Assert.Contains("first-sale",p.Completed);
+        Assert.Equal("continue-series",CareerGuidance.Evaluate(s,p).Id);CareerGuidance.Observe(s,p);Assert.Contains("first-sale",p.Completed);
         p.Route="contest";Assert.Equal("contest-create",CareerGuidance.Evaluate(s,p).Id);
-        p.Route="doujin";Assert.Equal("grow",CareerGuidance.Evaluate(s,p).Id);
+        p.Route="doujin";Assert.Equal("continue-series",CareerGuidance.Evaluate(s,p).Id);
         p.Route="employment";Assert.Equal("employment",CareerGuidance.Evaluate(s,p).Id);
-        p.Route="opening";Assert.Equal("direction",CareerGuidance.Evaluate(GameState.NewGame(),p).Id);
+        Assert.Equal("create",CareerGuidance.Evaluate(GameState.NewGame(),new GuidancePreferences{Route="opening"}).Id);
     }
     [Fact]public void Guidance_respects_selected_project_and_contest_separation()
     {

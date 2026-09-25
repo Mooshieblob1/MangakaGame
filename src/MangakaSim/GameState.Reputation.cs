@@ -7,7 +7,7 @@ public partial class GameState
 {
     private void ChangeTrackRecord(double delta, int? businessId = null)
     { var b = BusinessOf(businessId ?? ControlledBusinessId); b.TrackRecord = Math.Clamp(b.TrackRecord + delta, 0, 100); }
-    private double BusinessReputation(int business) => ReputationRules.Effective(BusinessOf(business).TrackRecord, People.Where(p => p.Employment?.BusinessId == business).Select(p => p.Reputation));
+    internal double BusinessReputation(int business) => ReputationRules.Effective(BusinessOf(business).TrackRecord, People.Where(p => p.Employment?.BusinessId == business).Select(p => p.Reputation));
     private static void ChangeReputation(Person person, double delta) => person.Reputation = Math.Clamp(person.Reputation + delta, 0, 100);
     private static Dictionary<int, long> ChapterHours(Chapter chapter) => chapter.Stages.SelectMany(w => w.HoursByPerson)
         .GroupBy(p => p.Key).ToDictionary(g => g.Key, g => g.Sum(p => p.Value));

@@ -104,3 +104,49 @@ cannot measure them.
    decision is pending.
 
 Each fix should be followed by a re-run of the playtest to confirm the change.
+
+## Re-run after fix 1, career guidance (2026-09-26)
+
+The playtest bot now follows Helper-Chan's targets after the first sale
+instead of a scripted route. Results on the Standard preset:
+
+- Guidance moved on at every point: continue as a series on day 7, pitch on
+  day 8 (Monthly Hoshigaku Flowers, shown chance 60%), serialization offer on
+  day 31, first hire on day 171.
+- First hire day by difficulty: Challenging day 227, Relaxed day 143.
+- T1.2 is now met for the steps up to a first hire in simulation. It still
+  needs a fresh player (T1.10) to confirm.
+
+New friction found:
+
+- The 1997 growth hire has no free desk; guidance points to recruitment
+  before the player can seat anyone. Fix 2 (first-hire safety) should cover
+  this.
+- On Challenging, repeated recruitment attempts hit the recruitment cooldown
+  with no explanation of when to try again.
+
+Unchanged: early careers are nearly identical across seeds, and the studio
+holds about ¥18.6 million by 1999, so fixes 2 and 3 are still needed.
+
+## Re-run after fix 2, first-hire safety (2026-09-26)
+
+All five runs pass (seeds 0, 1 and 42 on Standard, seed 7 on Challenging and
+Relaxed). Guidance now waits for a safe runway, counting confirmed page fees,
+and a free desk.
+
+- First hire on day 143 on every preset, the day after the first magazine
+  chapter is published (day 142). Before fix 2 it was day 171 on Standard,
+  227 on Challenging and 143 on Relaxed.
+- No missed paydays in any run, so the new missed-payday text never fired in
+  the playtest. It is covered by unit and smoke checks instead.
+- After the first hire, business cash on seed 0 falls from ¥317,685
+  (September 1996) to ¥81,851 (February 1997) before the first collected
+  edition lifts it to ¥796,777 in March. Safe, but thin.
+- The recruitment cooldown is now explained; no run hit it.
+- The bot's scripted 1997 growth hire still meets "This workplace has no free
+  desk" once before moving to Nerima.
+
+Unchanged: early careers are nearly identical across seeds, no setbacks
+occur, and the studio holds about ¥18.7 million by April 1999. Fix 3
+(setbacks and economy balance) is next.
+

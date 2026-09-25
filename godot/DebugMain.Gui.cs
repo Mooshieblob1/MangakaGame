@@ -206,10 +206,11 @@ public partial class DebugMain
         var quote=StudioCard(flow,"YOUR QUOTE & STATUS");quote.GetParent<Control>().CustomMinimumSize=new(280,0);
         foreach(var control in controls)control.Reparent(summary.Contains(control)?quote:inputs);
     }
-    private void ConfirmPlayerAction(string title,string detail,Action commit)
+    private ConfirmationDialog ConfirmPlayerAction(string title,string detail,Action commit,string ok="Confirm",string cancel="Keep editing")
     {
-        var dialog=new ConfirmationDialog{Title=title,DialogText=detail,OkButtonText="Confirm",CancelButtonText="Keep editing",Exclusive=true};AddChild(dialog);
+        var dialog=new ConfirmationDialog{Title=title,DialogText=detail,OkButtonText=ok,CancelButtonText=cancel,Exclusive=true};AddChild(dialog);
         dialog.Confirmed+=()=>{try{commit();}finally{dialog.QueueFree();}};dialog.Canceled+=()=>dialog.QueueFree();
         dialog.PopupCentered(new Vector2I(580,260));
+        return dialog;
     }
 }

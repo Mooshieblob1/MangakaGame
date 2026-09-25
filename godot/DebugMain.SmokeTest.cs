@@ -67,10 +67,10 @@ public partial class DebugMain
             Check(chapter.DueDate == GameClock.Start.AddDays(7) && chapter.Stages.Count == 5, "Create series and chapter");
             Check(_state.People[0].Queue.Count == 5 && !chapter.IsAtRisk, "Self-published queue has no publisher deadline risk");
             Press("1x");
-            _Process(1.25);
+            _Process(SecondsPerHourAt1x / 2);
             Check(_state.Clock.Now == GameClock.Start, "Fractional time stays in driver");
-            _Process(1.25);
-            Check(_state.Clock.Now == GameClock.Start.AddHours(1), "1x advances one hour in 2.5 seconds");
+            _Process(SecondsPerHourAt1x / 2);
+            Check(_state.Clock.Now == GameClock.Start.AddHours(1), $"1x advances one hour in {SecondsPerHourAt1x:0.#} seconds");
             Check(Math.Abs(chapter.StageWork(Stage.Name).HoursDone - 1.9) < 0.0001, "Work bar progress");
 
             AdvanceAndScan(200);

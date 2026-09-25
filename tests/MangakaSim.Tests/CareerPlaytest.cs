@@ -7,7 +7,7 @@ namespace MangakaSim.Tests;
 
 /// <summary>
 /// Sub-project 10 guided-player playtest. A scripted player follows Helper-Chan's guidance and
-/// ordinary player choices for three in-game years, recording milestones, money, estimated real
+/// ordinary player choices for three in-game years; after the first sale it acts only on the current guidance step, recording milestones, money, estimated real
 /// time and every rejected action. Excluded from the normal suite; run with
 /// dotnet test --filter Category=Playtest
 /// </summary>
@@ -58,6 +58,7 @@ public class CareerPlaytest
         private readonly List<string> _monthly = new();
         private readonly List<(DateTime From, string Id, string Title)> _guidance = new();
         private readonly HashSet<string> _seen = new();
+        private readonly List<(DateTime At, string Step, string Problem)> _stale = new();
         private readonly Dictionary<int, int> _printRuns = new();
         private readonly DateTime _start;
         private double _seconds, _workSeconds;
@@ -147,16 +148,15 @@ public class CareerPlaytest
         {
             var step = Guide();
             if (_guidance.Count == 0 || _guidance[^1].Id != step.Id) _guidance.Add((State.Clock.Now, step.Id, step.Title));
-            // After the first readers the player picks the doujin growth route, as the direction card offers.
-            if (step.Id == "direction") { _guide.Route = "doujin"; Mark("Guidance: direction chosen"); }
 
             var owned = State.Series.Where(s => s.BusinessId == State.ControlledBusinessId).ToArray();
             if (owned.Length == 0) { if (Try("Create doujin", new CreateDoujinCommand("First pages", "adventure"))) Mark("First doujin created"); return; }
 
             FundBusiness();
             SellBooks(owned);
-            if (_seen.Contains("First sale")) PursueMagazine(owned);
-            if (State.Series.Any(s => s.Publishing == PublishingStatus.Serialized) || State.Money > 600_000) GrowStudio();
+            // After the first sale the player does what Helper-Chan's latest message asks, nothing more.
+            if (_seen.Contains("First sale")) FollowGuidance();
+            if (_hired) GrowStudio();
         }
 
         private void FundBusiness()
@@ -185,69 +185,92 @@ public class CareerPlaytest
             }
         }
 
-        private (Magazine Magazine, string Genre, double Chance) BestPitch(Series? series)
+        private string BestGenre() => State.PublisherCatalog.Magazines.SelectMany(m => m.GenreAffinities.Keys.Select(g => (m, g)))
+            .OrderByDescending(p => PitchRules.Chance(p.m.Tier, 60, State.EffectiveReputation, p.m.Affinity(p.g), State.GenrePopularity(p.g)))
+            .ThenBy(p => p.m.Id).ThenBy(p => p.g).First().g;
+
+        private void Stale(GuidanceStep step, string problem) => _stale.Add((State.Clock.Now, step.Id, problem));
+
+        private bool Guided(GuidanceStep step, string label, ICommand command)
         {
-            var genres = series is null ? State.PublisherCatalog.Magazines.SelectMany(m => m.GenreAffinities.Keys).Distinct() : [series.Genre];
-            return State.PublisherCatalog.Magazines.SelectMany(m => genres.Select(g => (m, g)))
-                .Where(p => series is null || !series.PitchCooldowns.TryGetValue(p.m.Id, out var until) || until <= State.Clock.Now)
-                .Select(p => (p.m, p.g, PitchRules.Chance(p.m.Tier, 60, State.EffectiveReputation, p.m.Affinity(p.g), State.GenrePopularity(p.g))))
-                .OrderByDescending(p => p.Item3).ThenBy(p => p.m.Id).FirstOrDefault();
+            if (Try(label, command)) return true;
+            Stale(step, _rejections[^1].Message);
+            return false;
         }
 
-        private void PursueMagazine(Series[] owned)
+        private void FollowGuidance()
         {
-            foreach (var offered in owned.Where(s => s.Publishing == PublishingStatus.Offered))
-                if (Try("Accept offer", new AcceptOfferCommand(offered.Id))) { Mark("First serialization accepted"); Note($"Accepted serialization of {offered.Title}."); }
-            if (owned.Any(s => s.Status == SeriesStatus.Active && s.Publishing is PublishingStatus.Serialized or PublishingStatus.Pitching or PublishingStatus.Offered)) return;
-            var candidate = owned.LastOrDefault(s => !s.StandaloneDoujin && s.Status == SeriesStatus.Active && s.Publishing == PublishingStatus.Unpublished);
-            if (candidate is null)
+            var step = Guide();
+            var series = State.Series.FirstOrDefault(s => s.Id == step.Project);
+            switch (step.Id)
             {
-                var best = BestPitch(null);
-                var title = $"Pitch project {owned.Length + 1}";
-                if (!Try("Create series", new CreateSeriesCommand(title, best.Genre, Cadence.Monthly, 16))) return;
-                candidate = State.Series.Last();
-                Mark("First ongoing series created"); Note($"Created {title} ({best.Genre}) aiming at {best.Magazine.Name}.");
+                case "continue-series":
+                    if (Guided(step, "Continue as ongoing series", new ContinueOneShotCommand(step.Project)))
+                    { Mark("First ongoing series created"); Note($"Continued {series!.Title} as an ongoing series."); }
+                    break;
+                case "next-series":
+                    var genre = BestGenre();
+                    if (Guided(step, "Create series", new CreateSeriesCommand($"Pitch project {State.Series.Count + 1}", genre, Cadence.Monthly, 16)))
+                    { Mark("First ongoing series created"); Note($"Created a new {genre} series to pitch."); }
+                    break;
+                case "pitch":
+                case "pitch-rejected":
+                    var best = CareerGuidance.PitchOutlooks(State, series!).FirstOrDefault(o => o.Open);
+                    if (best is null) { if (step.Id == "pitch") Stale(step, "Suggested a pitch with every magazine on cooldown."); break; }
+                    if (Guided(step, "Pitch", new PitchSeriesCommand(series!.Id, best.Magazine.Id)))
+                        Note($"Pitched {series.Title} to {best.Magazine.Name} (tier {best.Magazine.Tier}, guidance chance {best.Chance:P0}).");
+                    break;
+                case "offer":
+                    if (Guided(step, "Accept offer", new AcceptOfferCommand(step.Project))) { Mark("First serialization accepted"); Note($"Accepted serialization of {series!.Title}."); }
+                    break;
+                case "first-hire":
+                    var cheapest = State.Candidates.Where(c => !c.Recruited && c.ExpiresAt > State.Clock.Now &&
+                            (c.IntroductionBusinessId is null || c.IntroductionBusinessId == State.ControlledBusinessId))
+                        .OrderBy(c => Math.Max(StudioRules.MinimumMonthlySalary, c.ExpectedSalary)).ThenBy(c => c.Id).FirstOrDefault();
+                    if (cheapest is null) { Stale(step, "Suggested hiring with no candidate available."); break; }
+                    if (!Hire(cheapest)) Stale(step, _rejections.Count > 0 ? _rejections[^1].Message : "Hiring failed.");
+                    break;
+                case "serial-rhythm" when !State.Candidates.Any(c => !c.Recruited && c.ExpiresAt > State.Clock.Now) && _recruitAttempts < 12:
+                    if (Try("Recruit", new RecruitStaffCommand())) { _recruitAttempts++; Mark("First recruitment started"); }
+                    break;
             }
-            var target = BestPitch(candidate);
-            if (target.Magazine is null) return;
-            if (Try("Pitch", new PitchSeriesCommand(candidate.Id, target.Magazine.Id)))
-                Note($"Pitched {candidate.Title} to {target.Magazine.Name} (tier {target.Magazine.Tier}, estimated chance {target.Chance:P0} at quality 60).");
         }
 
         private void GrowStudio()
         {
-            // A first assistant once serialized, then one more whenever the account covers six months of the whole payroll.
+            // After the guided first hire, one more whenever the account covers six months of the whole payroll.
             var staff = State.ControlledStaff.ToArray();
             var payroll = staff.Sum(p => p.Employment?.MonthlySalary ?? 0);
-            if (staff.Length >= 4 || (_hired && staff.Length > 1 && State.AvailableBusinessCash < 6 * (payroll + 180_000))) return;
-            if (_hired && staff.Length > 1) Mark("Growth hire attempted");
+            if (staff.Length >= 4 || State.AvailableBusinessCash < 6 * (payroll + 180_000)) return;
+            Mark("Growth hire attempted");
             var candidates = State.Candidates.Where(c => !c.Recruited && c.ExpiresAt > State.Clock.Now).OrderByDescending(c => c.Skills.Values.Sum()).ToArray();
             if (candidates.Length == 0)
             {
-                if (_recruitAttempts < 12 && Try("Recruit", new RecruitStaffCommand())) { _recruitAttempts++; Mark("First recruitment started"); }
+                if (_recruitAttempts < 12 && Try("Recruit", new RecruitStaffCommand())) _recruitAttempts++;
                 return;
             }
+            Hire(candidates[0]);
+        }
+
+        private bool Hire(Candidate c)
+        {
             var location = State.Protagonist.Employment!.LocationId;
-            var c = candidates[0];
-            if (Try("Hire at current workplace", new HireStaffCommand(c.Id, location, c.ExpectedSalary))) { _hired = true; return; }
+            var salary = Math.Max(StudioRules.MinimumMonthlySalary, c.ExpectedSalary);
+            if (Try("Hire at current workplace", new HireStaffCommand(c.Id, location, salary))) { _hired = true; return true; }
             // Furnish the current workplace if the only problem is a missing desk.
             var arrangement = State.ArrangeOffice(location, true, true);
             if (arrangement.Purchases.Count > 0 && Try("Furnish", new ApplyOfficeLayoutCommand(location, State.OfficeRevision, arrangement.Placements, arrangement.Purchases, [])))
-            { Mark("First furniture purchase"); if (Try("Hire after furnishing", new HireStaffCommand(c.Id, location, c.ExpectedSalary))) { _hired = true; return; } }
+            { Mark("First furniture purchase"); if (Try("Hire after furnishing", new HireStaffCommand(c.Id, location, salary))) { _hired = true; return true; } }
             // Otherwise move the studio to the cheapest property with room for two.
-            if (State.Locations.Single(l => l.Id == location).IsFamilyHome)
-            {
-                var offer = TokyoProperties.All.Where(p => p.Seats >= 2).OrderBy(p => p.Rent).First();
-                if (State.AvailableBusinessCash < offer.Rent * 6) return;
-                if (Try("Move studio", new StudioActionCommand(StudioAction.Move, offer.Id)))
-                {
-                    Mark("First studio move"); Note($"Moved to {offer.District} (rent {offer.Rent:N0} yen a month).");
-                    location = State.Protagonist.Employment!.LocationId;
-                    arrangement = State.ArrangeOffice(location, true, true);
-                    Try("Furnish new studio", new ApplyOfficeLayoutCommand(location, State.OfficeRevision, arrangement.Placements, arrangement.Purchases, []));
-                    if (Try("Hire after move", new HireStaffCommand(c.Id, location, c.ExpectedSalary))) _hired = true;
-                }
-            }
+            if (!State.Locations.Single(l => l.Id == location).IsFamilyHome) return false;
+            var offer = TokyoProperties.All.Where(p => p.Seats >= 2).OrderBy(p => p.Rent).First();
+            if (State.AvailableBusinessCash < offer.Rent * 6 || !Try("Move studio", new StudioActionCommand(StudioAction.Move, offer.Id))) return false;
+            Mark("First studio move"); Note($"Moved to {offer.District} (rent {offer.Rent:N0} yen a month).");
+            location = State.Protagonist.Employment!.LocationId;
+            arrangement = State.ArrangeOffice(location, true, true);
+            Try("Furnish new studio", new ApplyOfficeLayoutCommand(location, State.OfficeRevision, arrangement.Placements, arrangement.Purchases, []));
+            if (Try("Hire after move", new HireStaffCommand(c.Id, location, salary))) { _hired = true; return true; }
+            return false;
         }
 
         public string Report()
@@ -261,6 +284,13 @@ public class CareerPlaytest
                 sb.AppendLine($"| {m.At:yyyy-MM-dd} | {(m.At - _start).TotalDays:F0} | {(int)(m.Minutes / 60)}:{(int)(m.Minutes % 60):00} | {m.Name} |");
             sb.AppendLine("\r\n## Guidance timeline\r\n\r\n| From | Day | Step | Title |\r\n|---|---|---|---|");
             foreach (var g in _guidance) sb.AppendLine($"| {g.From:yyyy-MM-dd} | {(g.From - _start).TotalDays:F0} | {g.Id} | {g.Title} |");
+            sb.AppendLine("\r\n## Guidance problems\r\n");
+            var ends = _guidance.Skip(1).Select(g => g.From).Append(State.Clock.Now);
+            foreach (var (g, until) in _guidance.Zip(ends).Where(p => (p.Second - p.First.From).TotalDays > 180))
+                sb.AppendLine($"- Long wait: {g.Id} unchanged for {(until - g.From).TotalDays:F0} days from {g.From:yyyy-MM-dd}.");
+            foreach (var g in _stale.GroupBy(x => (x.Step, x.Problem)))
+                sb.AppendLine($"- Stale: {g.Key.Step} failed {g.Count()} times from {g.First().At:yyyy-MM-dd}: {g.Key.Problem}");
+            if (_stale.Count == 0) sb.AppendLine("- No guided action failed.");
             sb.AppendLine("\r\n## Monthly snapshot\r\n\r\n| Month | Real hours | Personal yen | Business yen | Serialized | Staff | Guidance |\r\n|---|---|---|---|---|---|---|");
             foreach (var line in _monthly) sb.AppendLine(line);
             sb.AppendLine($"\r\nSavings contributions: {_contributions} totalling {_contributed:N0} yen. Recruitment searches: {_recruitAttempts}.\r\n");

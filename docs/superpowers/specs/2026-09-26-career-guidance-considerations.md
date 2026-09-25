@@ -1,7 +1,8 @@
 # Tier 1 fix 1: career guidance after the first sale, considerations
 
 Date: 2026-09-26.
-Status: design questions in progress. Source finding: guidance stops after the
+Status: design complete and implemented 2026-09-26 (see the
+[completion record](../career-guidance-completion.md)). Source finding: guidance stops after the
 first sale ([full career playtest findings](../full-career-playtest-findings.md)).
 
 ## Problem
@@ -78,3 +79,39 @@ works as today and keeps the icon.
 
 Design complete; implementation plan:
 [2026-09-26-career-guidance.md](../plans/2026-09-26-career-guidance.md).
+
+## Period research: PHS text messaging (2026-09-26)
+
+Classification as in the [Tokyo research ledger](2026-09-23-tokyo-research.md):
+H is historical evidence, P is proxy or context, G is a game choice.
+
+- **H:** DDI Pocket launched Pmail (Pメール), Japan's first short message
+  service between voice handsets, on 20 November 1996. Messages were limited
+  to 20 half-width kana, numerals and pictograms, addressed by phone number.
+  PHS ("pitch") handsets and Pmail became very popular with high school
+  students. [Pメール, Wikipedia](https://ja.wikipedia.org/wiki/P%E3%83%A1%E3%83%BC%E3%83%AB)
+- **H:** NTT Personal started its text service, later known as きゃらメール,
+  in April 1997. Messages were held at a centre (up to 70 characters, 20
+  messages, for 3 days) and could be sent from PHS or push-button phones. The
+  service ended in February 2005.
+  [NTT Docomo notice](https://www.docomo.ne.jp/info/notice/page/041008_00.html),
+  [Weblio: きゃらメール](https://www.weblio.jp/content/%E3%81%8D%E3%82%83%E3%82%89%E3%83%A1%E3%83%BC%E3%83%AB)
+- **H:** Astel also routed texts through a centre so they arrived after the
+  handset came back into coverage; its internet service dot-i followed in 2000.
+  [アステル, Wikipedia](https://ja.wikipedia.org/wiki/%E3%82%A2%E3%82%B9%E3%83%86%E3%83%AB),
+  [ITmedia, Dec 2000](https://www.itmedia.co.jp/news/0012/01/astel.html)
+- **H:** By 1998 each carrier offered larger text services (DDI's PmailDX
+  allowed up to 1,000 characters).
+  [INTERNET Watch, Mar 1998](https://internet.watch.impress.co.jp/www/article/980316/ddi.htm),
+  [INTERNET Watch, Aug 1998](https://internet.watch.impress.co.jp/www/article/980818/special.htm)
+- **P:** period handsets were small candy-bar phones with a stub antenna, a
+  numeric keypad and a monochrome, often green or amber backlit, dot-matrix
+  display of a few lines.
+  [PHS 25-year history, Y!mobile](https://www.ymobile.jp/sp/goodbyephs/),
+  [GetNavi 1999 handset review](https://getnavi.jp/gadgets/67365/)
+- **G:** Helper-Chan's phone shows up to 140 characters per message, a
+  portrait beside each text and a scrollable thread. A real 1996 handset could
+  show only 20 kana, which would make tutorial text unreadable; the green
+  screen, antenna, keypad and short split messages carry the period feel
+  instead. Messages from April 1996, before Pmail existed, are an accepted
+  anachronism of a few months.

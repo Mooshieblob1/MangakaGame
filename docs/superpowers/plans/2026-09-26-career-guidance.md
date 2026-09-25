@@ -2,7 +2,8 @@
 
 Date: 2026-09-26. Design: [career guidance considerations](../specs/2026-09-26-career-guidance-considerations.md)
 (Q12 to Q15). Finding addressed: guidance stops after the first sale.
-Status: awaiting approval.
+Status: implemented 2026-09-26. See the
+[completion record](../career-guidance-completion.md).
 
 ## Part A. Simulation guidance (src/MangakaSim/Guidance.cs)
 

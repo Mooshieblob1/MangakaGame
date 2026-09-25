@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using MangakaSim.Rules;
 
 namespace MangakaSim;
 
@@ -24,6 +25,44 @@ public partial class GameState
     [JsonIgnore] public long ReservedWages => ControlledStaff.Sum(p => Math.Max((long)Math.Ceiling(p.Employment!.AccruedPay),
         p.Employment.StartsAt.AddDays(7) > Clock.Now ? StudioRules.HiringReserve(p.Employment.MonthlySalary) : 0)) + WageArrears;
     [JsonIgnore] public long AvailableBusinessCash => FreeCash(ControlledBusinessId);
+    /// <summary>When the recruitment cooldown ends, or null when a search can start now.</summary>
+    [JsonIgnore] public DateTime? NextRecruitmentAt => LastRecruitmentAt is { } last && Clock.Now < last.AddDays(14) ? last.AddDays(14) : null;
+    public int FreeDesks(int locationId) => FreeTimelineDesks(locationId);
+    /// <summary>The controlled business's open workplace with the most free desks, or null when every desk is taken.</summary>
+    [JsonIgnore] public StudioLocation? WorkplaceWithFreeDesk => Locations.Where(l => l.BusinessId == ControlledBusinessId && !l.Closed && FreeTimelineDesks(l.Id) > 0)
+        .OrderByDescending(l => FreeTimelineDesks(l.Id)).ThenBy(l => l.Id).FirstOrDefault();
+
+    /// <summary>
+    /// Read-only estimate of how many months business funds and confirmed page fees cover wages and running costs
+    /// if another salary is added. Only signed serializations count as income; doujin and other sales are excluded.
+    /// </summary>
+    public HiringRunway HiringRunway(long extraMonthlySalary = 0)
+    {
+        var until = Clock.Now.AddDays(StudioRules.ConfirmedIncomeDays);
+        long income = 0;
+        foreach (var series in Series.Where(s => s.BusinessId == ControlledBusinessId && s.Status == SeriesStatus.Active &&
+            s.Publishing == PublishingStatus.Serialized && s.Contract is not null).OrderBy(s => s.Id))
+        {
+            var magazine = PublisherCatalog.Get(series.Contract!.MagazineId);
+            // A close at the current hour has already been paid, so count only later ones.
+            var close = Clock.Now < series.Contract.FirstIssueClose ? IssueSchedule.FirstCloseAtOrAfter(magazine, series.Contract.FirstIssueClose)
+                : IssueSchedule.FirstCloseAfter(magazine, Clock.Now);
+            for (; close <= until; close = IssueSchedule.AddIssues(magazine, close, 1))
+            {
+                var fee = (long)series.PagesPerChapter * series.Contract.FeePerPage;
+                income += fee - (long)(fee * .2m);
+            }
+        }
+        var salaries = ControlledStaff.Where(p => p.Employment!.NoticeEndsAt is null).Sum(p => p.Employment!.MonthlySalary) + extraMonthlySalary;
+        var places = Locations.Where(l => l.BusinessId == ControlledBusinessId && !l.Closed).ToArray();
+        var business = ControlledBusiness;
+        var bills = places.Sum(l => l.MonthlyRent + new long[] { 5000, 10000, 20000, 35000, 60000 }[l.PropertyTier]) +
+            (business.Incorporated ? 20000 : 0) + (business.Account.Entries.Any(e => e.Reason == "internet") ? 3000 : 0) +
+            Loans.Where(l => l.BusinessId == ControlledBusinessId && l.Principal > 0).Sum(l =>
+                Math.Min(l.Principal, l.Card ? Math.Max(5000, (long)Math.Ceiling(l.Principal * .1)) : (long)Math.Ceiling((double)l.Original / l.Term)) +
+                (long)Math.Ceiling(l.Principal * l.Apr / 12));
+        return new(AvailableBusinessCash, income, salaries + bills);
+    }
 
     private void InitializeStudio(OwnershipMode ownership)
     {

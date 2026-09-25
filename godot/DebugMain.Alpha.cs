@@ -7,11 +7,16 @@ namespace MangakaGame;
 
 public partial class DebugMain
 {
-    private PanelContainer _guidanceCard=null!;
-    private Label _guidanceTitle=null!,_guidanceText=null!;
+    private PhoneFrame _phone=null!;
+    private PhoneIcon _phoneIcon=null!;
+    private ScrollContainer _phoneScroll=null!;
+    private Label _phoneDate=null!;
     private OfficeAudio _audio=null!;
-    private Button _showGuidance=null!,_guidanceRoutes=null!;
-    private TextureRect _guidancePortrait=null!;
+    private Button _showGuidance=null!;
+    private Tween? _phoneTween;
+    private bool _phoneOpen;
+    private float _phoneSlide;
+    private string _phoneKey="",_phoneLatest="";
     private OptionButton _alphaPrinter=null!;
     private SpinBox _alphaCopies=null!;
     private byte[]? _reportScreen;
@@ -23,42 +28,164 @@ public partial class DebugMain
     private void BuildAlpha()
     {
         _audio=new OfficeAudio();AddChild(_audio);
-        _guidanceCard=new PanelContainer();_shell.AddChild(_guidanceCard);_shell.MoveChild(_guidanceCard,_shell.GetChildCount()-2);
-        _guidanceCard.AddThemeStyleboxOverride("panel",Surface(Hover,8));
-        var row=new HBoxContainer();_guidanceCard.AddChild(row);
-        _guidancePortrait=HelperPortrait(96,108);row.AddChild(_guidancePortrait);
-        var copy=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};row.AddChild(copy);
-        _guidanceTitle=Words(copy,"",17);_guidanceText=Words(copy,"",14);
-        var actions=new VBoxContainer{SizeFlagsVertical=SizeFlags.ShrinkCenter};row.AddChild(actions);
-        _showGuidance=ActionButton(actions,"Show me",ShowGuidance);_showGuidance.Name="GuidanceShowMe";
-        _guidanceRoutes=ActionButton(actions,"What should I do?",()=>Navigate("Guidance"));
-        ActionButton(row,"×",()=>{_presentation.Guidance.Visible=false;RefreshGuidance();});
+        // Helper-Chan texts the player. Both controls join the floating layer in BuildFloatingOffice.
+        _phone=new PhoneFrame{Name="HelperPhone",Visible=false,MouseFilter=MouseFilterEnum.Stop};
+        _phoneIcon=new PhoneIcon{Name="HelperPhoneIcon",Visible=false};_phoneIcon.Pressed+=()=>OpenPhone(false);
+    }
+    private static string LatestKey(GuidancePreferences prefs)=>prefs.Thread.LastOrDefault() is { } last
+        ?$"{prefs.Thread.Count}|{last.Time.Ticks}|{string.Join("|",last.Texts)}":"";
+    private void BuildPhone(bool modern,float scale)
+    {
+        _phone.Configure(modern,_darkMode,scale);Empty(_phone);
+        _phoneIcon.Modern=modern;_phoneIcon.TextScale=scale;_phoneIcon.QueueRedraw();
+        var box=new VBoxContainer();box.AddThemeConstantOverride("separation",(int)(6*scale));_phone.AddChild(box);
+        Label Text(Control parent,string text,int size)
+        {
+            // Explicit sizes so the phone grows with the text setting even before it joins the tree.
+            var label=Words(parent,text,size);label.AddThemeFontSizeOverride("font_size",(int)(size*scale));
+            label.AddThemeColorOverride("font_color",_phone.TextColor);return label;
+        }
+        StyleBoxFlat Bubble(Color color,float radius)
+        {
+            var bubble=new StyleBoxFlat{BgColor=color,BorderColor=_phone.BubbleEdge,AntiAliasing=true};bubble.SetBorderWidthAll(1);
+            bubble.SetCornerRadiusAll((int)(radius*scale));bubble.SetContentMarginAll(7*scale);return bubble;
+        }
+        Button Reply(Control parent,string title,Action action)
+        {
+            var button=ActionButton(parent,title,action);button.SizeFlagsHorizontal=SizeFlags.ExpandFill;
+            button.AddThemeFontSizeOverride("font_size",(int)(14*scale));button.CustomMinimumSize=new(0,32*scale);
+            foreach(var state in new[]{"normal","hover","pressed","focus"})
+            {
+                var style=Bubble(state is "hover" or "pressed"?_phone.BubbleEdge:_phone.BubbleColor,modern?16:4);
+                if(state=="focus"){style.DrawCenter=false;style.SetBorderWidthAll(2);style.BorderColor=_phone.TextColor;}
+                button.AddThemeStyleboxOverride(state,style);
+            }
+            foreach(var colour in new[]{"font_color","font_hover_color","font_pressed_color","font_focus_color"})button.AddThemeColorOverride(colour,_phone.TextColor);
+            return button;
+        }
+        var header=new HBoxContainer();header.AddThemeConstantOverride("separation",(int)(6*scale));box.AddChild(header);
+        header.AddChild(HelperPortrait(34*scale,34*scale));
+        var names=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};names.AddThemeConstantOverride("separation",0);header.AddChild(names);
+        Text(names,modern?"Helper-Chan":"HELPER-CHAN",15);_phoneDate=Text(names,$"{_state.Clock.Now:ddd d MMM yyyy, HH:mm}",11);
+        var close=Reply(header,"×",ClosePhone);close.SizeFlagsHorizontal=SizeFlags.ShrinkEnd;close.CustomMinimumSize=new(32*scale,32*scale);close.TooltipText="Put the phone away";
+        box.AddChild(new ColorRect{Color=_phone.BubbleEdge,CustomMinimumSize=new(0,1)});
+        _phoneScroll=new ScrollContainer{SizeFlagsVertical=SizeFlags.ExpandFill,HorizontalScrollMode=ScrollContainer.ScrollMode.Disabled};box.AddChild(_phoneScroll);
+        var thread=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};thread.AddThemeConstantOverride("separation",(int)(10*scale));_phoneScroll.AddChild(thread);
+        var messages=_presentation.Guidance.Thread;
+        foreach(var message in messages.Skip(Math.Max(0,messages.Count-50)))
+        {
+            var row=new HBoxContainer();row.AddThemeConstantOverride("separation",(int)(6*scale));thread.AddChild(row);
+            var face=HelperPortrait(28*scale,28*scale);face.SizeFlagsVertical=SizeFlags.ShrinkBegin;row.AddChild(face);
+            var texts=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};texts.AddThemeConstantOverride("separation",(int)(4*scale));row.AddChild(texts);
+            Text(texts,$"{message.Time:ddd d MMM, HH:mm}",11).Modulate=new Color(1,1,1,.72f);
+            foreach(var text in message.Texts)
+            {
+                var bubble=new PanelContainer();bubble.AddThemeStyleboxOverride("panel",Bubble(_phone.BubbleColor,modern?14:3));texts.AddChild(bubble);
+                Text(bubble,text,14);
+            }
+        }
+        if(messages.Count==0)Text(thread,"No messages yet.",13);
+        if(ArrearsCoverable)Reply(box,$"Cover from savings (¥{_state.WageArrears:N0})",CoverArrears).Name="GuidanceCoverArrears";
+        var replies=new HBoxContainer();replies.AddThemeConstantOverride("separation",(int)(6*scale));box.AddChild(replies);
+        _showGuidance=Reply(replies,"Show me",ShowGuidance);_showGuidance.Name="GuidanceShowMe";
+        Reply(replies,"Later",ClosePhone);
+    }
+    private bool ArrearsCoverable=>_state.WageArrears>0&&_state.PersonalMoney>=_state.WageArrears&&_state.Control==ControlMode.OwnerDirector;
+    private void CoverArrears()
+    {
+        // Only on the player's tap: personal savings are never used for the business automatically.
+        var owed=_state.WageArrears;
+        try{_state.Apply(new ContributeFundsCommand(owed));}
+        catch(InvalidCommandException ex){Notify(ex.Message);return;}
+        CareerGuidance.Say(_presentation.Guidance,_state.Clock.Now,$"Done! I moved ¥{owed:N0} from your savings into the business. The wages are paid within the hour.");
+        _dirty=true;RefreshGuidance();
+    }
+    private void OpenPhone(bool buzz)
+    {
+        if(_phone is null||_floatingUi is null)return;
+        var wasOpen=_phoneOpen;_phoneOpen=true;_phone.Visible=true;_phoneIcon.Visible=false;
+        _phoneLatest=LatestKey(_presentation.Guidance);
+        if(buzz)_audio.Buzz();
+        ResizeFloatingOffice();
+        if(!wasOpen&&!_presentation.ReducedUiMotion)
+        {
+            // Slide up from below the window edge. The offset keeps the slide correct if the window resizes meanwhile.
+            _phoneTween?.Kill();_phoneTween=CreateTween();
+            _phoneTween.TweenMethod(Callable.From<float>(v=>{_phoneSlide=v;ResizeFloatingOffice();}),1f,0f,.25).SetTrans(Tween.TransitionType.Cubic).SetEase(Tween.EaseType.Out);
+        }
+        CareerGuidance.MarkRead(_presentation.Guidance);_phoneIcon.Unread=0;
+        ScrollPhoneToEnd();
+    }
+    private void ClosePhone()
+    {
+        if(_phone is null)return;
+        _phoneTween?.Kill();_phoneTween=null;_phoneSlide=0;_phoneOpen=false;_phone.Visible=false;
+        _phoneIcon.Visible=_floatingUi is not null&&_managementReady;_phoneIcon.Unread=CareerGuidance.Unread(_presentation.Guidance);
+        if(_floatingUi is not null)ResizeFloatingOffice();
+    }
+    private void ScrollPhoneToEnd()
+    {
+        var scroll=_phoneScroll;
+        Callable.From(()=>{if(IsInstanceValid(scroll))scroll.ScrollVertical=(int)scroll.GetVScrollBar().MaxValue;}).CallDeferred();
+    }
+    private void SetGuidanceVisible(bool visible)
+    {
+        _presentation.Guidance.Visible=visible;
+        if(!visible)ClosePhone();
+        RefreshGuidance();
     }
     private void RefreshGuidance()
     {
-        if(_guidanceCard is null)return;
-        CareerGuidance.Observe(_state,_presentation.Guidance);
-        _guidanceCard.Visible=_presentation.Guidance.Visible;
-        var step=CareerGuidance.Evaluate(_state,_presentation.Guidance);
-        _guidanceTitle.Text="Helper-Chan · "+step.Title;_guidanceText.Text=step.Text;
-        _guidanceTitle.TooltipText=step.Text+"\nOpen Help for all guidance.";
+        if(_phone is null||_floatingUi is null)return;
+        var prefs=_presentation.Guidance;
+        CareerGuidance.Observe(_state,prefs);
+        var scale=(float)_presentation.UiScale;var modern=_state.Clock.Now.Year>=2010;
+        var latest=LatestKey(prefs);
+        var key=$"{latest}|{modern}|{scale}|{_darkMode}|{(ArrearsCoverable?_state.WageArrears:0)}";
+        if(key!=_phoneKey){_phoneKey=key;BuildPhone(modern,scale);if(_phoneOpen){ResizeFloatingOffice();ScrollPhoneToEnd();}}
+        _phoneDate.Text=$"{_state.Clock.Now:ddd d MMM yyyy, HH:mm}";
+        var blocked=_inMenu||_helperPopup.Visible||OfficeEditing||!_managementReady;
+        var unread=CareerGuidance.Unread(prefs);
+        if(unread>0&&!blocked)
+        {
+            if(!_phoneOpen&&prefs.Visible)OpenPhone(true);
+            else if(_phoneOpen&&latest!=_phoneLatest){_audio.Buzz();_phoneLatest=latest;ScrollPhoneToEnd();}
+        }
+        if(_phoneOpen&&!blocked){CareerGuidance.MarkRead(prefs);unread=0;}
+        _phoneIcon.Unread=unread;_phoneIcon.Visible=!_phoneOpen&&_managementReady;
     }
     private void ShowGuidance()
     {
         if(_inMenu||_helperPopup.Visible||OfficeEditing){Notify("Finish or close the current dialog or furniture draft first.");return;}
         var step=CareerGuidance.Evaluate(_state,_presentation.Guidance);
+        ClosePhone();
+        if(_state.WageArrears>0&&_presentation.Guidance.Thread.LastOrDefault(m=>m.Step!="notice")?.Step==CareerGuidance.ArrearsStep)
+            step=step with{Target="arrears",Project=0};
         if(step.Project>0)SelectSeriesForWorkbench(step.Project);
-        Control? focus=null;
+        Control? focus=null;string hint;
         switch(step.Target)
         {
-            case "create":Navigate("New doujin");focus=GetNodeOrNull<LineEdit>("%DoujinTitle");break;
-            case "production":OpenWorkspace("Production");focus=_seriesOption;break;
-            case "printing":
-                OpenPrinting(step.Project);focus=_alphaCopies?.GetLineEdit();break;
-            case "employment":OpenWorkspace("Career moves");focus=FindChildren("*","Button",true,false).OfType<Button>().FirstOrDefault(b=>b.Name=="GuidanceEmployment");break;
-            case "staff":Navigate("Staff");break;
-            case "awards":Navigate("Awards");break;
-            default:Navigate("Guidance");break;
+            case "create":Navigate("New doujin");focus=GetNodeOrNull<LineEdit>("%DoujinTitle");
+                hint="Here's the New doujin page! Give it a title, pick a genre, then press Create.";break;
+            case "production":OpenWorkspace("Production");focus=_seriesOption;
+                hint="This is Production. Pages move through each stage by themselves while time runs.";break;
+            case "printing":OpenPrinting(step.Project);focus=_alphaCopies?.GetLineEdit();
+                hint="Here's printing. Ten copy-shop copies is a safe first order.";break;
+            case "series":Navigate("Series details",step.Project);focus=VisibleButton("Continue as ongoing series");
+                hint="Press \"Continue as ongoing series\" here. Magazines only take ongoing series.";break;
+            case "publishing":OpenWorkspace("Publishing");focus=_pitchButton;
+                hint="Choose the magazine I named, then press Pitch. My estimate for each one is shown here.";break;
+            case "employment":OpenWorkspace("Career moves");focus=FindChildren("*","Button",true,false).OfType<Button>().FirstOrDefault(b=>b.Name=="GuidanceEmployment");
+                hint="Studio jobs are listed here. Pick one that suits you.";break;
+            case "arrears":Navigate("Staff");
+                hint="Unpaid wages show here. Letting someone go stops new wages; borrowing is on the Finances page.";break;
+            case "staff":Navigate("Staff");hint="Your team and recruitment live here.";break;
+            case "recruitment":OpenWorkspace("Recruitment");focus=_recruitButton;
+                hint="Compare candidates here. The runway line shows what each wage does to your funds.";break;
+            case "furniture":OpenDeskFix();
+                hint="Add a desk and chair from the catalogue, then press Apply. Fill all desks can buy the missing chairs.";break;
+            case "awards":Navigate("Awards");hint="Contests and awards are listed here.";break;
+            default:Navigate("Guidance");hint="Here are all my suggestions. Pick a direction whenever you like.";break;
         }
         focus??=_sideContent.GetChildren().OfType<Button>().FirstOrDefault();
         if(focus is not null)
@@ -68,18 +195,24 @@ public partial class DebugMain
                 if(parent is ScrollContainer scroll)scroll.CallDeferred(ScrollContainer.MethodName.EnsureControlVisible,focus);
             var target=focus;GetTree().CreateTimer(2).Timeout+=()=>{if(IsInstanceValid(target))target.Modulate=Colors.White;};
         }
-        Notify("Helper-Chan: "+step.Text);
+        CareerGuidance.Say(_presentation.Guidance,_state.Clock.Now,hint);CareerGuidance.MarkRead(_presentation.Guidance);
+        RefreshGuidance();
+        Notify("Helper-Chan: "+hint);
     }
+    private Button? VisibleButton(string text)=>FindChildren("*","Button",true,false).OfType<Button>()
+        .FirstOrDefault(b=>b.Text==text&&b.IsVisibleInTree()&&!b.IsQueuedForDeletion());
     private void GuidancePage()
     {
         Words(_sideContent,"Choose what you would like to work toward. Every career action remains available.");
-        foreach(var (route,label) in new[]{("opening","Opening guidance"),("doujin","Grow the doujin business"),("contest","Enter a contest"),("employment","Seek studio employment")})
-        {var id=route;ActionButton(_sideContent,label,()=>{_presentation.Guidance.Route=id;_presentation.Guidance.Visible=true;RefreshGuidance();});}
+        foreach(var (route,label) in new[]{("career","Follow the career path"),("contest","Enter a contest"),("employment","Seek studio employment")})
+        {var id=route;ActionButton(_sideContent,label,()=>{_presentation.Guidance.Route=id;SetGuidanceVisible(true);});}
         Words(_sideContent,"Project to follow");var projects=new OptionButton();projects.AddItem("Choose automatically",0);
         foreach(var s in _state.Series.Where(s=>s.BusinessId==_state.ControlledBusinessId&&(_state.Control==ControlMode.OwnerDirector||s.LeadPersonId==_state.ProtagonistPersonId)))projects.AddItem(s.Title,s.Id);
         projects.Select(Math.Max(0,projects.GetItemIndex(_presentation.Guidance.Project)));_sideContent.AddChild(projects);
         projects.ItemSelected+=_=>{_presentation.Guidance.Project=projects.GetSelectedId();RefreshGuidance();};
-        ActionButton(_sideContent,_presentation.Guidance.Visible?"Hide guidance":"Resume guidance",()=>{_presentation.Guidance.Visible=!_presentation.Guidance.Visible;RefreshGuidance();BuildManagementPage();});
+        ActionButton(_sideContent,"Open Helper-Chan's messages",()=>OpenPhone(false));
+        ActionButton(_sideContent,_presentation.Guidance.Visible?"Hide guidance":"Resume guidance",()=>{SetGuidanceVisible(!_presentation.Guidance.Visible);BuildManagementPage();});
+        Words(_sideContent,"Hiding guidance stops the phone popping up. The phone icon stays in the corner with her messages.",14);
         ActionButton(_sideContent,"Create a one-shot doujin",()=>Navigate("New doujin"));
         Words(_sideContent,"Observed progress: "+string.Join(", ",_presentation.Guidance.Completed.Select(Humanize)),14);
     }
@@ -102,7 +235,7 @@ public partial class DebugMain
     {
         var dark=new CheckBox{Text="Dark mode",ButtonPressed=_darkMode};parent.AddChild(dark);dark.Toggled+=SetDarkMode;
         Words(parent,"Controls: WASD or middle drag to pan · wheel to zoom · right drag to rotate. Space pauses/resumes; 1 slows down; 2 speeds up. Shortcuts stay off while typing or in dialogs.",14);
-        var guidance=new CheckBox{Text="Helper-Chan's next-step card",ButtonPressed=_presentation.Guidance.Visible};parent.AddChild(guidance);guidance.Toggled+=v=>{_presentation.Guidance.Visible=v;RefreshGuidance();};
+        var guidance=new CheckBox{Text="Helper-Chan's phone pops up for new messages",ButtonPressed=_presentation.Guidance.Visible};parent.AddChild(guidance);guidance.Toggled+=SetGuidanceVisible;
         foreach(var ambience in new[]{true,false})
         {
             Words(parent,ambience?"Office ambience · 0 mutes":"Sound effects · 0 mutes");

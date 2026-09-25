@@ -109,4 +109,17 @@ public static class StudioRules
     public static long ExpectedSalary(int bestSkill) => Math.Max(MinimumMonthlySalary,
         (long)Math.Round((60000 + 1400 * bestSkill) / 1000d, MidpointRounding.AwayFromZero) * 1000);
     public static long HiringReserve(long salary) => (long)Math.Ceiling(salary * 7m / 30m);
+    /// <summary>Months of wages and running costs, counting confirmed page fees, before hiring is called safe.</summary>
+    public const int SafeRunwayMonths = 3;
+    public const int ConfirmedIncomeDays = 90;
+}
+
+/// <param name="Cash">Free business cash after reserved wages and bills.</param>
+/// <param name="ConfirmedIncome">Page fees from signed serializations over the next 90 days, after the creator share.</param>
+/// <param name="MonthlyCosts">Salaries, rent, utilities, recurring charges and loan repayments per month.</param>
+public sealed record HiringRunway(long Cash, long ConfirmedIncome, long MonthlyCosts)
+{
+    /// <summary>Months covered, or null when there are no monthly costs.</summary>
+    public double? Months => MonthlyCosts <= 0 ? null : (double)(Cash + ConfirmedIncome) / MonthlyCosts;
+    public bool Safe => Months is not { } months || months >= StudioRules.SafeRunwayMonths;
 }
