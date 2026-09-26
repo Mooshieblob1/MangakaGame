@@ -150,3 +150,32 @@ Unchanged: early careers are nearly identical across seeds, no setbacks
 occur, and the studio holds about ¥18.7 million by April 1999. Fix 3
 (setbacks and economy balance) is next.
 
+## Re-run after fix 3, setbacks and economy (2026-09-26)
+
+All five runs complete. Setbacks now happen and money stays meaningful.
+
+| Run | Setbacks | Business, April 1999 |
+|---|---|---|
+| Seed 0 Standard | Warning April 1997, cancelled July 1997; second series warned and cancelled December 1998 | ¥1.11 million |
+| Seed 1 Standard | First pitch rejected (shown 48%), second magazine accepted; strong series | ¥10.58 million |
+| Seed 42 Standard | None; steady average series | ¥2.25 million |
+| Seed 7 Challenging | Warning April 1997, cancelled August 1997 | ¥1.55 million |
+| Seed 7 Relaxed | Warning April 1997, cancelled August 1997 | ¥0.44 million |
+
+- Four of five runs meet a rejection or a cancellation. Every cancelled run
+  pitches again and wins a new serialization, so the setback is recoverable.
+- No drain after the first hire: on seed 0 the business rises steadily from
+  ¥345,173 (September 1996) to ¥737,523 (February 1997) before the first
+  collected edition, where it fell to ¥81,851 before.
+- The average debut on Standard (seeds 0 and 42) ends between ¥1.1 million and
+  ¥2.3 million, just under the ¥2 million to ¥5 million target when a
+  cancellation happens, and inside it without one. The strong series on seed 1
+  ends well ahead, as intended, though reprint income there should be
+  reviewed in the Tier 2 balance pass.
+- On seed 7 Relaxed the bot's scripted third hire and studio move empty the
+  business in 1998, with three missed paydays covered from savings. Guided
+  play does not make that hire.
+- Real time is unchanged at about 4 hours per in-game year, so mid-career
+  pacing (item 6) is still open.
+- Challenging and Relaxed see the same setbacks on the same days; difficulty
+  still changes only money (item 5).

@@ -104,6 +104,7 @@ public static class CareerGuidance
         if (pitching is not null) return Pitching(state, pitching);
         if (serialized.Length > 0)
         {
+            if (serialized.FirstOrDefault(s => s.WarningIssuedAt is not null) is { } warned) return Warning(state, warned);
             var series = serialized[0];
             if (!state.ControlledStaff.Any(p => p.Id != state.ProtagonistPersonId))
             {
@@ -125,6 +126,15 @@ public static class CareerGuidance
                 "Contests and studio employment are side routes you can start from Help.", "help", series.Id);
         }
 
+        if (state.Events.LastOrDefault(e => e.Type == EventType.SeriesCancelled && owned.Any(s => s.Id == e.SeriesId)) is { } cancelled &&
+            cancelled.Time >= state.Clock.Now.AddDays(-28) && owned.First(s => s.Id == cancelled.SeriesId) is var ended)
+        {
+            var name = cancelled.MagazineId is { } id ? state.PublisherCatalog.Get(id).Name : "The magazine";
+            var until = cancelled.MagazineId is { } m && ended.PitchCooldowns.TryGetValue(m, out var again) ? again : cancelled.Time.AddDays(52 * 7);
+            return new("series-cancelled", "The series has ended", $"{name} cancelled {ended.Title}. It happens to many series, so please don't give up!\n" +
+                "Your published volumes keep selling, and the readers you gained stay with you.\n" +
+                $"{name} will look at this series again after {until:d MMM yyyy}. Pitch it to another magazine, or start a new series.", "publishing", ended.Id);
+        }
         var project = active.FirstOrDefault(s => s.Id == preferences.Project && s.Publishing == PublishingStatus.Unpublished && !InContest(state, s)) ??
             active.LastOrDefault(s => !s.StandaloneDoujin && s.Publishing == PublishingStatus.Unpublished && !InContest(state, s)) ??
             active.LastOrDefault(s => s.StandaloneDoujin && !InContest(state, s));
@@ -150,6 +160,29 @@ public static class CareerGuidance
                 "Keep selling doujin and improving your pages meanwhile.", "printing", project.Id);
         return new("pitch", "Pitch to a magazine", $"{project.Title} can be pitched now! {best.Magazine.Name} gives the best chance, about {best.Chance:P0}.\n" +
             "You draw a 31-page sample, and the editor answers at an issue close.\nMost first pitches are rejected. That is normal, and you can try again.", "publishing", project.Id);
+    }
+
+    private static GuidanceStep Warning(GameState state, Series series)
+    {
+        var magazine = state.PublisherCatalog.Get(series.Contract!.MagazineId);
+        var clocks = CancellationRules.Clocks(state.Protection(series));
+        var left = Math.Max(1, (int)Math.Ceiling(clocks.Cancel - CancellationRules.IssueAge(series.WarningIssuedAt!.Value, state.Clock.Now, magazine.Cadence)));
+        var rank = series.LastRank is { } r ? $"ranked {r} of {magazine.RosterSize} in {magazine.Name}. Series below rank {magazine.CancellationRank} are at risk"
+            : $"is below the safe rankings in {magazine.Name}";
+        return new("cancellation-warning", "A cancellation warning", $"{series.Title} {rank}.\n" +
+            $"The editor decides in about {left} {(left == 1 ? "issue" : "issues")} unless it climbs back.\n" + WarningAdvice(state, series, magazine) + "\n" +
+            "You can also end the series on your own terms in Publishing.", "production", series.Id);
+    }
+
+    private static string WarningAdvice(GameState state, Series series, Magazine magazine)
+    {
+        var genre = TrendRules.Normalise(series.Genre, state.TrendCatalog);
+        var quality = series.Chapters.Where(c => c.PublishedAt is not null && c.Quality is not null).OrderBy(c => c.PublishedAt).LastOrDefault()?.Quality ?? 60;
+        if (magazine.Affinity(genre) * state.GenrePopularity(genre) < .9)
+            return "Genre fit is the weakest part: readers of this magazine or this year want other stories. Strong pages still help most.";
+        return quality < RankingRules.FanScore(series.Fanbase, magazine.Tier)
+            ? "Page quality is the weakest part. Give each chapter more time, put a stronger assistant on it, or use fewer pages."
+            : "Readership is the weakest part. Keep every issue on time and raise page quality: more time per chapter, a stronger assistant or fewer pages.";
     }
 
     private static GuidanceStep Pitching(GameState state, Series series)

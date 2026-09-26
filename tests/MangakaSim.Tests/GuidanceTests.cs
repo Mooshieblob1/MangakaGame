@@ -141,4 +141,38 @@ public class GuidanceTests
         }
         Assert.Fail("No seed produced a rejected first pitch.");
     }
+    [Fact]
+    public void Cancellation_warning_explains_the_line_the_time_left_and_a_fix()
+    {
+        var s = SimulationFixture.EightPublished(); var p = new GuidancePreferences(); var series = s.Series[0];
+        var magazine = s.PublisherCatalog.Get(series.Contract!.MagazineId);
+        series.LastRank = magazine.CancellationRank + 2;
+        series.WarningIssuedAt = s.Clock.Now;
+        var step = CareerGuidance.Evaluate(s, p);
+        Assert.Equal("cancellation-warning", step.Id);
+        Assert.Contains($"ranked {magazine.CancellationRank + 2} of {magazine.RosterSize}", step.Text);
+        Assert.Contains("below rank " + magazine.CancellationRank, step.Text);
+        Assert.Contains("weakest part", step.Text);
+        Assert.Contains("end the series", step.Text);
+        Assert.All(step.Texts, t => Assert.True(t.Length <= CareerGuidance.TextLimit, t));
+        series.WarningIssuedAt = null;
+        Assert.NotEqual("cancellation-warning", CareerGuidance.Evaluate(s, p).Id);
+    }
+
+    [Fact]
+    public void Cancellation_explains_what_is_kept_and_then_moves_on()
+    {
+        var s = SimulationFixture.EightPublished(); var p = new GuidancePreferences(); var series = s.Series[0];
+        var magazine = series.Contract!.MagazineId;
+        s.Apply(new PauseSeriesCommand(series.Id));
+        PublishingTests.Until(s, () => series.Status == SeriesStatus.Ended);
+        Assert.Contains(s.Events, e => e.Type == EventType.SeriesCancelled);
+        var step = CareerGuidance.Evaluate(s, p);
+        Assert.Equal("series-cancelled", step.Id);
+        Assert.Contains($"{series.PitchCooldowns[magazine]:d MMM yyyy}", step.Text);
+        Assert.Contains("keep selling", step.Text);
+        Assert.All(step.Texts, t => Assert.True(t.Length <= CareerGuidance.TextLimit, t));
+        s.Advance(24 * 29);
+        Assert.NotEqual("series-cancelled", CareerGuidance.Evaluate(s, p).Id);
+    }
 }

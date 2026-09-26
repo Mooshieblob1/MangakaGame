@@ -85,11 +85,13 @@ public class SalesTests
         first.WeeksOnSale = 0;
         first.CopiesSold = 99990;
         first.AverageQuality = 70;
-        series.Fanbase = 3000000;
         var monday = state.Clock.Now.Date.AddDays(((int)DayOfWeek.Monday - (int)state.Clock.DayOfWeek + 7) % 7);
         if (monday <= state.Clock.Now) monday = monday.AddDays(7);
         state.Clock.Now = monday;
-        var copies = SalesRules.CommercialCopies(3000000, 70, state.GenrePopularity(series.Genre), 1);
+        var tier = state.PublisherCatalog.Get(series.PastContracts.Last().MagazineId).Tier;
+        // Enough readers for a million-copy week whatever the magazine size.
+        series.Fanbase = 3000000 / SalesRules.TierDemand(tier);
+        var copies = SalesRules.CommercialCopies(series.Fanbase, 70, state.GenrePopularity(series.Genre), 1, tier);
         var record = state.StudioTrackRecord;
         var influence=state.Trends.Single(t=>t.Genre=="drama").PlayerInfluence;
         state.SalesStep();
@@ -121,6 +123,43 @@ public class SalesTests
         Assert.Equal(4, volume.WeeksOnSale);
         Assert.Equal(300000 + state.Ledger.Where(e => e.Kind == AccountEntryKind.Expense).Sum(e => e.Amount), state.Money);
         Assert.DoesNotContain(state.Events, e => e.Type == EventType.ConventionRecap);
+    }
+    [Fact]
+    public void Tier_demand_and_print_run_ladder_have_exact_boundaries()
+    {
+        Assert.Equal(1, SalesRules.TierDemand(1));
+        Assert.Equal(.6, SalesRules.TierDemand(2));
+        Assert.Equal(.35, SalesRules.TierDemand(3));
+        Assert.Throws<ArgumentOutOfRangeException>(() => SalesRules.TierDemand(4));
+        Assert.Equal(21000, SalesRules.CommercialCopies(100000, 70, 1, 1, 3));
+        Assert.Equal(10000, SalesRules.Rung(0));
+        Assert.Equal(10000, SalesRules.Rung(10000));
+        Assert.Equal(15000, SalesRules.Rung(10001));
+        Assert.Equal(100000, SalesRules.Rung(70001));
+        Assert.Equal(150000, SalesRules.Rung(100001));
+        Assert.Equal(500000, SalesRules.Rung(500000));
+        Assert.Equal(600000, SalesRules.Rung(500001));
+        Assert.Throws<ArgumentOutOfRangeException>(() => SalesRules.Rung(-1));
+    }
+    [Fact]
+    public void Royalties_are_paid_per_print_run_at_release_and_each_reprint()
+    {
+        var state = SimulationFixture.Serialized();
+        var series = state.Series[0];
+        PublishingTests.Until(state, () => series.Volumes.Any(v => !v.IsDoujin));
+        var volume = series.Volumes.First(v => !v.IsDoujin);
+        state.Apply(new EndSeriesCommand(series.Id));
+        state.Advance(state.Clock.HoursUntil(volume.ReleaseDate));
+        var index = Economy.PriceIndex(state.TrendCatalog, volume.ReleaseDate);
+        var first = Assert.Single(state.Ledger, e => e.Reason == "royalties, first print run" && e.SeriesId == series.Id);
+        Assert.Equal(volume.ReleaseDate, first.Time);
+        Assert.Equal(SalesRules.Income(SalesRules.FirstPrintRun, index, false), first.Amount);
+        PublishingTests.Until(state, () => volume.SalesClosed);
+        var reprints = state.Ledger.Where(e => e.Reason == "royalties, reprint" && e.SeriesId == series.Id).ToList();
+        var paid = first.Amount + reprints.Sum(e => e.Amount);
+        Assert.InRange(paid, SalesRules.Income(SalesRules.Rung(volume.CopiesSold), index, false) - reprints.Count,
+            SalesRules.Income(SalesRules.Rung(volume.CopiesSold), index, false) + reprints.Count);
+        Assert.All(reprints, e => Assert.Contains(state.Events, m => m.Time == e.Time && m.Message.Contains("goes back to press")));
     }
     [Fact]
     public void Internet_unaffordability_and_numeric_overflow_are_explicit()

@@ -268,7 +268,13 @@ playtesting.
 - **Tier 1 fix 2, first-hire safety (done 2026-09-26, not committed):** runway shown
   and confirmed below 3 months (Q16 to Q18), desk and cooldown explanations, missed-payday
   text with "Cover from savings". Record: `docs/superpowers/first-hire-safety-completion.md`.
-  Next: fix 3, setbacks and economy balance.
+- **Tier 1 fix 3, setbacks and economy (done 2026-09-26, not committed):** pitch
+  odds, earlier cancellation pressure, tier-scaled sales, print-run royalties,
+  newcomer fee floor, warning and cancellation texts (Q19 to Q21), and the phone
+  folding to its icon on cramped screens. Record:
+  `docs/superpowers/setbacks-economy-completion.md`. Next: remaining playtest
+  items (opening pitch wait, difficulty that matters, mid-career pacing), then
+  a T1.9 display sweep and preparing the fresh-player test (T1.10).
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

@@ -90,7 +90,7 @@ public partial class DebugMain
         Check(_state.Ledger.Any(e => e.Reason == "chapter fee" && e.Amount > 0), "Published chapter pays fee");
         Check(_state.Markets[5].LastRanking.Any(r => r.SeriesId == _state.Series[0].Id), "Publication appears in magazine ranking");
         await DrivePublishingUntil(() => _state.Series[0].Volumes.Any(v => !v.IsDoujin && v.CopiesSold > 0));
-        Check(_state.Ledger.Any(e => e.Reason == "royalties" && e.Amount > 0), "Commercial volume releases and earns royalties");
+        Check(_state.Ledger.Any(e => e.Reason.StartsWith("royalties") && e.Amount > 0), "Commercial volume releases and earns royalties");
         Check(_state.Money == _state.ControlledBusiness.Account.OpeningBalance + _state.Ledger.Sum(e => e.Amount), "Displayed balance reconciles with ledger");
         _titleEdit.Text = "Draft input kept";
         _magazineOption.Selected = 5;

@@ -183,6 +183,8 @@ public partial class DebugMain
         if(page is "Series details" or "Sell online" or "Print doujin" or "Showcase")SelectSeriesForWorkbench(detail);
         OpenManagementWorkbench();
         PageEntrance(_side);
+        // On a cramped screen the page needs the phone's column, so the phone folds to its icon.
+        if(_phoneOpen&&PhoneCrampsPage())ClosePhone();
         if(_presentation.Tips&&_presentation.Tutorials.Add(page)&&TutorialText(page) is {} tip)Notify("Helper-Chan: "+tip);
     }
     private void OpenManagementWorkbench()

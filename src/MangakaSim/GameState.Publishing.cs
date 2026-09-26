@@ -130,6 +130,8 @@ public partial class GameState
         series.Publishing = PublishingStatus.Serialized;
         series.DoujinCadence = series.Cadence;
         series.Cadence = magazine.Cadence;
+        // Magazines set the chapter length; a doujin's short issues grow to the magazine standard.
+        series.PagesPerChapter = Math.Max(series.PagesPerChapter, CadenceRules.MagazinePages(magazine.Cadence));
         ClearCancellation(series);
         series.LastRank = null;
         series.NextChapterDueOverride = offer.FirstIssueClose;

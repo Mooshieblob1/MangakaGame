@@ -17,6 +17,8 @@ public partial class DebugMain
         SetProcess(false);
         try
         {
+            // Headless runs start with a tiny window, which would fold the phone like a cramped screen, so use the project size.
+            GetWindow().Size=new(1600,900);
             Directory.CreateDirectory(SmokeOutput);_careers=new CareerStore(Path.Combine(SmokeOutput,"alpha-careers-"+Guid.NewGuid().ToString("N")));
             var buzzes=_audio.BuzzCount;NewCareerMenu();Press("Begin career");await SettleUi();_helperPopup.Hide();
             RefreshGuidance();await SettleUi();
@@ -103,8 +105,22 @@ public partial class DebugMain
             foreach(var (size,name,scale) in new(Vector2I,string,double)[]{(new(1280,720),"720-150",1.5),(new(1920,1080),"1080",1)})
             {
                 _presentation.UiScale=scale;ApplyTextScale();GetWindow().Size=size;RefreshRunway();await SettleUi();await SettleUi();
-                for(Node n=_runwayLabel;n is not null;n=n.GetParent())if(n is ScrollContainer scroll){scroll.EnsureControlVisible(_runwayLabel);break;}
-                await SettleUi();await CaptureSmokeImage($"alpha-hiring-runway-{name}");
+                // Open the page with the phone already out, as a player following a text would.
+                if(!_phoneOpen)OpenPhone(false);_phoneTween?.Kill();_phoneSlide=0;OpenWorkspace("Recruitment");RefreshRunway();await SettleUi();await SettleUi();
+                ScrollContainer? runwayScroll=null;
+                for(Node n=_runwayLabel;n is not null;n=n.GetParent())if(n is ScrollContainer scroll){runwayScroll=scroll;break;}
+                // Scroll the line's first row to the top, as a player reading it would; at large text it can be taller than the view.
+                if(runwayScroll is not null)runwayScroll.ScrollVertical+=(int)(_runwayLabel.GetGlobalPosition().Y-runwayScroll.GetGlobalPosition().Y);await SettleUi();
+                var runwayShown=runwayScroll is not null&&runwayScroll.Size.Y>=80&&runwayScroll.GetGlobalRect().HasPoint(_runwayLabel.GetGlobalPosition()+new Vector2(2,2));
+                Check(runwayShown,$"Recruitment page has room to show the runway line at {name} (scroll {runwayScroll?.GetGlobalRect()}, line {_runwayLabel.GetGlobalRect()}, page {_side.Visible}:{_side.GetGlobalRect()} report {_report.Visible}:{_report.GetGlobalRect()}, phone {_phoneOpen})");
+                if(PhoneCrampsPage())
+                {
+                    Check(!_phoneOpen&&_phoneIcon.Visible,$"Phone folds to its icon when a page opens at {name}");
+                    RefreshGuidance();await SettleUi();
+                    Check(!_phoneOpen,$"New texts wait on the icon instead of covering the page at {name}");
+                }
+                else Check(_phoneOpen&&_phone.Visible&&!_runwayLabel.GetGlobalRect().Intersects(_phone.GetGlobalRect()),$"Open phone leaves the runway line uncovered at {name}");
+                await CaptureSmokeImage($"alpha-hiring-runway-{name}");
             }
             before=_state.ToJson();Press("Hire at selected workplace");await SettleUi();
             var warning=GetChildren().OfType<ConfirmationDialog>().LastOrDefault(d=>d.Title=="Hire with a short runway");

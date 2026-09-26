@@ -38,14 +38,19 @@ public class PublishingRuleTests
     [Fact]
     public void Pitch_editor_and_fees_have_exact_boundaries()
     {
-        Assert.Equal(.2482272, PitchRules.Chance(1, 84, 25, 1.2, 1.3), 10);
-        Assert.Equal(.384, PitchRules.Chance(1, 100, 100, 1, 1), 10);
+        Assert.Equal(.19858176, PitchRules.Chance(1, 84, 25, 1.2, 1.3), 10);
+        Assert.Equal(.3072, PitchRules.Chance(1, 100, 100, 1, 1), 10);
         Assert.Equal(.02, PitchRules.Chance(1, 0, 0, .8, .2));
         Assert.Equal(.95, PitchRules.Chance(3, 100, 100, 1.2, 1.8));
         Assert.Equal(65, EditorRules.Threshold(1, 0));
         Assert.Equal(.95, EditorRules.Chance(1, 85, 0), 10);
         Assert.Equal(.05, EditorRules.Chance(1, 45, 0), 10);
         Assert.Equal(14500, ReputationRules.Fee(9000, 20000, 50, 1));
+        Assert.Equal(ReputationRules.Fee(9000, 20000, 50, 1), ReputationRules.Fee(9000, 20000, 0, 1));
+        Assert.Equal(16700, ReputationRules.Fee(9000, 20000, 70, 1));
+        Assert.Equal(.12 * .5 * .6, PitchRules.Chance(1, 50, 0, 1, 1), 10);
+        Assert.Equal(.24 * .5 * .6, PitchRules.Chance(2, 50, 0, 1, 1), 10);
+        Assert.Equal(.40 * .5 * .6, PitchRules.Chance(3, 50, 0, 1, 1), 10);
     }
 
     [Fact]
@@ -71,8 +76,8 @@ public class PublishingRuleTests
         Assert.Equal(.97, TrendRules.Crowding(3));
         Assert.Equal(.85, TrendRules.Crowding(7));
         Assert.Equal(.7, ReputationRules.Protection(300, 500000, 50), 10);
-        Assert.Equal((3, 3, 8), CancellationRules.Clocks(0));
-        Assert.Equal((12, 26, 2), CancellationRules.Clocks(1));
+        Assert.Equal((2, 3, 8), CancellationRules.Clocks(0));
+        Assert.Equal((8, 26, 2), CancellationRules.Clocks(1));
     }
 
     [Fact]

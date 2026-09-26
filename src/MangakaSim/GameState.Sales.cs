@@ -76,10 +76,22 @@ public partial class GameState
     {
         if (volume.ReleasedAt is not null) return;
         volume.ReleasedAt = Clock.Now;
+        if (!volume.IsDoujin) PayPrintRun(series, volume, 0, SalesRules.Rung(volume.CopiesSold), "royalties, first print run");
         if (volume.IsDoujin && volume.AverageQuality >= 75) ChangeTrackRecord(.5, series.BusinessId);
         Emit(EventType.VolumeReleased, $"{series.Title} volume {volume.Number} released ({(volume.IsDoujin ? "doujin" : "tankobon")}).",
             series.Id, context: new(VolumeId: volume.Id));
     }
+    // Royalties on the copies added to the print run, paid when the run is ordered.
+    private long PayPrintRun(Series series, Volume volume, long printedBefore, long printedAfter, string description)
+    {
+        var revenue = SalesRules.Income(printedAfter - printedBefore, Economy.PriceIndex(TrendCatalog, volume.ReleaseDate), false);
+        if (revenue <= 0) return 0;
+        AccountPost(BusinessOf(volume.BusinessId).Account, revenue, description, AccountEntryKind.Publishing, series.Id);
+        VolumeContribution(volume, revenue);
+        return revenue;
+    }
+    private int SeriesTier(Series series) =>
+        (series.Contract ?? series.PastContracts.LastOrDefault()) is { } contract ? PublisherCatalog.Get(contract.MagazineId).Tier : 1;
     internal void SalesStep()
     {
         foreach (var series in Series.OrderBy(s => s.Id))
@@ -104,7 +116,7 @@ public partial class GameState
             {
                 var copies = volume.IsDoujin ? SalesRules.DoujinCopies(fans, volume.AverageQuality, trend,
                     BusinessOf(volume.BusinessId).HasInternet ? Economy.InternetReach(TrendCatalog, Clock.Now) : 0, volume.WeeksOnSale + 1) :
-                    SalesRules.CommercialCopies(fans, volume.AverageQuality, trend, volume.WeeksOnSale + 1);
+                    SalesRules.CommercialCopies(fans, volume.AverageQuality, trend, volume.WeeksOnSale + 1, SeriesTier(series));
                 var potential = (long)Math.Floor(copies*(1+series.Reach/100)*RivalDemand(series.Genre,volume.AverageQuality)*RecognitionLift(series.Id));
                 var channelUnits = SettleChannelDemand(series,volume,potential);
                 if(volume.SalesClosed)copies=0;
@@ -117,11 +129,11 @@ public partial class GameState
                 volume.SalesClosed = volume.WeeksOnSale >= volume.SalesWindowWeeks;
                 if (!volume.IsDoujin)
                 {
-                    var revenue = SalesRules.Income(copies, Economy.PriceIndex(TrendCatalog, volume.ReleaseDate), false);
-                    AccountPost(BusinessOf(volume.BusinessId).Account,revenue,"royalties",AccountEntryKind.Publishing,series.Id);
-                    VolumeContribution(volume,revenue);
+                    var (printed, reprint) = (SalesRules.Rung(old), SalesRules.Rung(volume.CopiesSold));
+                    if (reprint > printed && PayPrintRun(series, volume, printed, reprint, "royalties, reprint") > 0)
+                        StudioMessage($"{series.Title} volume {volume.Number} goes back to press: {reprint:N0} copies in print.");
                 }
-                var fanGain = (copies + channelUnits) * (volume.IsDoujin ? .3 : .05);
+                var fanGain = (copies + channelUnits) * (volume.IsDoujin ? .3 : SalesRules.CommercialFanGain);
                 gains += fanGain;
                 if (volume.IsDoujin)
                 {

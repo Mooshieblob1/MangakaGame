@@ -60,13 +60,15 @@ public class SeriesLifecycleTests
         var state = SimulationFixture.Serialized();
         var series = state.Series[0];
         var chapter = series.Chapters.Last();
+        var pages = chapter.Pages;
+        Assert.Equal(CadenceRules.MagazinePages(series.Cadence), series.PagesPerChapter);
         var before = state.ToJson();
         Assert.Throws<InvalidCommandException>(() => state.Apply(new SetCadenceCommand(series.Id, Cadence.Weekly)));
         Assert.Equal(before, state.ToJson());
         state.Apply(new SetPagesPerChapterCommand(series.Id, 3));
         PublishingTests.Until(state, () => chapter.PublishedAt is not null);
-        Assert.Equal(19, chapter.Pages);
-        Assert.Equal(19 * series.Contract!.FeePerPage, state.Ledger.First(e => e.Reason == "chapter fee").Amount);
+        Assert.Equal(pages, chapter.Pages);
+        Assert.Equal(pages * series.Contract!.FeePerPage, state.Ledger.First(e => e.Reason == "chapter fee").Amount);
         Assert.All(series.Chapters.Where(c => c.Number > chapter.Number), c => Assert.Equal(3, c.Pages));
     }
 
@@ -76,7 +78,8 @@ public class SeriesLifecycleTests
         var state = SimulationFixture.EightPublished();
         var series = state.Series[0];
         Assert.Empty(series.Strikes);
-        Assert.Equal(0, series.WeeksBelowLine);
+        // Grace covers the first six publications, so only the seventh and eighth can count below the line.
+        Assert.InRange(series.WeeksBelowLine, 0, series.ChaptersPublished - 6);
         state.Apply(new PauseSeriesCommand(series.Id));
         // Completed stock is allowed to publish during a pause before misses begin.
         PublishingTests.Until(state, () => series.Strikes.Count > 0);

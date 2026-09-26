@@ -103,11 +103,15 @@ public class HiringRunwayTests
     {
         var s = Serialized(); var p = new GuidancePreferences();
         s.ControlledBusiness.Account.Balance = 0;
+        // Standard magazine fees cover a first salary, so use thin chapters to exercise the wait.
+        var pages = s.Series[0].PagesPerChapter;
+        s.Series[0].PagesPerChapter = 4;
         var step = CareerGuidance.Evaluate(s, p);
         Assert.Equal("serial-rhythm", step.Id);
         Assert.Contains("three months", step.Text);
 
         s.ControlledBusiness.Account.Balance = 5_000_000;
+        s.Series[0].PagesPerChapter = pages;
         if (s.WorkplaceWithFreeDesk is null)
         {
             step = CareerGuidance.Evaluate(s, p);

@@ -27,7 +27,7 @@ public class PublishingScenarioTests
         Assert.Equal(state.ToJson(), replay.ToJson());
         Assert.Contains(state.Ledger, e => e.Reason == "doujin sales" && e.Amount > 0);
         Assert.Contains(state.Ledger, e => e.Reason == "chapter fee" && e.Amount > 0);
-        Assert.Contains(state.Ledger, e => e.Reason == "royalties" && e.Amount > 0);
+        Assert.Contains(state.Ledger, e => e.Reason.StartsWith("royalties") && e.Amount > 0);
         Assert.True(state.Series[0].ChaptersPublished >= 12);
         Assert.Contains(state.Series[0].Volumes, v => !v.IsDoujin && v.CopiesSold > 0);
         Assert.Equal(state.ControlledBusiness.Account.OpeningBalance + state.Ledger.Sum(e => e.Amount), state.Money);

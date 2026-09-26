@@ -11,7 +11,7 @@ public partial class GameState
         foreach (var magazine in PublisherCatalog.Magazines)
         {
             var market = new MagazineState { MagazineId = magazine.Id, NextIssueClose = IssueSchedule.Anchor(magazine) };
-            var (min, max) = magazine.Tier switch { 1 => (40, 95), 2 => (35, 85), _ => (30, 75) };
+            var (min, max) = magazine.Tier switch { 1 => (40, 95), 2 => (40, 88), _ => (38, 82) };
             for (var slot = 0; slot < magazine.RosterSize - 1; slot++) market.Fillers.Add(NewFiller(magazine, min, max));
             if (magazine.Tier == 1)
             {
@@ -44,7 +44,7 @@ public partial class GameState
             var market = Markets.Single(m => m.MagazineId == magazine.Id);
             var competitors = Series.Where(s => s.Publishing == PublishingStatus.Serialized &&
                 s.Contract!.MagazineId == magazine.Id && s.Contract.FirstIssueClose <= close.CloseTime).OrderBy(s => s.Id).ToArray();
-            var grace = competitors.ToDictionary(s => s.Id, s => s.Contract!.ChaptersPublished < 8);
+            var grace = competitors.ToDictionary(s => s.Id, s => s.Contract!.ChaptersPublished < 6);
             var published = new Dictionary<int, Chapter>();
             foreach (var series in competitors)
             {

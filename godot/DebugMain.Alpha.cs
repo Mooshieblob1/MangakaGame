@@ -148,7 +148,7 @@ public partial class DebugMain
         var unread=CareerGuidance.Unread(prefs);
         if(unread>0&&!blocked)
         {
-            if(!_phoneOpen&&prefs.Visible)OpenPhone(true);
+            if(!_phoneOpen&&prefs.Visible&&!(PageOpen&&PhoneCrampsPage()))OpenPhone(true);
             else if(_phoneOpen&&latest!=_phoneLatest){_audio.Buzz();_phoneLatest=latest;ScrollPhoneToEnd();}
         }
         if(_phoneOpen&&!blocked){CareerGuidance.MarkRead(prefs);unread=0;}

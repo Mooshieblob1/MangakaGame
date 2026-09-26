@@ -230,6 +230,14 @@ public class CareerPlaytest
                     if (cheapest is null) { Stale(step, "Suggested hiring with no candidate available."); break; }
                     if (!Hire(cheapest)) Stale(step, _rejections.Count > 0 ? _rejections[^1].Message : "Hiring failed.");
                     break;
+                case "cancellation-warning":
+                    // A careful player keeps the series going and lets the next chapters answer the warning.
+                    if (_seen.Add($"warning-advice-{series?.Id}")) Note($"Warning advice: {step.Title}");
+                    break;
+                case "series-cancelled":
+                    // Nothing to do yet: after the wait Helper-Chan moves on to the next series or magazine.
+                    if (_seen.Add($"cancelled-advice-{series?.Id}")) Note($"Cancellation advice: {step.Title}");
+                    break;
                 case "serial-rhythm" when !State.Candidates.Any(c => !c.Recruited && c.ExpiresAt > State.Clock.Now) && _recruitAttempts < 12:
                     if (Try("Recruit", new RecruitStaffCommand())) { _recruitAttempts++; Mark("First recruitment started"); }
                     break;
@@ -294,9 +302,23 @@ public class CareerPlaytest
             sb.AppendLine("\r\n## Monthly snapshot\r\n\r\n| Month | Real hours | Personal yen | Business yen | Serialized | Staff | Guidance |\r\n|---|---|---|---|---|---|---|");
             foreach (var line in _monthly) sb.AppendLine(line);
             sb.AppendLine($"\r\nSavings contributions: {_contributions} totalling {_contributed:N0} yen. Recruitment searches: {_recruitAttempts}.\r\n");
+            sb.AppendLine("## Business ledger by year\r\n\r\n| Year | Reason | Entries | Yen |\r\n|---|---|---|---|");
+            foreach (var g in State.Ledger.GroupBy(e => (e.Time.Year, e.Reason)).OrderBy(g => g.Key.Year).ThenBy(g => g.Sum(e => e.Amount)))
+                sb.AppendLine($"| {g.Key.Year} | {g.Key.Reason} | {g.Count()} | {g.Sum(e => e.Amount):N0} |");
+            sb.AppendLine();
             sb.AppendLine("## Series\r\n\r\n| Title | Status | Publishing | Chapters complete | Volumes | Copies sold |\r\n|---|---|---|---|---|---|");
             foreach (var s in State.Series)
                 sb.AppendLine($"| {s.Title} | {s.Status} | {s.Publishing} | {s.Chapters.Count(c => c.Status == ChapterStatus.Complete)} | {s.Volumes.Count} | {s.Volumes.Sum(v => v.CopiesSold):N0} |");
+            foreach (var s in State.Series.Where(s => s.Chapters.Any(c => c.Rank is not null)))
+            {
+                var ranks = s.Chapters.Where(c => c.Rank is not null).Select(c => c.Rank!.Value).ToList();
+                var sorted = ranks.OrderBy(r => r).ToList();
+                sb.AppendLine($"\r\nRanks for {s.Title}: best {sorted[0]}, median {sorted[sorted.Count / 2]}, worst {sorted[^1]}; by issue {string.Join(" ", ranks)}.");
+                sb.AppendLine($"Quality by issue: {string.Join(" ", s.Chapters.Where(c => c.Rank is not null).Select(c => c.Quality))}.");
+                var debut = State.Career.Rankings.FirstOrDefault(r => r.Rows.Any(e => e.SeriesId == s.Id));
+                if (debut is not null)
+                    sb.AppendLine($"Debut ranking: {string.Join(", ", debut.Rows.Select(e => $"{e.Rank}. {(e.SeriesId == s.Id ? "*" : "")}{e.Score:0.0}"))}.");
+            }
             sb.AppendLine("\r\n## Decisions and notable events\r\n");
             foreach (var d in _decisions) sb.AppendLine("- " + d);
             sb.AppendLine("\r\n## Rejected actions (friction)\r\n\r\n| Action | Count | First date | Message |\r\n|---|---|---|---|");
