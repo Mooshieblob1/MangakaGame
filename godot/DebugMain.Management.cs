@@ -110,7 +110,7 @@ public partial class DebugMain
         var funds=new PanelContainer{ThemeTypeVariation="HeaderFunds",SizeFlagsVertical=SizeFlags.ShrinkCenter};header.AddChild(funds);
         BuildMoneyHeader(funds);
         _inboxShortcut=HeaderButton(header,"0 unread",()=>{if(_homeOffice.Visible)OpenOfficeSidebar("Inbox");else Navigate("Inbox");});_inboxShortcut.TooltipText="Open Inbox";
-        foreach(var speed in new[]{0,1,2,4,8}){var s=speed;var button=HeaderButton(header,s==0?"Ⅱ":$"{s}×",()=>{if(GameKeysAvailable()){if(s==0)TogglePause();else SetSpeed(s);}});button.ToggleMode=true;_speedButtons[s]=button;button.TooltipText="Space: pause / resume · 1: slower · 2: faster";}
+        foreach(var speed in new[]{0,1,2,4,8,32}){var s=speed;var button=HeaderButton(header,s==0?"Ⅱ":$"{s}×",()=>{if(GameKeysAvailable()){if(s==0)TogglePause();else ChooseSpeed(s);}});button.ToggleMode=true;_speedButtons[s]=button;button.TooltipText="Space: pause / resume · 1: slower · 2: faster";}
         HeaderButton(header,"Save",()=>OpenSaveMenu());
         _overnightSpeedBadge=Words(header,"▶▶ 32× NIGHT",14);_overnightSpeedBadge.SizeFlagsVertical=SizeFlags.ShrinkCenter;_overnightSpeedBadge.Hide();
         _overnightSpeedBadge.AddThemeColorOverride("font_color",new Color("8fe4d5"));

@@ -97,6 +97,7 @@ public partial class DebugMain : Control
         if (OS.GetCmdlineUserArgs().Contains("--series-status-smoke")) CallDeferred(nameof(RunSeriesStatusSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--atmosphere-smoke")) CallDeferred(nameof(RunAtmosphereSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--family-home-smoke")) CallDeferred(nameof(RunFamilyHomeSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--quiet-speed-smoke")) CallDeferred(nameof(RunQuietSpeedSmoke));
     }
 
     public override void _Process(double delta)
@@ -141,25 +142,40 @@ public partial class DebugMain : Control
         var fresh = _state.EventsSince(_scanIndex).ToList();
         _scanIndex = _state.Events.Count;
 
+        // At 32x routine days roll on; only events that need the player stop the game (Q27).
+        var fast = _speed >= QuietSpeed && _overnightTarget is null && _managementReady;
+        var prefs = _presentation.Guidance;
+        var threadBefore = prefs.Thread.Count;
         GameEvent? recap = null;
         var shouldPause = false;
+        var stop = false;
         foreach (var ev in fresh)
         {
             AppendLog(ev);
             // A missed payday becomes Helper-Chan's text; the pop-up remains only when her guidance is hidden.
-            var texted = ev.Type == EventType.WageArrears && CareerGuidance.ReportArrears(_state, _presentation.Guidance, ev) && _presentation.Guidance.Visible;
+            var texted = ev.Type == EventType.WageArrears && CareerGuidance.ReportArrears(_state, prefs, ev) && prefs.Visible;
             if (_managementReady && !texted) QueueImportantEvent(ev,_state.Events.IndexOf(ev));
-            if (ev.Type == EventType.DailyRecap ||
+            if (ev.Type == EventType.DailyRecap) recap = ev;
+            if (fast && (CareerGuidance.FastSpeedStops.Contains(ev.Type) || texted)) { shouldPause = true; stop = true; }
+            else if (fast && ev.Type is EventType.DailyRecap or EventType.ChapterCompleted) { }
+            else if (ev.Type == EventType.DailyRecap ||
                 (_state.Settings.AutoPause.TryGetValue(ev.Type, out var pause) && pause))
-            {
                 shouldPause = true;
-                if (ev.Type == EventType.DailyRecap) recap = ev;
-            }
         }
+        if (fast && prefs.Visible)
+        {
+            CareerGuidance.Observe(_state, prefs);
+            if (prefs.Thread.Count > threadBefore && CareerGuidance.Unread(prefs) > 0) { shouldPause = true; stop = true; }
+        }
+        // Helper-Chan introduces 32x once, after a working day with nothing that needed the player (Q28).
+        if (!fast && recap != null && _managementReady && prefs.Visible && _overnightTarget is null &&
+            CareerGuidance.OfferQuietSpeed(_state, prefs, recap.Time.AddHours(-24))) _dirty = true;
 
         // Overnight bookkeeping still runs, but notices wait for the following morning.
         if(_overnightTarget is not null)return false;
-        if (shouldPause) Pause();
+        if (stop) { Pause(); _resumeSpeed = _daySpeed; }
+        else if (shouldPause) Pause();
+        if (fast && recap != null && !shouldPause) { BeginOvernight(); return true; }
         if (recap != null) ShowRecap(recap);
         return shouldPause;
     }
@@ -176,6 +192,7 @@ public partial class DebugMain : Control
         CancelOvernight();
         var changed=_speed!=speed;
         if (speed > 0) _resumeSpeed = speed;
+        if (speed > 0 && speed < QuietSpeed) _daySpeed = speed;
         _speed = speed;
         RefreshSpeedFeedback(changed);
         _accumulator = 0;

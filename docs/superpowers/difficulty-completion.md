@@ -2,7 +2,7 @@
 
 Date: 2026-09-26. Design: [considerations](specs/2026-09-26-difficulty-considerations.md)
 (Q22 and Q23). Plan: [implementation plan](plans/2026-09-26-difficulty.md).
-Not committed yet.
+Committed as `f8b17b8`.
 
 ## What changed
 

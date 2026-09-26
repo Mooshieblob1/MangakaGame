@@ -15,7 +15,8 @@ public partial class DebugMain
     private const double OvernightSpeed=32;
     // Overnight is a brief presentation, independent of the longer playable day.
     private const double OvernightSecondsPerHourAt1x=2.5;
-    private double OfficePlaybackSpeed=>_speed<=0?0:_overnightDeparting?8:_speed;
+    // Office motion stays readable: capped at 8x during the night and during 32x days.
+    private double OfficePlaybackSpeed=>_speed<=0?0:_overnightDeparting?8:Math.Min(_speed,8);
 
     private void BeginOvernight()
     {

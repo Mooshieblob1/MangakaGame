@@ -8,6 +8,15 @@ namespace MangakaGame;
 public partial class DebugMain
 {
     private readonly Dictionary<int,Button> _speedButtons=new();
+    // 32x skips routine days; anything that needs the player drops back to the last slower speed (Q26, Q27).
+    private const double QuietSpeed=32;
+    private double _daySpeed=1;
+    private void ChooseSpeed(double speed)
+    {
+        // Choosing 32x yourself counts as Helper-Chan's introduction (Q28).
+        if(speed>=QuietSpeed&&_managementReady)_presentation.Guidance.Completed.Add(CareerGuidance.QuietSpeedStep);
+        SetSpeed(speed);
+    }
     private Label? _speedFlash;
     private Tween? _speedTween;
     private string SeriesSalesText(Series series)
@@ -39,6 +48,7 @@ public partial class DebugMain
             button.ThemeTypeVariation=_speed==speed?"HeaderActiveButton":"HeaderButton";
             button.Disabled=overnight&&speed>0;
             button.TooltipText=overnight?(speed==0?"Pause / resume the overnight transition at 32×":"Daytime speeds return in the morning. Space pauses / resumes the 32× night transition."):
+                speed==QuietSpeed?"32×: routine days skip ahead. Helper-Chan stops you when anything needs you.\nSpace: pause / resume · 1: slower · 2: faster":
                 "Space: pause / resume · 1: slower · 2: faster";
         }
         if(!flash||_speedFlash is null||_inMenu)return;

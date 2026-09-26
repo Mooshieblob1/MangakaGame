@@ -48,8 +48,9 @@ public partial class DebugMain
             SetSpeed(4);_Input(new InputEventKey{Keycode=Key.Space,Pressed=true});Check(_speed==0,"Space pauses through input handler");
             _Input(new InputEventKey{Keycode=Key.Space,Pressed=true});Check(_speed==4,"Space restores prior speed");
             foreach(var expected in new[]{2,1,0,0}){HandleTimeShortcut(Key.Key1);Check(_speed==expected,"1 decreases speed with pause boundary");}
-            foreach(var expected in new[]{1,2,4,8,8}){HandleTimeShortcut(Key.Key2);Check(_speed==expected,"2 increases speed with maximum boundary");}
-            _Input(new InputEventKey{Keycode=Key.Space,Pressed=true,Echo=true});Check(_speed==8,"Key repeat does not toggle pause repeatedly");
+            foreach(var expected in new[]{1,2,4,8,32,32}){HandleTimeShortcut(Key.Key2);Check(_speed==expected,"2 increases speed to the 32x maximum");}
+            _Input(new InputEventKey{Keycode=Key.Space,Pressed=true,Echo=true});Check(_speed==32,"Key repeat does not toggle pause repeatedly");
+            HandleTimeShortcut(Key.Key1);Check(_speed==8,"1 steps back from 32x to 8x");
             ShowMenu();Check(!HandleTimeShortcut(Key.Space)&&!GameKeysAvailable(true),"Menu blocks time and movement shortcuts");
             _inMenu=false;_menu.Hide();_helperPopup.Show();Check(!HandleTimeShortcut(Key.Key2),"Helper popup blocks shortcuts");_helperPopup.Hide();
             Navigate("New doujin");var title=GetNode<LineEdit>("%DoujinTitle");title.GrabFocus();

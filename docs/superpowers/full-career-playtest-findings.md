@@ -211,3 +211,17 @@ All five runs complete. Setbacks now happen and money stays meaningful.
 - Item 4 (the wait before a series debuts) is done; see the
   [completion record](debut-wait-completion.md). Still open: mid-career
   pacing (item 6).
+
+## Re-run after fix 6, mid-career pacing (2026-09-27)
+
+- A 32x speed skips routine working days and stops only when something needs
+  the player. At 8x a year still takes about 4.0 real hours plus about 110 to
+  190 recap clicks. At 32x it takes about 1.1 real hours, or up to about 1.6
+  if every day with a stop is finished at 8x, with 6 to 70 stops a year
+  (most are Helper-Chan texts in the first year).
+- Three in-game years drop from about 12 hours to about 3.5 to 5 hours.
+- Simulation results are unchanged: no simulation, balance or save change.
+- Item 6 (mid-career pacing) is done; see the
+  [completion record](mid-career-pacing-completion.md). T1.5 stays unticked
+  until the fresh-player test (T1.10) judges the pacing. All playtest items
+  now have a fix; next are the T1.9 display sweep and T1.10.

@@ -17,12 +17,15 @@ public class CareerPlaytest
     // Mirrors the Godot driver: 36 s per game hour at 1x, player at 8x during work hours,
     // 2.5 s per hour at 1x played at 32x overnight.
     private const double WorkSecondsPerHour = 36.0 / 8, NightSecondsPerHour = 2.5 / 32;
+    // Mid-career pacing (Q26 to Q28): daytime at 32x instead of 8x, for the per-year comparison.
+    private const double QuietWorkSecondsPerHour = 36.0 / 32;
     private const int Years = 3;
 
     [Theory]
     [InlineData(0, CareerDifficulty.Standard)]
     [InlineData(1, CareerDifficulty.Standard)]
     [InlineData(42, CareerDifficulty.Standard)]
+    [InlineData(7, CareerDifficulty.Standard)]
     [InlineData(7, CareerDifficulty.Relaxed)]
     [InlineData(7, CareerDifficulty.Challenging)]
     public void Three_year_guided_career(int seed, CareerDifficulty difficulty)
@@ -65,6 +68,9 @@ public class CareerPlaytest
         private int _eventCursor, _contributions, _recruitAttempts;
         private long _contributed;
         private bool _hired;
+        // Per career year: daytime hours, night hours, daily recaps (a click each at 8x), 32x stop events and new Helper-Chan texts.
+        private readonly Dictionary<int, (int Work, int Night, int Recaps, int Stops, int Texts)> _pace = new();
+        private int _textsSeen;
 
         public GuidedPlayer(int seed, CareerDifficulty difficulty)
         {
@@ -94,6 +100,10 @@ public class CareerPlaytest
                 var working = State.ControlledStaff.Any(p => p.Schedule.IsRegularHour(State.Clock.Now));
                 var cost = working ? WorkSecondsPerHour : NightSecondsPerHour;
                 _seconds += cost; if (working) _workSeconds += cost;
+                var year = (int)((State.Clock.Now - _start).TotalDays / 365.25);
+                var pace = _pace.GetValueOrDefault(year);
+                if (working) pace.Work++; else pace.Night++;
+                _pace[year] = pace;
                 State.Advance(1);
                 ReadEvents();
                 if (State.Clock.Now >= nextMonth)
@@ -108,6 +118,14 @@ public class CareerPlaytest
         private GuidanceStep Guide()
         {
             CareerGuidance.Observe(State, _guide);
+            // Each new Helper-Chan text stops a 32x day, like the stop events.
+            var texts = _guide.Thread.Count;
+            if (texts > _textsSeen)
+            {
+                var year = (int)((State.Clock.Now - _start).TotalDays / 365.25);
+                var pace = _pace.GetValueOrDefault(year); pace.Texts += texts - _textsSeen; _pace[year] = pace;
+                _textsSeen = texts;
+            }
             return CareerGuidance.Evaluate(State, _guide);
         }
 
@@ -116,6 +134,11 @@ public class CareerPlaytest
             for (; _eventCursor < State.Events.Count; _eventCursor++)
             {
                 var e = State.Events[_eventCursor];
+                var year = (int)((e.Time - _start).TotalDays / 365.25);
+                var pace = _pace.GetValueOrDefault(year);
+                if (e.Type == EventType.DailyRecap) pace.Recaps++;
+                if (CareerGuidance.FastSpeedStops.Contains(e.Type)) pace.Stops++;
+                _pace[year] = pace;
                 switch (e.Type)
                 {
                     case EventType.ChapterCompleted: Mark("First chapter completed"); break;
@@ -321,6 +344,16 @@ public class CareerPlaytest
             sb.AppendLine($"# Guided career playtest: seed {_seed}, {_difficulty}\r\n");
             sb.AppendLine($"Start {_start:yyyy-MM-dd}, end {State.Clock.Now:yyyy-MM-dd}. Estimated clock time at the fastest speeds: {Minutes / 60:F1} hours " +
                 $"({_workSeconds / 3600:F1} hours of daytime play). Excludes reading, pausing and menus.\r\n");
+            sb.AppendLine("## Pacing by speed\r\n\r\nEstimated real time per career year with daytime at 8x (recap click every working day) " +
+                "and at 32x (routine days run on; the game stops only for stop events and new Helper-Chan texts). Nights at 32x in both.\r\n");
+            sb.AppendLine("| Year | Working hours | 8x hours | 8x recap clicks | 32x hours | 32x stops | Of which texts |\r\n|---|---|---|---|---|---|---|");
+            foreach (var (year, p) in _pace.OrderBy(p => p.Key))
+            {
+                var night = p.Night * NightSecondsPerHour;
+                sb.AppendLine($"| {year + 1} | {p.Work:N0} | {(p.Work * WorkSecondsPerHour + night) / 3600:F1} | {p.Recaps} | " +
+                    $"{(p.Work * QuietWorkSecondsPerHour + night) / 3600:F1} | {p.Stops + p.Texts} | {p.Texts} |");
+            }
+            sb.AppendLine();
             sb.AppendLine("## Milestones\r\n\r\n| Date | Day | Real time (h:mm) | Milestone |\r\n|---|---|---|---|");
             foreach (var m in _milestones)
                 sb.AppendLine($"| {m.At:yyyy-MM-dd} | {(m.At - _start).TotalDays:F0} | {(int)(m.Minutes / 60)}:{(int)(m.Minutes % 60):00} | {m.Name} |");

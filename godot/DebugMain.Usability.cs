@@ -76,8 +76,8 @@ public partial class DebugMain
         if(key==Key.Space){TogglePause();return true;}
         if(key is not (Key.Key1 or Key.Key2 or Key.Kp1 or Key.Kp2))return false;
         if(_overnightTarget is not null){SetSpeed(key is Key.Key1 or Key.Kp1?0:OvernightSpeed);return true;}
-        var speeds=new double[]{0,1,2,4,8};int index=Array.IndexOf(speeds,_speed);
-        SetSpeed(speeds[Math.Clamp(index+(key is Key.Key1 or Key.Kp1?-1:1),0,speeds.Length-1)]);return true;
+        var speeds=new double[]{0,1,2,4,8,QuietSpeed};int index=Array.IndexOf(speeds,_speed);
+        ChooseSpeed(speeds[Math.Clamp(index+(key is Key.Key1 or Key.Kp1?-1:1),0,speeds.Length-1)]);return true;
     }
     private void PanWithKeys(double delta)
     {

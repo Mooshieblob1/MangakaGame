@@ -273,18 +273,23 @@ playtesting.
   newcomer fee floor, warning and cancellation texts (Q19 to Q21), and the phone
   folding to its icon on cramped screens. Record:
   `docs/superpowers/setbacks-economy-completion.md`.
-- **Tier 1 fix 4, difficulty that matters (done 2026-09-26, not committed):**
+- **Tier 1 fix 4, difficulty that matters (done 2026-09-26, commit `f8b17b8`):**
   Recovery grace sets editor waits and protected chapters, Business pressure
   sets rival strength and pitch odds (Q22, Q23); Standard unchanged, no save
   change. Record: `docs/superpowers/difficulty-completion.md`.
-- **Tier 1 fix 5, the wait before a series debuts (done 2026-09-26, not committed):**
+- **Tier 1 fix 5, the wait before a series debuts (done 2026-09-26, commit `f8b17b8`):**
   four-issue lead time kept; Helper-Chan explains the debut and page fees,
   "x of y chapters ready" in her texts and Production, then one suggestion
   (early hire if cash lasts to the debut, convention, short doujin, part-time
   job) plus the buffer tip (Q24, Q25); no save or balance change. Record:
-  `docs/superpowers/debut-wait-completion.md`. Next: mid-career pacing
-  (playtest item 6), then a T1.9 display sweep and preparing the fresh-player
-  test (T1.10).
+  `docs/superpowers/debut-wait-completion.md`.
+- **Tier 1 fix 6, mid-career pacing (done 2026-09-27, uncommitted):** a 32x
+  speed (header and 1/2 keys) runs routine days without the recap and stops,
+  back to the slower speed, for the Q27 list and new Helper-Chan texts; one
+  introduction text after the first sale (Q26 to Q28); 8x unchanged, no save
+  or balance change. About 1.1 to 1.6 real hours per in-game year instead of 4.
+  Record: `docs/superpowers/mid-career-pacing-completion.md`. Next: a T1.9
+  display sweep, then preparing the fresh-player test (T1.10).
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

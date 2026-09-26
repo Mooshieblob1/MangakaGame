@@ -330,9 +330,34 @@ public static class CareerGuidance
         if (titles.Any(s => s.Volumes.Any(v => v.CopiesSold > 0)) || state.Career.Sales.Any(x => titles.Any(s => s.Id == x.Series) && x.Physical + x.Digital + x.Overseas > 0))
             preferences.Completed.Add("first-sale");
         var step = Evaluate(state, preferences);
-        var last = preferences.Thread.LastOrDefault(m => m.Step is not ("notice" or ArrearsStep));
+        var last = preferences.Thread.LastOrDefault(m => m.Step is not ("notice" or ArrearsStep or QuietSpeedStep));
         if (last is null || last.Step != step.Id)
             Append(preferences, new() { Step = step.Id, Time = state.Clock.Now, Texts = step.Texts.ToList() });
+    }
+
+    public const string QuietSpeedStep = "quiet-speed";
+    public const string QuietSpeedText = "Nothing needs you right now. Try 32× to skip ahead; I'll stop you if anything comes up.";
+
+    /// <summary>Events that stop a 32x day and return to the slower speed (Q27). Routine recaps do not.</summary>
+    public static readonly IReadOnlySet<EventType> FastSpeedStops = new HashSet<EventType>
+    {
+        EventType.IndustryDecision, EventType.SerializationOffered, EventType.PitchRejected, EventType.EditorRedoRequested,
+        EventType.CancellationWarning, EventType.SeriesCancelled, EventType.DeadlineMissed, EventType.IssueMissed,
+        EventType.ChapterAtRisk, EventType.WageArrears,
+    };
+
+    /// <summary>
+    /// Helper-Chan's one-time 32x introduction (Q28): after the first sale, at the end of a working day
+    /// since <paramref name="dayStart"/> with no stop event and no unread text. Marks the step complete when sent.
+    /// </summary>
+    public static bool OfferQuietSpeed(GameState state, GuidancePreferences preferences, DateTime dayStart)
+    {
+        if (!preferences.Completed.Contains("first-sale") || preferences.Completed.Contains(QuietSpeedStep) || Unread(preferences) > 0) return false;
+        for (int i = state.Events.Count - 1; i >= 0 && state.Events[i].Time >= dayStart; i--)
+            if (FastSpeedStops.Contains(state.Events[i].Type)) return false;
+        preferences.Completed.Add(QuietSpeedStep);
+        Append(preferences, new() { Step = QuietSpeedStep, Time = state.Clock.Now, Texts = [QuietSpeedText] });
+        return true;
     }
 
     public const string ArrearsStep = "wage-arrears";
