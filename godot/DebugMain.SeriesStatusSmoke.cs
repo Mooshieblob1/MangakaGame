@@ -43,6 +43,26 @@ public partial class DebugMain
             _state.Apply(new AcceptOfferCommand(series.Id));Navigate("Series details",series.Id);await SettleUi();
             Check(PublishingStatusText(series).Contains("Serialization accepted")&&!PublishingStatusText(series).Contains("your decision needed"),"Signed contract replaces pending decision text");
             await CaptureSmokeImage("series-status-accepted");
+            var accepted=_state.ToJson();
+            Check(PublishingStatusText(series).Contains($"Chapters ready ahead: 0 of {_state.ChaptersReadyAhead(series).Target}"),"Signed series shows chapters ready ahead");
+            // This fixture skips the doujin sale, so record it as a career past its first sale would have.
+            _presentation.Guidance.Completed.Add("first-sale");RefreshGuidance();await SettleUi();
+            Check(CareerGuidance.Evaluate(_state,_presentation.Guidance).Id=="first-deadline"&&PhoneSays("chapters ready")&&PhoneSays("Page fees only arrive"),$"Helper-Chan explains the debut wait and counts ready chapters ({CareerGuidance.Evaluate(_state,_presentation.Guidance).Id}: {string.Join(" | ",_phone.FindChildren("*","Label",true,false).OfType<Label>().Select(l=>l.Text).TakeLast(4))})");
+            for(var day=0;day<120&&_state.ChaptersReadyAhead(series) is var a&&a.Ready<a.Target;day++){_state.Advance(24);CareerGuidance.Observe(_state,_presentation.Guidance);}
+            _scanIndex=_state.Events.Count;_dirty=true;RefreshGuidance();Navigate("Series details",series.Id);await SettleUi();
+            var wait=CareerGuidance.Evaluate(_state,_presentation.Guidance);
+            Check(series.ChaptersPublished==0&&wait.Id.StartsWith("debut-wait-")&&PhoneSays("Other ideas")&&PhoneSays("buffer to 4"),"Stock ready: one suggestion, the others listed and the buffer tip");
+            Check(_presentation.Guidance.Thread.SelectMany(m=>m.Texts).All(t=>t.Length<=CareerGuidance.TextLimit),"Debut wait texts fit the 140 character limit");
+            Check(PublishingStatusText(series).Contains($"Chapters ready ahead: {_state.ChaptersReadyAhead(series).Ready} of"),"Series status counts the finished stock");
+            var windowSize=GetWindow().Size;
+            foreach(var (size,name,scale) in new(Vector2I,string,double)[]{(new(1920,1080),"1080",1),(new(1280,720),"720-150",1.5)})
+            {
+                _presentation.UiScale=scale;ApplyTextScale();GetWindow().Size=size;await SettleUi();
+                if(!_phoneOpen)OpenPhone(false);_phoneTween?.Kill();_phoneSlide=0;await SettleUi();await SettleUi();
+                await CaptureSmokeImage($"series-status-debut-wait-{name}");
+            }
+            _presentation.UiScale=1;ApplyTextScale();GetWindow().Size=windowSize;await SettleUi();
+            _state=GameState.FromJson(accepted);series=_state.Series.Single();
             var signed=_state.ToJson();_state=GameState.FromJson(snapshot);series=_state.Series.Single();
             _state.Apply(new DeclineOfferCommand(series.Id));Navigate("Series");Check(PublishingStatusText(series).Contains("Offer declined"),"Declined offer retains a clear outcome");
             _state=GameState.FromJson(snapshot);series=_state.Series.Single();_state.Advance(_state.Clock.HoursUntil(series.PendingOffer!.ExpiresAt));

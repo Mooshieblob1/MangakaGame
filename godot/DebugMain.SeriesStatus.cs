@@ -47,7 +47,7 @@ public partial class DebugMain
         if(series.Contract is {} contract)
             return $"Serialization accepted · {Magazine(contract.MagazineId)}\n"+
                 (series.ChaptersPublished==0?$"First issue: {contract.FirstIssueClose:d MMM yyyy}":$"{series.ChaptersPublished} chapters published")+
-                $" · ¥{contract.FeePerPage:N0}/page";
+                $" · ¥{contract.FeePerPage:N0}/page"+(_state.ChaptersReadyAhead(series) is var ahead?$"\nChapters ready ahead: {ahead.Ready} of {ahead.Target}":"");
         if(series.StandaloneDoujin)return "Self-published one-shot · no magazine contract";
         var outcome=_state.Events.LastOrDefault(e=>e.SeriesId==series.Id&&e.Type is
             EventType.PitchRejected or EventType.OfferDeclined or EventType.OfferExpired or EventType.SeriesCancelled or EventType.SeriesWithdrawn);

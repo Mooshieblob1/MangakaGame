@@ -184,6 +184,12 @@ public partial class DebugMain
                 hint="Compare candidates here. The runway line shows what each wage does to your funds.";break;
             case "furniture":OpenDeskFix();
                 hint="Add a desk and chair from the catalogue, then press Apply. Fill all desks can buy the missing chairs.";break;
+            case "conventions":Navigate("Conventions",step.Project);focus=VisibleButton("Confirm convention booking");
+                hint="Choose the event I named, check the copies to bring, then press Confirm convention booking.";break;
+            case "finances":Navigate("Finances");
+                focus=FindChildren("*","Button",true,false).OfType<Button>().FirstOrDefault(b=>b.ToggleMode&&b.Text.EndsWith("Part-time work & personal contributions"));
+                if(focus is Button{ButtonPressed:false} section)section.ButtonPressed=true;
+                hint="Part-time work is in this section. You can stop the job any time if chapters slip.";break;
             case "awards":Navigate("Awards");hint="Contests and awards are listed here.";break;
             default:Navigate("Guidance");hint="Here are all my suggestions. Pick a direction whenever you like.";break;
         }

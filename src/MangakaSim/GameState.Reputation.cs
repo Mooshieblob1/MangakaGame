@@ -113,7 +113,7 @@ public partial class GameState
     internal void CancellationStep(Series series, Magazine magazine, bool grace)
     {
         if (series.IsIconic || grace) return;
-        var clocks = CancellationRules.Clocks(Protection(series));
+        var clocks = CancellationClocks(series);
         series.Strikes.RemoveAll(time => CancellationRules.StrikeExpired(time, Clock.Now, magazine.Cadence, clocks.StrikeLifetime));
         if (series.LastRank is { } rank)
         {

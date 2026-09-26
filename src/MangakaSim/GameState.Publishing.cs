@@ -91,7 +91,7 @@ public partial class GameState
             var reputation = BusinessReputation(series.BusinessId);
             sample.PitchResolved = true;
             var recognition = Progression.Awards.Any(a => a.SeriesId == series.Id && a.Prize > 0 && a.ResolvedAt >= Clock.Now.AddDays(-365)) ? .1 : 0;
-            if (Rng.NextDouble() < Math.Min(.95, PitchRules.Chance(magazine.Tier, quality, reputation, affinity, trend) + recognition))
+            if (Rng.NextDouble() < Math.Min(.95, PitchRules.Chance(magazine.Tier, quality, reputation, affinity, trend) * PitchFactor(series.BusinessId) + recognition))
             {
                 var first = IssueSchedule.AddIssues(magazine, Clock.Now, 4);
                 series.PendingOffer = new(magazine.Id, ReputationRules.Fee(magazine.FeePerPageMin, magazine.FeePerPageMax,

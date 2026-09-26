@@ -115,7 +115,7 @@ public partial class DebugMain
         var cushion=new OptionButton{Visible=newGame};foreach(var name in new[]{"Custom opening funds: lean (half)","Custom opening funds: standard","Custom opening funds: comfortable (double)"})cushion.AddItem(name);cushion.Select(1);custom.AddChild(cushion);
         var pressure=new OptionButton();foreach(var name in new[]{"Low business pressure","Standard business pressure","High business pressure"})pressure.AddItem(name);pressure.Select(newGame?1:p.Pressure);custom.AddChild(pressure);
         var recovery=new OptionButton();foreach(var name in new[]{"Short recovery grace","Standard recovery grace","Long recovery grace"})recovery.AddItem(name);recovery.Select(newGame?1:p.Recovery);custom.AddChild(recovery);
-        Words(custom,"Custom pressure changes recruitment and new publishing-channel setup costs. Recovery changes the grace before unpaid rent closes a workplace. Signed obligations stay intact.",13);
+        Words(custom,"Business pressure sets how strong rival series are in reader surveys, how often editors accept pitches, and optional costs such as recruitment and advertising. Recovery grace sets how long editors wait before warning and cancelling, how many chapters protect a new series, and the grace before unpaid rent closes a workplace. Signed obligations stay intact.",13);
         var assists=StudioCard(parent,"SANDBOX ASSISTS");
         Words(assists,"Sandbox or any assist permanently disables Steam achievements for this save.",14);
         var assistList=new VBoxContainer{Visible=!newGame&&p.Assists!=SandboxAssist.None};assists.AddChild(assistList);
@@ -133,9 +133,9 @@ public partial class DebugMain
             custom.GetParent<Control>().Visible=selected==CareerDifficulty.Custom;
             summary.Text=newGame?selected switch
             {
-                CareerDifficulty.Relaxed=>"A gentler start · ¥400,000 personal / ¥600,000 business",
-                CareerDifficulty.Challenging=>"Tighter finances · ¥100,000 personal / ¥150,000 business",
-                CareerDifficulty.Custom=>"Choose your opening funds and business pressure below.",
+                CareerDifficulty.Relaxed=>"A gentler career · ¥400,000 personal / ¥600,000 business · weaker rivals, better pitch odds and more patient editors",
+                CareerDifficulty.Challenging=>"A tougher career · ¥100,000 personal / ¥150,000 business · stronger rivals, harder pitches and less patient editors",
+                CareerDifficulty.Custom=>"Choose your opening funds, business pressure and recovery grace below.",
                 CareerDifficulty.Sandbox=>"Play freely · achievements disabled · choose optional assists below.",
                 _=>"The standard career · ¥200,000 personal / ¥300,000 business"
             }:"Changes apply going forward. Opening funds and title ownership stay fixed.";

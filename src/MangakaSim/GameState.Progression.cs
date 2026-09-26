@@ -73,10 +73,20 @@ public partial class GameState
         p.Changes.Add(new(Clock.Now, p.Difficulty, p.Assists, p.Pressure, p.Recovery));
     }
     private int RecoveryDays(int days, int business) => ManagedBusiness(business) ?
-        Math.Max(1, (int)Math.Ceiling(days * new[] { .75, 1, 1.5 }[Progression.Recovery])) : days;
+        Math.Max(1, (int)Math.Ceiling(days * DifficultyRules.RecoveryFactor(Progression.Recovery))) : days;
     private long DiscretionaryCost(long amount, int business, string reason) => ManagedBusiness(business) &&
         reason is "recruitment" or "digital edition setup" or "overseas localization" or "advertising" ?
-        (long)Math.Ceiling(amount * new[] { .85, 1, 1.15 }[Progression.Pressure]) : amount;
+        (long)Math.Ceiling(amount * DifficultyRules.CostFactor(Progression.Pressure)) : amount;
+    /// <summary>Editor patience for this series: recovery grace lengthens or shortens the warning and cancellation waits.</summary>
+    public (int Warning, int Cancel, int StrikeLifetime) CancellationClocks(Series series)
+    {
+        var clocks = CancellationRules.Clocks(Protection(series));
+        return ManagedBusiness(series.BusinessId) ? DifficultyRules.Clocks(clocks, Progression.Recovery) : clocks;
+    }
+    public int GraceChapters(Series series) => ManagedBusiness(series.BusinessId) ? DifficultyRules.GraceChapters(Progression.Recovery) : 6;
+    public double PitchFactor(int business) => ManagedBusiness(business) ? DifficultyRules.PitchFactor(Progression.Pressure) : 1;
+    // Fillers are the magazines' other series, so business pressure sets how hard they are to outrank.
+    private double RivalStrength => DifficultyRules.RivalStrength(Progression.Pressure);
     private bool DeadlineProtected(Series series) => ManagedBusiness(series.BusinessId) && Assist(SandboxAssist.NoDeadlinePenalties);
     public double RecognitionLift(int series)
     {

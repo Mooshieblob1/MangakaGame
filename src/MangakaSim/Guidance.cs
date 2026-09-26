@@ -94,12 +94,7 @@ public static class CareerGuidance
         }
         var serialized = active.Where(s => s.Publishing == PublishingStatus.Serialized && s.Contract is not null).ToArray();
         var debut = serialized.FirstOrDefault(s => s.ChaptersPublished == 0);
-        if (debut is not null)
-        {
-            var magazine = state.PublisherCatalog.Get(debut.Contract!.MagazineId);
-            return new("first-deadline", "Your first deadline", $"{debut.Title} debuts in {magazine.Name}. The first issue closes {debut.Contract.FirstIssueClose:d MMM yyyy, HH:mm}.\n" +
-                "Each chapter must be finished by its issue close. A missed issue records a strike.\nWatch the progress bar and due dates in Production.", "production", debut.Id);
-        }
+        if (debut is not null) return Debut(state, owned, debut);
         var pitching = active.FirstOrDefault(s => s.Publishing == PublishingStatus.Pitching);
         if (pitching is not null) return Pitching(state, pitching);
         if (serialized.Length > 0)
@@ -165,7 +160,7 @@ public static class CareerGuidance
     private static GuidanceStep Warning(GameState state, Series series)
     {
         var magazine = state.PublisherCatalog.Get(series.Contract!.MagazineId);
-        var clocks = CancellationRules.Clocks(state.Protection(series));
+        var clocks = state.CancellationClocks(series);
         var left = Math.Max(1, (int)Math.Ceiling(clocks.Cancel - CancellationRules.IssueAge(series.WarningIssuedAt!.Value, state.Clock.Now, magazine.Cadence)));
         var rank = series.LastRank is { } r ? $"ranked {r} of {magazine.RosterSize} in {magazine.Name}. Series below rank {magazine.CancellationRank} are at risk"
             : $"is below the safe rankings in {magazine.Name}";
@@ -224,13 +219,86 @@ public static class CareerGuidance
         var trend = series.IsIconic ? 1 : state.GenrePopularity(genre);
         var recognition = state.Progression.Awards.Any(a => a.SeriesId == series.Id && a.Prize > 0 && a.ResolvedAt >= state.Clock.Now.AddDays(-365)) ? .1 : 0;
         return state.PublisherCatalog.Magazines.Select(m => new PitchOutlook(m,
-                Math.Min(.95, PitchRules.Chance(m.Tier, quality, reputation, series.IsIconic ? 1 : m.Affinity(genre), trend) + recognition),
+                Math.Min(.95, PitchRules.Chance(m.Tier, quality, reputation, series.IsIconic ? 1 : m.Affinity(genre), trend) * state.PitchFactor(series.BusinessId) + recognition),
                 series.PitchCooldowns.TryGetValue(m.Id, out var until) && until > state.Clock.Now ? until : null))
             .OrderByDescending(o => o.Open).ThenByDescending(o => o.Chance).ThenBy(o => o.Magazine.Id).ToArray();
     }
 
     public static PitchOutlook Outlook(GameState state, Series series, string magazineId) =>
         PitchOutlooks(state, series).First(o => o.Magazine.Id == magazineId);
+
+    /// <summary>Before the first issue: explain the lead time, count chapters ready ahead, then suggest side work (Q24, Q25).</summary>
+    private static GuidanceStep Debut(GameState state, Series[] owned, Series debut)
+    {
+        var contract = debut.Contract!;
+        var magazine = state.PublisherCatalog.Get(contract.MagazineId);
+        var (ready, target) = state.ChaptersReadyAhead(debut);
+        if (ready < target)
+            return new(ready == 0 ? "first-deadline" : $"first-deadline-{ready}", "Your first deadline",
+                $"{debut.Title} debuts in {magazine.Name}. The first issue closes {contract.FirstIssueClose:d MMM yyyy}.\n" +
+                $"{ready} of {target} chapters ready. Editors want chapters done early, so one slow week never misses an issue.\n" +
+                "Page fees only arrive after chapters publish. Watch the progress bar and due dates in Production.", "production", debut.Id);
+
+        const string Buffer = "For extra safety, raise the finished chapter buffer to 4 in Studio management, Team, Production limits.";
+        var opening = $"{ready} of {target} chapters are ready for the {contract.FirstIssueClose:d MMM} debut. You have free time until then.";
+        static string Others(string chosen) => new[] { "an early hire", "a convention", "a short doujin", "a part-time job" }
+            .Where(o => o != chosen).ToArray() is var o ? $"Other ideas: {o[0]}, {o[1]} or {o[2]}." : "";
+
+        if (!state.ControlledStaff.Any(p => p.Id != state.ProtagonistPersonId))
+        {
+            var wage = CheapestWage(state);
+            var runway = state.HiringRunway(wage ?? StudioRules.MinimumMonthlySalary);
+            // Wages fall due before the first page fee, so cash alone must carry the studio until the debut.
+            var monthsToDebut = Math.Max(0, (contract.FirstIssueClose - state.Clock.Now).TotalDays / 30);
+            bool cashCarries = runway.Cash >= runway.MonthlyCosts * Math.Max(StudioRules.SafeRunwayMonths, monthsToDebut + 1);
+            if (runway.Safe && cashCarries && state.WorkplaceWithFreeDesk is null)
+                return new("debut-wait-desk", "Room for an early assistant?", string.Join('\n', opening,
+                    $"Suggestion: hire early. Funds cover {RunwayText(runway)} with an assistant, but every desk is taken. Add one in Furniture.",
+                    Others("an early hire"), Buffer), "furniture", debut.Id);
+            if (runway.Safe && cashCarries)
+                return new("debut-wait-hire", "Hire before the debut?", string.Join('\n', opening,
+                    $"Suggestion: hire early. Funds cover {RunwayText(runway)} with an assistant, who can settle in before deadlines start.",
+                    SearchText(state, wage is not null), Others("an early hire"), Buffer), "recruitment", debut.Id);
+        }
+
+        var stocked = owned.Select(s => (Series: s, Copies: s.Volumes.Where(v => v.IsDoujin && v.BusinessId == state.ControlledBusinessId).Sum(v => state.Stock(v.Id))))
+            .Where(x => x.Copies > 0).OrderByDescending(x => x.Copies).ToArray();
+        var stock = stocked.Sum(x => x.Copies);
+        bool booked = state.Bookings.Any(b => b.BusinessId == state.ControlledBusinessId && !b.Settled && !b.Cancelled);
+        if (stock > 0 && !booked)
+        {
+            var major = state.NextConvention(2);
+            var (date, name, fee) = major < contract.FirstIssueClose
+                ? (major, major.Month == 8 ? "summer convention" : "winter convention", 8000)
+                : (state.NextConvention(1), "regional event", 5000);
+            // Only suggest a booth the business can pay for now, booth and return travel included.
+            var home = state.Locations.FirstOrDefault(l => l.Id == state.Protagonist.Employment?.LocationId)?.District;
+            var travel = home is null ? 0 : TokyoProperties.Travel(home, fee == 8000 ? "Ariake" : "Toshima").Fare * 2 * (fee == 8000 ? 2 : 1);
+            if (home is not null && state.AvailableBusinessCash >= fee + travel)
+            {
+                var opens = date > state.Clock.Now.Date.AddDays(28) ? $" Booking opens {date.AddDays(-28):d MMM}." : "";
+                return new("debut-wait-convention", "A convention before the debut?", string.Join('\n', opening,
+                    $"Suggestion: sell your {stock:N0} unsold doujin copies at the {name} on {date:d MMM} (¥{fee:N0} booth).{opens}",
+                    "Book it on the Conventions page.", Others("a convention"), Buffer), "conventions", stocked[0].Series.Id);
+            }
+        }
+
+        // One side doujin per wait: once one is started after signing, finishing it does not bring the suggestion back.
+        var signed = state.Events.LastOrDefault(e => e.Type == EventType.OfferAccepted && e.SeriesId == debut.Id)?.Time ?? DateTime.MaxValue;
+        bool sideDoujin = owned.Any(s => s.Id != debut.Id && (s.StartDate >= signed ||
+            s.Status == SeriesStatus.Active && s.Publishing == PublishingStatus.Unpublished &&
+            (s.Chapters.Count == 0 || s.Chapters.Any(c => c.Status != ChapterStatus.Complete))));
+        if (!sideDoujin)
+            return new("debut-wait-doujin", "A short doujin meanwhile?", string.Join('\n', opening,
+                "Suggestion: draw a short doujin or one-shot in New doujin. Magazine chapters always come first, so your debut stays safe.",
+                Others("a short doujin"), Buffer), "create", debut.Id);
+
+        return new("debut-wait-job", "Some extra income?", string.Join('\n', opening,
+            state.Protagonist.OutsideJob == OutsideJob.None
+                ? "Suggestion: a part-time job earns personal money while you wait. Set it under Part-time work in Finances. Stop it if chapters slip."
+                : "Your part-time job keeps personal money coming in while you wait. Stop it in Finances if chapters slip.",
+            Others("a part-time job"), Buffer), "finances", debut.Id);
+    }
 
     private static string RunwayText(HiringRunway runway) => runway.Months is not { } months ? "every month" :
         months >= 12 ? "over a year" : $"about {Math.Floor(months * 10) / 10:0.#} months";

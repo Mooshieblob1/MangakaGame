@@ -179,3 +179,35 @@ All five runs complete. Setbacks now happen and money stays meaningful.
   pacing (item 6) is still open.
 - Challenging and Relaxed see the same setbacks on the same days; difficulty
   still changes only money (item 5).
+
+## Re-run after fix 4, difficulty that matters (2026-09-26)
+
+- Standard seeds 0, 1 and 42 are unchanged, as designed.
+- Seed 7 Relaxed: no rejection, warning or cancellation to April 1999; the
+  business ends at about 3.54 million yen.
+- Seed 7 Challenging: first pitch rejected, 7 rejections in total, first
+  warning in February 1997 (was April), 3 cancellations, each followed by a
+  new serialization; the business ends at about 0.18 million yen with
+  personal savings above 2 million.
+- Item 5 (difficulty that matters) is done; see the
+  [completion record](difficulty-completion.md). Still open: the wait before a
+  series debuts (item 4) and mid-career pacing (item 6).
+
+## Re-run after fix 5, the wait before a series debuts (2026-09-26)
+
+- The pre-debut stock is ready on day 49 to 79 and the debut follows on day
+  142 or 172, as before. The wait is no longer idle: every run books a
+  convention, draws a side doujin and takes the part-time job in early July
+  1996.
+- Personal savings in April 1999 are 1.1 to 2.3 million yen higher than after
+  fix 4. Business money is within about 0.6 million yen, except seed 7
+  Challenging, which ends at about 4.0 million yen instead of 0.18 million.
+- Only seed 7 Relaxed, which has plenty of cash, hires before the debut. No run
+  has unpaid wages, rejected bookings or rejected print orders; only pitch
+  rejections remain (seed 0: 3 in 1997, none after fix 4; seed 7 Challenging:
+  8, was 7). Warning and cancellation dates are unchanged.
+- The convention and part-time job texts alternate about once a week late in
+  the wait. Left for the fresh-player test (T1.10).
+- Item 4 (the wait before a series debuts) is done; see the
+  [completion record](debut-wait-completion.md). Still open: mid-career
+  pacing (item 6).

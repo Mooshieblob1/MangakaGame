@@ -2,7 +2,7 @@
 
 Date: 2026-09-26. Design: [considerations](specs/2026-09-26-setbacks-economy-considerations.md)
 (Q19 to Q21). Plan: [implementation plan](plans/2026-09-26-setbacks-economy.md).
-Not committed yet.
+Committed as `8d71521`.
 
 ## What changed
 

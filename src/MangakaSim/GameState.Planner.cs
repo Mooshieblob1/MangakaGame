@@ -41,8 +41,7 @@ public partial class GameState
             if (series.StandaloneDoujin && series.Chapters.Count > 0) continue;
             if (Progression.Manuscripts.Any(m => m.SeriesId == series.Id && !m.Released)) continue;
             var open = series.Chapters.Count(c => c.Status != ChapterStatus.Complete);
-            var completed = series.Chapters.Count(c => c.Status == ChapterStatus.Complete && c.PublishedAt is null && !c.IsOneShot && !c.DoujinEligible);
-            if (series.Publishing == PublishingStatus.Serialized && completed >= Math.Max(1,series.BufferLimit)) continue;
+            if (series.Publishing == PublishingStatus.Serialized && ChaptersReadyAhead(series) is var ahead && ahead.Ready >= ahead.Target) continue;
             if (series.Publishing == PublishingStatus.Unpublished && series.Volumes.Count(v => v.IsDoujin && v.ReleasedAt is null && (!series.ReleaseShortIssues || v.Format==VolumeFormat.DoujinIssue)) >= series.MasterLimit) continue;
             if (open < series.PipelineLimit && (open == 0 || series.Chapters.Last().StageWork(Stage.Name).IsDone)) CreateNextChapter(series);
         }
@@ -164,4 +163,8 @@ public partial class GameState
         if (r.Stage != Stage.Name && chapter.EditorMagazineId is not null && chapter.Editor != EditorStatus.Approved) return false;
         return chapter.Stages.TakeWhile(s => s.Stage != r.Stage).All(s => s.IsDone);
     }
+
+    /// <summary>Finished magazine chapters waiting to publish, against the finished-chapter buffer the planner fills before it stops.</summary>
+    public (int Ready, int Target) ChaptersReadyAhead(Series series) =>
+        (series.Chapters.Count(c => c.Status == ChapterStatus.Complete && c.PublishedAt is null && !c.IsOneShot && !c.DoujinEligible), Math.Max(1, series.BufferLimit));
 }

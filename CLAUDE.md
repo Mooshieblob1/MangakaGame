@@ -262,19 +262,29 @@ playtesting.
   sale, the first hire is a cash trap, no setbacks ever occur and the economy is too
   generous once serialized, about 4 real hours per in-game year. These fixes are the
   next Tier 1 work.
-- **Tier 1 fix 1, career guidance (done 2026-09-26, not committed):** one career path
+- **Tier 1 fix 1, career guidance (done 2026-09-26, commit `22a9c93`):** one career path
   from first doujin to first hire (Q12 to Q15), shown as texts on Helper-Chan's phone
   (PHS to 2009, smartphone from 2010). Record: `docs/superpowers/career-guidance-completion.md`.
-- **Tier 1 fix 2, first-hire safety (done 2026-09-26, not committed):** runway shown
+- **Tier 1 fix 2, first-hire safety (done 2026-09-26, commit `22a9c93`):** runway shown
   and confirmed below 3 months (Q16 to Q18), desk and cooldown explanations, missed-payday
   text with "Cover from savings". Record: `docs/superpowers/first-hire-safety-completion.md`.
-- **Tier 1 fix 3, setbacks and economy (done 2026-09-26, not committed):** pitch
+- **Tier 1 fix 3, setbacks and economy (done 2026-09-26, commit `8d71521`):** pitch
   odds, earlier cancellation pressure, tier-scaled sales, print-run royalties,
   newcomer fee floor, warning and cancellation texts (Q19 to Q21), and the phone
   folding to its icon on cramped screens. Record:
-  `docs/superpowers/setbacks-economy-completion.md`. Next: remaining playtest
-  items (opening pitch wait, difficulty that matters, mid-career pacing), then
-  a T1.9 display sweep and preparing the fresh-player test (T1.10).
+  `docs/superpowers/setbacks-economy-completion.md`.
+- **Tier 1 fix 4, difficulty that matters (done 2026-09-26, not committed):**
+  Recovery grace sets editor waits and protected chapters, Business pressure
+  sets rival strength and pitch odds (Q22, Q23); Standard unchanged, no save
+  change. Record: `docs/superpowers/difficulty-completion.md`.
+- **Tier 1 fix 5, the wait before a series debuts (done 2026-09-26, not committed):**
+  four-issue lead time kept; Helper-Chan explains the debut and page fees,
+  "x of y chapters ready" in her texts and Production, then one suggestion
+  (early hire if cash lasts to the debut, convention, short doujin, part-time
+  job) plus the buffer tip (Q24, Q25); no save or balance change. Record:
+  `docs/superpowers/debut-wait-completion.md`. Next: mid-career pacing
+  (playtest item 6), then a T1.9 display sweep and preparing the fresh-player
+  test (T1.10).
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

@@ -15,6 +15,15 @@ public partial class DebugMain
             _careers=new CareerStore(ProjectSettings.GlobalizePath("res://../TestResults/progression-careers-"+Guid.NewGuid().ToString("N")));
             NewCareerMenu();await SettleUi();
             FindChildren("*","CheckBox",true,false).OfType<CheckBox>().First(c=>c.Text=="Instant manga production"&&!c.IsQueuedForDeletion()).ButtonPressed=true;
+            // The longer preset summaries must wrap inside the setup panel.
+            Press("Career rules");await SettleUi();
+            var preset=FindChildren("*","OptionButton",true,false).OfType<OptionButton>().First(o=>!o.IsQueuedForDeletion()&&Enumerable.Range(0,o.ItemCount).Any(i=>o.GetItemText(i)=="Challenging"));
+            var chosen=preset.Selected;var challenging=Enumerable.Range(0,preset.ItemCount).First(i=>preset.GetItemText(i)=="Challenging");
+            preset.Select(challenging);preset.EmitSignal(OptionButton.SignalName.ItemSelected,challenging);await SettleUi();
+            Check(FindChildren("*","Label",true,false).OfType<Label>().Any(l=>l.IsVisibleInTree()&&l.Text.Contains("less patient editors")),"Challenging summary names the setback effects");
+            await CaptureSmokeImage("progression-setup-challenging");
+            preset.Select(chosen);preset.EmitSignal(OptionButton.SignalName.ItemSelected,chosen);await SettleUi();
+            Press("Your mangaka");await SettleUi();
             await CaptureSmokeImage("progression-setup");Press("Begin career");await SettleUi();
             Check(_state.Assist(SandboxAssist.InstantProduction)&&!AchievementDelivery.Eligible(_state),"New-career Sandbox controls reach policy");
             _state.Apply(new DifficultyCommand(CareerDifficulty.Custom,SandboxAssist.InstantProduction,Pressure:0));_dirty=true;await SettleUi();

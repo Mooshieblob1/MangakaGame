@@ -125,7 +125,9 @@ public class CareerPlaytest
                     case EventType.SerializationOffered: Mark("First serialization offer"); Note(e.Message); break;
                     case EventType.OfferExpired: Mark("Offer expired"); break;
                     case EventType.ChapterPublished: Mark("First magazine chapter published"); break;
-                    case EventType.DeadlineMissed: Mark("First deadline missed"); break;
+                    case EventType.DeadlineMissed: Mark("First deadline missed");
+                        if (State.Protagonist.OutsideJob != OutsideJob.None && Try("Stop part-time job", new SetOutsideJobCommand(OutsideJob.None))) Note("Stopped the part-time job after a missed deadline.");
+                        break;
                     case EventType.IssueMissed: Mark("First magazine issue missed"); Note(e.Message); break;
                     case EventType.RankingPublished when Owned(e.SeriesId): Mark("First own ranking"); break;
                     case EventType.CancellationWarning: Mark("First cancellation warning"); Note(e.Message); break;
@@ -180,6 +182,9 @@ public class CareerPlaytest
                 var copies = runs == 0 ? 30 : 50;
                 var cost = GameState.PrintingCost(PrintTier.CopyShop, v.PrintedPages, copies);
                 if (State.AvailableBusinessCash < cost) continue;
+                // A player sees the storage line and does not order copies with nowhere to keep them.
+                if (!State.Locations.Any(l => l.BusinessId == v.BusinessId && !l.Closed &&
+                    l.Storage - State.PrintRuns.Where(r => r.LocationId == l.Id).Sum(r => r.Remaining) >= copies)) continue;
                 if (Try("Print", new StudioActionCommand(StudioAction.Print, v.Id, Amount: copies, Value: (int)PrintTier.CopyShop)))
                 { _printRuns[v.Id] = runs + 1; Mark(runs == 0 ? "First print order" : "First reprint"); }
             }
@@ -229,6 +234,35 @@ public class CareerPlaytest
                         .OrderBy(c => Math.Max(StudioRules.MinimumMonthlySalary, c.ExpectedSalary)).ThenBy(c => c.Id).FirstOrDefault();
                     if (cheapest is null) { Stale(step, "Suggested hiring with no candidate available."); break; }
                     if (!Hire(cheapest)) Stale(step, _rejections.Count > 0 ? _rejections[^1].Message : "Hiring failed.");
+                    break;
+                case "debut-wait-hire" or "debut-wait-desk":
+                    Mark("Pre-debut stock ready");
+                    if (_seen.Add("debut-hire-advice")) Note($"Debut wait advice: {step.Title}");
+                    var early = State.Candidates.Where(c => !c.Recruited && c.ExpiresAt > State.Clock.Now &&
+                            (c.IntroductionBusinessId is null || c.IntroductionBusinessId == State.ControlledBusinessId))
+                        .OrderBy(c => Math.Max(StudioRules.MinimumMonthlySalary, c.ExpectedSalary)).ThenBy(c => c.Id).FirstOrDefault();
+                    if (early is not null) { if (Hire(early)) Mark("Pre-debut hire"); }
+                    else if (State.Recruitment is null && _recruitAttempts < 12 && Try("Recruit", new RecruitStaffCommand())) { _recruitAttempts++; Mark("First recruitment started"); }
+                    break;
+                case "debut-wait-convention":
+                    Mark("Pre-debut stock ready");
+                    if (_seen.Add("debut-convention-advice")) Note($"Debut wait advice: {step.Title} {step.Text.Split((char)10)[1]}");
+                    // Same event choice as the advice; a player waits until booking opens 28 days before.
+                    var debutClose = State.Series.First(x => x.Id == step.Project || x.Contract is not null && x.ChaptersPublished == 0).Contract?.FirstIssueClose ?? DateTime.MaxValue;
+                    var scale = State.NextConvention(2) < debutClose ? 2 : 1;
+                    if (State.NextConvention(scale) <= State.Clock.Now.Date.AddDays(28) &&
+                        Guided(step, "Book convention", new StudioActionCommand(StudioAction.BookConvention, State.ProtagonistPersonId, Amount: step.Project, Value: scale)))
+                    { Mark("Pre-debut convention booked"); Note($"Booked a scale {scale} convention on {State.NextConvention(scale):d MMM yyyy}."); }
+                    break;
+                case "debut-wait-doujin":
+                    Mark("Pre-debut stock ready");
+                    if (Guided(step, "Create side doujin", new CreateDoujinCommand($"Side story {State.Series.Count + 1}", "comedy")))
+                    { Mark("Pre-debut side doujin"); Note("Started a short side doujin while waiting for the debut."); }
+                    break;
+                case "debut-wait-job":
+                    Mark("Pre-debut stock ready");
+                    if (State.Protagonist.OutsideJob == OutsideJob.None && Guided(step, "Part-time job", new SetOutsideJobCommand(OutsideJob.Evenings)))
+                    { Mark("Pre-debut part-time job"); Note("Took an evening part-time job while waiting for the debut."); }
                     break;
                 case "cancellation-warning":
                     // A careful player keeps the series going and lets the next chapters answer the warning.

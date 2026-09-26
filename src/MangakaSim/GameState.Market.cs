@@ -44,7 +44,7 @@ public partial class GameState
             var market = Markets.Single(m => m.MagazineId == magazine.Id);
             var competitors = Series.Where(s => s.Publishing == PublishingStatus.Serialized &&
                 s.Contract!.MagazineId == magazine.Id && s.Contract.FirstIssueClose <= close.CloseTime).OrderBy(s => s.Id).ToArray();
-            var grace = competitors.ToDictionary(s => s.Id, s => s.Contract!.ChaptersPublished < 6);
+            var grace = competitors.ToDictionary(s => s.Id, s => s.Contract!.ChaptersPublished < GraceChapters(s));
             var published = new Dictionary<int, Chapter>();
             foreach (var series in competitors)
             {
@@ -87,7 +87,7 @@ public partial class GameState
             var genres = market.Fillers.Select(f => f.Genre).Concat(competitors.Where(s => published.ContainsKey(s.Id))
                 .Select(s => TrendRules.Normalise(s.Genre, TrendCatalog))).GroupBy(g => g).ToDictionary(g => g.Key, g => g.Count());
             var rows = market.Fillers.Select(f => new RankEntry(0, f.Title, null, f.Id,
-                (HistoricalFiller(f.Id)?.Phase == RivalPhase.Hiatus ? 0 : f.Popularity) * TrendRules.Crowding(genres[f.Genre] - 1))).ToList();
+                (HistoricalFiller(f.Id)?.Phase == RivalPhase.Hiatus ? 0 : f.Popularity) * RivalStrength * TrendRules.Crowding(genres[f.Genre] - 1))).ToList();
             foreach (var series in competitors.Where(s => published.ContainsKey(s.Id)))
             {
                 var genre = TrendRules.Normalise(series.Genre, TrendCatalog);
