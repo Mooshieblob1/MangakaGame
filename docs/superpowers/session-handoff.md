@@ -6,12 +6,12 @@ roadmap or a completion record. Replace its contents when the task changes.
 
 ## Current task: T1.10 preparation done, alpha.12 packaged; waiting on testers
 
-- Ledger: `.superpowers/sdd/2026-09-27-fresh-player-test/progress.md` (keep
-  until the work is committed).
+- Ledger (rulings, run logs): `.superpowers/sdd/2026-09-27-fresh-player-test/`,
+  git-ignored scratch that can be deleted once no longer useful.
 - Package: `builds/MangakaStudio-0.8.0-private-alpha.12-Windows.zip`, see
   `docs/superpowers/alpha-12-build-verification.md`. START-HERE.md is left out
   by the user's decision (the guide counts as outside help).
-- Nothing is committed. Next: the user commits when ready, recruits two fresh
+- Committed on `main` as `5ceb97a` (not pushed). Next: the user recruits two fresh
   testers and sends alpha.12 (never contact testers or share builds myself).
   Returned reports go in `TestResults/fresh-player/`; results in
   `docs/superpowers/fresh-player-test-findings.md`.
