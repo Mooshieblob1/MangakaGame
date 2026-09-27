@@ -41,6 +41,8 @@ public sealed record CareerManifest(int Format, string Career, string Name, bool
 public sealed class CareerStore(string root)
 {
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = false };
+    /// <summary>The fixed identifier of the T1.10 practice career, kept on import so its short code (70ac71) is recognisable in a timeline.</summary>
+    public const string PracticeCareer="70ac71ce0000400080000000a1b2c3d4";
     public string Root { get; } = Path.GetFullPath(root);
     public Action<string>? FaultInjector { get; set; }
     private string DirectoryFor(string career)
@@ -154,7 +156,7 @@ public sealed class CareerStore(string root)
         using var stream=new MemoryStream(package);using var zip=new ZipArchive(stream,ZipArchiveMode.Read);
         CheckArchive(zip);
         var data=ReadPackage(zip);
-        Validate(data);var state=GameState.ImportSupported(data.State);var career=Guid.NewGuid().ToString("N");
+        Validate(data);var state=GameState.ImportSupported(data.State);var career=data.Career==PracticeCareer?PracticeCareer:Guid.NewGuid().ToString("N");
         foreach(var hash in data.View.Artwork.Values.Distinct())
         {
             var asset=zip.GetEntry("art/"+hash+".png")??throw new InvalidDataException("Missing artwork in package.");

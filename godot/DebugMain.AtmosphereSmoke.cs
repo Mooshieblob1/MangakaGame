@@ -64,6 +64,24 @@ public partial class DebugMain
                 _homeOffice.ResetCamera();Check(_state.ToJson()==cameraOnlyState,"Neighborhood navigation does not alter simulation or RNG");
             }
             GetWindow().Size=new(1920,1080);
+            {
+                // A recap held behind a Helper-Chan notice follows it after Escape; resuming instead still skips the night.
+                _presentation=new(){Page="Office"};
+                _state=GameState.NewGame(2);_state.Apply(new CreateDoujinCommand("Evening pages","drama",64));_state.Advance(1);
+                ResetManagementSession();ShowOffice();_helperPopup.Hide();_popupEvents.Clear();_recapDialog.Hide();await SettleUi();
+                _scanIndex=_state.Events.Count;SetSpeed(8);
+                _state.Events.Add(new(){Time=_state.Clock.Now,ActivityDate=_state.Clock.Now.Date,Type=EventType.StaffNotice,Message="Held recap fixture notice"});
+                _state.Advance(9);ScanEvents();
+                var held=_pendingRecap;
+                Check(held is not null&&!_recapDialog.Visible,"A recap that arrives with a notice waits for it");
+                await SettleUi();
+                Check(_helperPopup.Visible&&!_recapDialog.Visible,"The notice shows first, without the recap on top");
+                _UnhandledKeyInput(new InputEventKey{Pressed=true,Keycode=Key.Escape});await SettleUi();
+                Check(!_helperPopup.Visible&&_recapDialog.Visible,"Closing the notice with Escape brings up the held recap");
+                _recapDialog.Hide();_pendingRecap=held;SetSpeed(8);RefreshManagement();
+                Check(_pendingRecap is null&&_overnightTarget is not null,"Resuming with a held recap still begins the overnight skip");
+                CancelOvernight();Pause();
+            }
             foreach(var previous in new[]{1d,2d,4d,8d})
             {
                 _presentation=new(){Page="Office"};
@@ -73,6 +91,7 @@ public partial class DebugMain
                 _state.Advance(9);_scanIndex=_state.Events.Count;_dirty=true;Refresh();
                 SetSpeed(previous);Pause();var before=_state.Clock.Now;
                 var expected=before.AddHours(_state.HoursUntilNextWork());
+                var logBefore=string.Join("",_timeline!.Files().Select(f=>f.Text)).Length;
                 OnRecapContinue();
                 _speedTween?.Kill();_speedFlash?.Hide();
                 Check(_speed==32&&_resumeSpeed==previous&&_state.Clock.Now==before,"Continue starts a temporary 32x transition without jumping the clock");
@@ -123,6 +142,9 @@ public partial class DebugMain
                     }
                 }
                 Check(_overnightTarget is null&&_state.Clock.Now==expected,"Overnight ends at the next scheduled work hour without overshooting");
+                var night=string.Join("",_timeline!.Files().Select(f=>f.Text))[logBefore..];
+                Check(night.Contains("| overnight")&&night.Contains("| morning speed")&&!night.Contains("speed 32x")&&!night.Contains("screen Office"),
+                    "The timeline logs the overnight skip as overnight and morning, not as a 32x choice or a screen change");
                 Check(_speedButtons.All(p=>!p.Value.Disabled),"Daytime speed buttons are available again after sunrise");
                 Check(dark&&empty&&dawn,"Empty room, lights out and dawn are all visible phases");
                 Check(elapsed<(expected-before).TotalHours*SecondsPerHourAt1x/8,"Complete overnight presentation is faster than ordinary 8x playback");

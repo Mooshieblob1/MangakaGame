@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Godot;
 
 namespace MangakaGame;
@@ -23,13 +24,19 @@ public partial class DebugMain
         var hours=_state.HoursUntilNextWork();
         if(hours<=0){SetSpeed(_resumeSpeed);return;}
         var previous=_resumeSpeed;
-        SetSpeed(OvernightSpeed);
-        _resumeSpeed=previous; // Temporary playback must never become the player's chosen speed.
-        _overnightTarget=_state.Clock.Now.AddHours(hours);
-        _overnightStart=_state.Clock.Now;
-        _overnightDeparting=true;_overnightHold=.2;
-        _homeOffice.EndingDay=_officeView.EndingDay=true;
-        ShowOffice();Refresh();
+        // The timeline records the night as one line, not as a 32x choice and an Office screen.
+        LogTimeline("overnight");_timelineQuiet=true;
+        try
+        {
+            SetSpeed(OvernightSpeed);
+            _resumeSpeed=previous; // Temporary playback must never become the player's chosen speed.
+            _overnightTarget=_state.Clock.Now.AddHours(hours);
+            _overnightStart=_state.Clock.Now;
+            _overnightDeparting=true;_overnightHold=.2;
+            _homeOffice.EndingDay=_officeView.EndingDay=true;
+            ShowOffice();Refresh();
+        }
+        finally{_timelineQuiet=false;}
         if(_overnightCaption is null)
         {
             var panel=new PanelContainer{MouseFilter=MouseFilterEnum.Ignore};_homeOffice.AddChild(panel);
@@ -86,7 +93,7 @@ public partial class DebugMain
             _accumulator-=1;
             if(AdvanceAndScan(1))return;
             if(_state.Clock.Now>=target)
-            {var previous=_resumeSpeed;CancelOvernight();SetSpeed(previous);return;}
+            {var previous=_resumeSpeed;CancelOvernight();_timelineQuiet=true;SetSpeed(previous);_timelineQuiet=false;LogTimeline("morning speed "+previous.ToString(CultureInfo.InvariantCulture)+"x");return;}
             // Keep one readable beat of darkness, including when a slow frame spans midnight.
             if(_state.Clock.Hour==0){_accumulator=0;_overnightHold=.2;break;}
         }

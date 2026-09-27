@@ -143,4 +143,32 @@ public class AlphaTests
         Assert.Throws<InvalidDataException>(()=>ProblemReport.Create("",GameState.NewGame()));
         Assert.Throws<InvalidDataException>(()=>ProblemReport.Create(new string('x',12001),GameState.NewGame()));
     }
+    [Fact]public void ProblemReport_attaches_the_session_timeline_as_text()
+    {
+        var state=GameState.NewGame(0);
+        var zip=new ZipArchive(new MemoryStream(ProblemReport.Create("Stuck after the pitch",state,timeline:[("timeline.old.log","old\r\n"),("timeline.log","2026-10-02 19:41:07 | +12 | 1996-04-08 | milestone first-sale\r\n")])));
+        Assert.Equal(["report.json","timeline.old.log","timeline.log"],zip.Entries.Select(e=>e.FullName));
+        using var report=zip.GetEntry("report.json")!.Open();
+        Assert.True(JsonNode.Parse(report)!["Timeline"]!.GetValue<bool>());
+        using var log=new StreamReader(zip.GetEntry("timeline.log")!.Open());
+        Assert.Contains("milestone first-sale",log.ReadToEnd());
+        Assert.Equal("0.8.0-private-alpha.12",ProblemReport.Build);
+    }
+    [Fact]public void ProblemReport_without_a_timeline_has_only_the_report()
+    {
+        var state=GameState.NewGame(0);
+        foreach(var timeline in new IReadOnlyList<(string,string)>?[]{null,[]})
+        {
+            var zip=new ZipArchive(new MemoryStream(ProblemReport.Create("Note",state,timeline:timeline)));
+            Assert.Equal("report.json",Assert.Single(zip.Entries).FullName);
+            using var report=zip.Entries[0].Open();
+            Assert.False(JsonNode.Parse(report)!["Timeline"]!.GetValue<bool>());
+        }
+    }
+    [Fact]public void ProblemReport_refuses_an_oversized_timeline()
+    {
+        var state=GameState.NewGame(0);var huge=new string('x',8*1024*1024+1);
+        var ex=Assert.Throws<InvalidDataException>(()=>ProblemReport.Create("Note",state,timeline:[("timeline.log",huge)]));
+        Assert.Equal("Report attachment is too large.",ex.Message);
+    }
 }

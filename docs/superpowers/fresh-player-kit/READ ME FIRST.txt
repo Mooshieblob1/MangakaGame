@@ -1,0 +1,53 @@
+MANGAKA STUDIO, private test (alpha.12)
+=======================================
+
+Thank you for testing. Mangaka Studio is a manga career and studio
+management game that starts in Tokyo in 1996. You guide a young manga
+artist from making self-published comics (doujin) at their parents'
+house to magazine serialization and running a studio. Helper-Chan, the
+assistant with the clipboard, texts you tips on her phone as you go.
+
+WHAT WE ASK
+- Start a new career on Standard difficulty. Do not turn on Sandbox.
+- Play until you hire your first staff member. That takes about 1 to 1.5
+  hours, in as many sittings as you like. The game saves as you play.
+- After that, keep going for as long as you enjoy it, up to three
+  in-game years.
+- If nothing went wrong for your series by the end (a rejected pitch, a
+  cancellation warning or a cancellation), import the practice career
+  (see below) and play until Helper-Chan warns about cancellation.
+
+THE ONE RULE
+Please do not ask anyone or look anything up about the game. If you do,
+that is fine, just say so in the questionnaire. Giving up is also fine
+and still very useful: please send the report anyway.
+
+STARTING THE GAME
+Unzip the folder and run MangakaStudio.exe. Windows may show a blue
+"Windows protected your PC" box, because this test build is not signed.
+Click "More info", then "Run anyway".
+
+THE PRACTICE CAREER
+Open the main menu ("Menu", bottom left), choose "Load Career", then
+"Import career or previous save", and pick
+"Practice - a struggling series.mangaka" from this folder.
+
+SENDING YOUR REPORT
+1. Main menu, "Report a problem".
+2. Write a short note (anything, even "finished").
+3. Keep "Attach session timeline" ticked and also tick "Attach career".
+4. Press "Export local report", and send the ZIP file together with your
+   filled-in Questionnaire.txt to the person who gave you the game.
+
+WHAT THE REPORT CONTAINS
+Your note, the game version, your career save and a session timeline.
+The career save includes the creator name and the titles you typed in
+the game. The timeline is a plain-text list of what happened when
+(screens opened, speed changes, game milestones, saves and errors); it
+contains no names you typed, no file paths and nothing about your
+computer except the window size. You can open the ZIP and read
+everything before sending. Nothing is uploaded by the game; you decide
+how to send it.
+
+KNOWN GAPS
+There is no music yet.

@@ -23,8 +23,13 @@ $process = Start-Process -FilePath $Godot -ArgumentList $arguments -WindowStyle 
 # Wait for the exporter, not the persistent MSBuild server it can spawn.
 if(-not $process.WaitForExit(180000)) { $process.Kill(); throw "Export timed out; see $log and $err" }
 if($process.ExitCode -ne 0) { throw "Export failed; see $log and $err" }
-Copy-Item -LiteralPath (Join-Path $repo 'docs/superpowers/private-alpha-testing.md') -Destination (Join-Path $output 'START-HERE.md')
+# The step-by-step guide (docs/superpowers/private-alpha-testing.md) is left out while fresh players test the game's own guidance (T1.10).
 Copy-Item -LiteralPath (Join-Path $repo 'docs/superpowers/private-alpha-credits.txt') -Destination (Join-Path $output 'CREDITS.txt')
+# T1.10 fresh-player kit: tester instructions, questionnaire and the practice career.
+$kit = Join-Path $repo 'docs/superpowers/fresh-player-kit'
+Copy-Item -LiteralPath (Join-Path $kit 'READ ME FIRST.txt') -Destination $output
+Copy-Item -LiteralPath (Join-Path $kit 'Questionnaire.txt') -Destination $output
+Copy-Item -LiteralPath (Join-Path $repo 'tests/MangakaSim.Tests/Fixtures/Practice - a struggling series.mangaka') -Destination $output
 # Engine-generated complete third-party notices are emitted by the export smoke below.
 $smoke = Join-Path $repo 'TestResults/package-check'
 New-Item -ItemType Directory -Path $smoke -Force | Out-Null

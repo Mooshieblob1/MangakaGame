@@ -1,6 +1,6 @@
 # Mangaka Studio private alpha
 
-Build: 0.8.0-private-alpha.11. Windows x64, standalone, no Steam required.
+Build: 0.8.0-private-alpha.12. Windows x64, standalone, no Steam required.
 
 This build adds a shorter top bar, clear screen-sized nametags, total chapter progress with coloured stage sections, continuous south walls and visible WC occupants behind a privacy blur. Helper-Chan stays at her desk during the creator's WC visits. It retains the modular chibi employees, animated Helper-Chan and parents, staggered family routines, rear stairs, genkan and Tokyo-style neighborhood. The default 08:00-18:00 workday lasts about 45 seconds at 8x without slowing character movement. Pausing the brief overnight transition preserves its progress; resuming continues at 32x, then restores your previous daytime speed at morning.
 
@@ -127,7 +127,7 @@ Please report actual experience; scripted checks cannot establish human pacing.
 ## Build and qualification notes
 
 This is a private test candidate, not a public release. Current qualification
-details are in `docs/superpowers/alpha-11-build-verification.md` in the development
+details are in `docs/superpowers/alpha-12-build-verification.md` in the development
 repository. Clean-machine and wider hardware testing remain separate from local
 development-machine checks. Music, Linux/macOS and native Steam support are later.
 

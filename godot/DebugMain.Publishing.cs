@@ -117,6 +117,8 @@ public partial class DebugMain
     private void RefreshPublishing()
     {
         var selected = _publishingSeries.ItemCount == 0 ? -1 : _publishingSeries.GetSelectedId();
+        // Follow the current series, so a newly created title is the one offered for pitching.
+        if (ManagementInterface && _progressSeriesId > 0) selected = _progressSeriesId;
         SyncOptions(_publishingSeries,_state.Series.Where(s=>!ManagementInterface||s.BusinessId==_state.ControlledBusinessId&&(_state.Control==ControlMode.OwnerDirector||s.LeadPersonId==_state.ProtagonistPersonId)).Select(s=>(s.Id,s.Title)),selected);
         var series = _publishingSeries.ItemCount == 0 ? null : _state.FindSeries(_publishingSeries.GetSelectedId());
         var magazine = _state.PublisherCatalog.Get(SelectedMagazineId());

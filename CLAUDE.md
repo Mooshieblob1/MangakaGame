@@ -2,7 +2,8 @@
 
 This file gives any Claude session the full context and instructions of the
 "Mangaka Game" project on claude.ai, plus the state of the project as of 2026-09-26.
-Read all of it before doing anything else in this repository.
+Read all of it before doing anything else in this repository. Then read
+`docs/superpowers/session-handoff.md`, which holds the work in progress.
 
 Repository location on the user's machine: `C:\Users\moosh\Repos\MangakaGame`.
 
@@ -199,7 +200,7 @@ playtesting.
 ### Gaps identified on 2026-09-26
 
 1. **Version control.** Resolved 2026-09-26: safety commit `8f6e3f4` on `main`
-   captures all work through alpha.11 (not pushed). The remote branch
+   captures all work through alpha.11; `main` pushed to GitHub on 2026-09-27. The remote branch
    `origin/claude/sp2-plan-implementation-z2feyy` is an abandoned, superseded cloud
    attempt at sub-projects 2 and 3; do not merge it.
 2. **Release checklist.** Resolved 2026-09-26: tiers and the Tier 1 checklist are in
@@ -289,7 +290,7 @@ playtesting.
   introduction text after the first sale (Q26 to Q28); 8x unchanged, no save
   or balance change. About 1.1 to 1.6 real hours per in-game year instead of 4.
   Record: `docs/superpowers/mid-career-pacing-completion.md`.
-- **Tier 1 fix 7, display sweep (done 2026-09-27, uncommitted):** T1.9 ticked.
+- **Tier 1 fix 7, display sweep (done 2026-09-27, commit `038295f`):** T1.9 ticked.
   `--display-sweep-smoke` checks 24 core screens at 5 sizes, 100% and 150%
   text and both themes (480 checks, 0 flagged), with my own review of the
   captures (Q29, Q30). Fixed an empty Publishing page, drop-downs losing their
@@ -297,6 +298,16 @@ playtesting.
   text in the light theme and the cramped Publishing form on small windows.
   Record: `docs/superpowers/display-sweep-completion.md`. Next: preparing the
   fresh-player test (T1.10).
+- **T1.10 fresh-player test (preparation done and alpha.12 packaged 2026-09-27, not committed; round 1 not run):**
+  unmoderated home tests (Q31) with a session timeline attached to the problem
+  report (Q32); testers reach the first hire, then play on up to three in-game
+  years, with a practice save if no setback happens (Q33); two rounds, two
+  testers on alpha.12 then one new tester on alpha.13 (Q34). T1.1 now reads
+  "reaches each of" instead of "in order". Record:
+  `docs/superpowers/specs/2026-09-27-fresh-player-test-considerations.md`. Plan:
+  `docs/superpowers/plans/2026-09-27-fresh-player-test.md`. Preparation record
+  (timeline, practice career, `--journey-smoke`, tester kit, recap and Publishing
+  fixes): `docs/superpowers/fresh-player-test-preparation-completion.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

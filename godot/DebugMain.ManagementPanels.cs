@@ -108,7 +108,10 @@ public partial class DebugMain
         AddPlot("Reader ranking · lower is better",samples,true,history);QuietWords(history,$"Ranking history available from {_state.Career.AvailableFrom:d MMM yyyy}.");
     }
     private void SelectSeriesForWorkbench(int id)
-    {_progressSeriesId=id;foreach(var option in new[]{_seriesOption,_publishingSeries,_channelSeries,_teamOption}){var index=option.GetItemIndex(id);if(index>=0)option.Select(index);}RefreshCurrentProgress();_dirty=true;}
+    {_progressSeriesId=id;foreach(var option in new[]{_seriesOption,_publishingSeries,_channelSeries,_teamOption}){var index=option.GetItemIndex(id);if(index>=0)option.Select(index);}
+        // The cadence and page controls show the chosen title's own values, not the form defaults.
+        if(_state.FindSeries(id) is {} chosen){_setPagesSpin.Value=chosen.PagesPerChapter;_setCadenceOption.Select(_setCadenceOption.GetItemIndex((int)chosen.Cadence));}
+        RefreshCurrentProgress();_dirty=true;}
     private DateTime ChartStart()=>_chartDays==0?GameClock.Start:_state.Clock.Now.AddDays(-_chartDays);
     private void PeriodSelector(Control? parent=null)
     {
@@ -271,7 +274,7 @@ public partial class DebugMain
         VBoxContainer copy;
         if(scene.Illustration is {} illustration)copy=IllustratedStoryBody(illustration,scene.Title,scene.Text);
         else HelperBody(scene.Expression,scene.Title,scene.Text,out copy);
-        void Respond(int answer,bool defer=false){_state.Apply(new StoryCommand(id,answer,defer));_dirty=true;_storyOpen=false;_helperPopup.Hide();BuildManagementPage();if(_popupEvents.Count==0&&!_recapDialog.Visible&&_storyResume>0)SetSpeed(_storyResume);}
+        void Respond(int answer,bool defer=false){_state.Apply(new StoryCommand(id,answer,defer));_dirty=true;_storyOpen=false;_helperPopup.Hide();BuildManagementPage();if(_popupEvents.Count==0&&!_recapDialog.Visible&&_pendingRecap is null&&_storyResume>0)SetSpeed(_storyResume);}
         ActionButton(copy,scene.First,()=>Respond(0));ActionButton(copy,scene.Second,()=>Respond(1));ActionButton(copy,"Read later",()=>Respond(-1,true));ActionButton(copy,"Skip this conversation",()=>Respond(-1));
     }
     private void BuildHelp()

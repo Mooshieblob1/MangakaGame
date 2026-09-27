@@ -298,8 +298,17 @@ See [family home refinement](docs/superpowers/family-home-refinement.md),
 [character integration and day length](docs/superpowers/character-integration-and-day-length.md)
 and the [UI and UX sweep](docs/superpowers/ui-ux-sweep-2026-09-25.md).
 
+### Alpha.12: Tier 1 fixes and the fresh-player test
+
+Alpha.12 carries Tier 1 fixes 1 to 7 (career guidance, first-hire safety,
+setbacks and economy, difficulty, the debut wait, 32x pacing and the display
+sweep) and the fresh-player test kit: a session timeline attached to problem
+reports, a practice career that reaches a cancellation warning, and tester
+instructions and a questionnaire in the package. See the
+[preparation record](docs/superpowers/fresh-player-test-preparation-completion.md).
+
 The latest local Windows package is
-`builds/MangakaStudio-0.8.0-private-alpha.11-Windows.zip`. See the
-[alpha.11 build verification](docs/superpowers/alpha-11-build-verification.md).
+`builds/MangakaStudio-0.8.0-private-alpha.12-Windows.zip`. See the
+[alpha.12 build verification](docs/superpowers/alpha-12-build-verification.md).
 The [release plan](docs/superpowers/specs/2026-09-22-roadmap.md#release-plan)
 sets out what remains before Steam Early Access.

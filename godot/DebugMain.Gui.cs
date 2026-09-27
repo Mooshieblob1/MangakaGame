@@ -33,6 +33,7 @@ public partial class DebugMain
     private void ShowOffice()
     {
         if(OfficeEditing){Notify("Apply or discard your furniture changes first.");return;}
+        LogTimeline("screen Office");
         _page="Office";_detailId=0;_report.Hide();_side.Hide();_homeOffice.Show();_officeSidebar=false;_expanded=false;
         RefreshNavigation();RefreshManagement();ResizeGui();
     }

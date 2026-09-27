@@ -171,7 +171,7 @@ public partial class DebugMain
     private void EndOfficeEditor()
     {
         _officeDraft=null;_officeMovePreview=null;_officeItem=0;_officeView.SelectedFurniture=0;LockOfficeControls(false);
-        _officeView.ClearMotion();if(!_recapDialog.Visible)SetSpeed(_officePreviousSpeed);_officeFeedback.Text="";_dirty=true;RefreshOffice();
+        _officeView.ClearMotion();if(!_recapDialog.Visible&&_pendingRecap is null)SetSpeed(_officePreviousSpeed);_officeFeedback.Text="";_dirty=true;RefreshOffice();
     }
     private void ApplyOfficeEditor()
     {

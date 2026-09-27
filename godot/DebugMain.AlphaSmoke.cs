@@ -75,11 +75,11 @@ public partial class DebugMain
             }
             _presentation.UiScale=1;ApplyTextScale();_phoneKey="";RefreshGuidance();
             ShowMenu();Press("Report a problem");await SettleUi();
-            var choices=_menuContent.GetChildren().OfType<CheckBox>().ToArray();Check(choices.Length==2&&choices.All(c=>!c.ButtonPressed),"Report attachments default off");
+            var choices=_menuContent.GetChildren().OfType<CheckBox>().ToArray();Check(choices.Length==3&&!choices[0].ButtonPressed&&!choices[1].ButtonPressed&&choices[2].ButtonPressed,"Report attachments: screen and career off, timeline on");
             _menuContent.GetChildren().OfType<TextEdit>().Single().Text="Alpha smoke: local export only.";
             await CaptureSmokeImage("alpha-report");Press("Export local report");await SettleUi();
             var picker=GetChildren().OfType<FileDialog>().Last();var reportPath=Path.Combine(SmokeOutput,"alpha-report.zip");picker.EmitSignal(FileDialog.SignalName.FileSelected,reportPath);await SettleUi();
-            using(var zip=ZipFile.OpenRead(reportPath))Check(zip.Entries.Count==1&&zip.GetEntry("report.json") is not null,"Actual report action writes selected local contents");
+            using(var zip=ZipFile.OpenRead(reportPath))Check(zip.Entries.Any(e=>e.FullName=="report.json")&&zip.GetEntry("timeline.log") is {} log&&new StreamReader(log.Open()).ReadToEnd().Contains("session start"),"Report holds report.json and the session timeline");
             Check(_state.ToJson()==before,"Reporting leaves simulation untouched");
             _menuContent.GetChildren().OfType<Button>().Single(b=>b.Text=="Cancel").EmitSignal(BaseButton.SignalName.Pressed);
             Press("Settings");await SettleUi();Check(_menuContent.FindChildren("*","HSlider",true,false).OfType<HSlider>().Count()>=3,"Volume controls and text scale present");

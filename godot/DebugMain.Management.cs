@@ -69,7 +69,7 @@ public partial class DebugMain
     private Button ActionButton(Control parent,string title,Action action)
     {
         var button=new Button{Text=title,MouseDefaultCursorShape=CursorShape.PointingHand};parent.AddChild(button);
-        button.Pressed+=()=>{try{_audio?.Cue();action();}catch(Exception ex)when(ex is System.IO.IOException or System.IO.InvalidDataException or InvalidCommandException or JsonException or InvalidOperationException or UnauthorizedAccessException){Notify(ex.Message);}};
+        button.Pressed+=()=>{try{_audio?.Cue();action();}catch(Exception ex)when(ex is System.IO.IOException or System.IO.InvalidDataException or InvalidCommandException or JsonException or InvalidOperationException or UnauthorizedAccessException){LogTimeline("error "+TimelineRedactor.Clean(ex.Message,_state));Notify(ex.Message);}};
         return button;
     }
     private Button HeaderButton(Control parent,string title,Action action)
@@ -95,6 +95,7 @@ public partial class DebugMain
     {
         debugRoot.Hide();LoadUiPreferences();Theme=EditorialTheme();
         _careers=new CareerStore(ProjectSettings.GlobalizePath("user://careers"));
+        StartTimeline();
         _backdrop=new ColorRect{Color=Wash,MouseFilter=MouseFilterEnum.Ignore};_backdrop.SetAnchorsPreset(LayoutPreset.FullRect);AddChild(_backdrop);
         var margin=new MarginContainer();margin.SetAnchorsPreset(LayoutPreset.FullRect);foreach(var e in new[]{"left","right","top","bottom"})margin.AddThemeConstantOverride("margin_"+e,16);AddChild(margin);
         var layout=new HBoxContainer();margin.AddChild(layout);
@@ -155,7 +156,7 @@ public partial class DebugMain
         var menuScroll=new ScrollContainer{HorizontalScrollMode=ScrollContainer.ScrollMode.Disabled};_menu.AddChild(menuScroll);_menuContent=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};menuScroll.AddChild(_menuContent);
         _helperPopup=new PanelContainer();_helperPopup.SetAnchorsPreset(LayoutPreset.Center);_helperPopup.Position=new(-420,-260);_helperPopup.Size=new(840,520);AddChild(_helperPopup);_helperPopup.Hide();
         _menu.VisibilityChanged+=()=>shade.Visible=_menu.Visible||_helperPopup.Visible;
-        _helperPopup.VisibilityChanged+=()=>shade.Visible=_menu.Visible||_helperPopup.Visible;
+        _helperPopup.VisibilityChanged+=()=>{shade.Visible=_menu.Visible||_helperPopup.Visible;_dirty=true;};
         BuildAlpha();BuildSpeedFeedback();PrepareWorkspaceForms();
         BuildFloatingOffice(margin,railPanel,body,shade);
         _side.VisibilityChanged+=RefreshNavigation;_report.VisibilityChanged+=RefreshNavigation;
@@ -177,6 +178,7 @@ public partial class DebugMain
     private void Navigate(string page,int detail=0)
     {
         if(OfficeEditing){Notify("Apply or discard your furniture changes before navigating.");return;}
+        LogTimeline("screen "+page);
         _back.Push((_page,_detailId,_scopeLocation,WorkspaceScroll(),_officeSidebar,_progressSeriesId,SelectedPerson.Id));
         _officeSidebar=false;_report.Hide();
         _page=page;_detailId=detail;_side.Show();ApplyPageLayout();BuildManagementPage();_sideScroll.ScrollVertical=0;
@@ -240,9 +242,12 @@ public partial class DebugMain
         if(!_inMenu&&!OfficeEditing&&!_storyOpen&&_state.Clock.Now.Date>_lastAutosave)
         {
             try{SaveCareer("Daily autosave",true);_lastAutosave=_state.Clock.Now.Date;}
-            catch(Exception ex)when(ex is System.IO.IOException or System.IO.InvalidDataException or UnauthorizedAccessException){_lastAutosave=_state.Clock.Now.Date;Notify("Autosave failed: "+ex.Message);}
+            catch(Exception ex)when(ex is System.IO.IOException or System.IO.InvalidDataException or UnauthorizedAccessException){_lastAutosave=_state.Clock.Now.Date;LogTimeline("error "+TimelineRedactor.Clean(ex.Message,_state));Notify("Autosave failed: "+ex.Message);}
         }
         if(_overnightTarget is null&&!_inMenu&&!OfficeEditing&&!_helperPopup.Visible&&_popupEvents.Count>0){var id=_popupEvents.Dequeue();if(!_presentation.ReadEvents.Contains(id))ShowEvent(id);}
+        // The held recap follows the notices; if the player resumed time instead, skip the summary but still end the day.
+        if(_pendingRecap is {} held&&(_speed>0||_overnightTarget is not null)){_pendingRecap=null;if(_overnightTarget is null)BeginOvernight();}
+        else if(_pendingRecap is {} waiting&&!_inMenu&&!_helperPopup.Visible&&_popupEvents.Count==0){_pendingRecap=null;ShowRecap(waiting);}
     }
     private void RefreshCompactHeader()
     {

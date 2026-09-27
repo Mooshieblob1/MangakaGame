@@ -42,6 +42,42 @@ public class CareerPlaytest
         Assert.Equal(json, run.State.ReplayTimeline().ToJson());
     }
 
+    // T1.10 practice career (Part 3): seed 0 on Standard, saved two in-game weeks before the first cancellation warning.
+    [Fact]
+    public void Practice_career_fixture()
+    {
+        var scout = new GuidedPlayer(0, CareerDifficulty.Standard);
+        var warning = DateTime.MinValue;
+        for (var year = 1; year <= Years && warning == DateTime.MinValue; year++)
+        {
+            scout.Play(year);
+            warning = scout.State.Events.FirstOrDefault(e => e.Type == EventType.CancellationWarning &&
+                scout.State.Series.Any(s => s.Id == e.SeriesId && s.BusinessId == scout.State.ControlledBusinessId))?.Time ?? DateTime.MinValue;
+        }
+        Assert.True(warning != DateTime.MinValue, "Seed 0 on Standard had no cancellation warning in three years");
+        Assert.True(warning.Year < 1999, $"Warning came late: {warning:d MMM yyyy}");
+
+        var player = new GuidedPlayer(0, CareerDifficulty.Standard);
+        player.PlayUntil(warning.AddDays(-14));
+        var state = player.State;
+        Assert.DoesNotContain(state.Events, e => e.Type == EventType.CancellationWarning &&
+            state.Series.Any(s => s.Id == e.SeriesId && s.BusinessId == state.ControlledBusinessId));
+        Assert.Contains(state.Series, s => s.BusinessId == state.ControlledBusinessId && s.Publishing == PublishingStatus.Serialized);
+
+        var view = new CareerPresentation { Guidance = player.Preferences, Page = "Office" };
+        CareerGuidance.Observe(state, view.Guidance);
+        CareerGuidance.MarkRead(view.Guidance);
+        var root = Path.Combine(Path.GetTempPath(), "mangaka-practice-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var store = new CareerStore(root);
+            var info = store.Save(CareerStore.PracticeCareer, "Practice: a struggling series", state, view);
+            var path = Path.Combine(RepoRoot(), "tests", "MangakaSim.Tests", "Fixtures", "Practice - a struggling series.mangaka");
+            File.WriteAllBytes(path, store.Export(info));
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
+    }
+
     private static string RepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
@@ -52,6 +88,7 @@ public class CareerPlaytest
     private sealed class GuidedPlayer
     {
         public GameState State { get; }
+        public GuidancePreferences Preferences => _guide;
         private readonly int _seed;
         private readonly CareerDifficulty _difficulty;
         private readonly GuidancePreferences _guide = new();
@@ -64,6 +101,7 @@ public class CareerPlaytest
         private readonly List<(DateTime At, string Step, string Problem)> _stale = new();
         private readonly Dictionary<int, int> _printRuns = new();
         private readonly DateTime _start;
+        private DateTime _nextMonth;
         private double _seconds, _workSeconds;
         private int _eventCursor, _contributions, _recruitAttempts;
         private long _contributed;
@@ -78,6 +116,7 @@ public class CareerPlaytest
             State = GameState.NewGame(seed);
             if (difficulty != CareerDifficulty.Standard) Try("Difficulty", new DifficultyCommand(difficulty));
             _start = State.Clock.Now;
+            _nextMonth = _start;
         }
 
         private double Minutes => _seconds / 60;
@@ -90,10 +129,10 @@ public class CareerPlaytest
             catch (InvalidCommandException e) { _rejections.Add((State.Clock.Now, label, e.Message)); return false; }
         }
 
-        public void Play(int years)
+        public void Play(int years) => PlayUntil(_start.AddYears(years));
+
+        public void PlayUntil(DateTime end)
         {
-            var end = _start.AddYears(years);
-            var nextMonth = _start;
             while (State.Clock.Now < end)
             {
                 if (State.Clock.Hour == 9) Decide();
@@ -106,11 +145,11 @@ public class CareerPlaytest
                 _pace[year] = pace;
                 State.Advance(1);
                 ReadEvents();
-                if (State.Clock.Now >= nextMonth)
+                if (State.Clock.Now >= _nextMonth)
                 {
                     _monthly.Add($"| {State.Clock.Now:yyyy-MM} | {Minutes / 60:F1} | {State.PersonalMoney:N0} | {State.Money:N0} | " +
                         $"{State.Series.Count(s => s.Publishing == PublishingStatus.Serialized)} | {State.ControlledStaff.Count()} | {Guide().Id} |");
-                    nextMonth = nextMonth.AddMonths(1);
+                    _nextMonth = _nextMonth.AddMonths(1);
                 }
             }
         }

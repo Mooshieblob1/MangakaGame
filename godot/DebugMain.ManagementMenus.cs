@@ -30,7 +30,7 @@ public partial class DebugMain
         });
         ActionButton(play,"New Career",NewCareerMenu);ActionButton(play,"Load Career",LoadCareerMenu);
         var more=StudioCard(cards,"MAKE YOURSELF AT HOME","Begin at your parents' house, with a drawing desk and a dream.");more.GetParent<Control>().CustomMinimumSize=new(300,0);
-        ActionButton(more,"Settings",SettingsMenu);ActionButton(more,"Report a problem",ReportProblem);ActionButton(more,"Quit",()=>GetTree().Quit());
+        ActionButton(more,"Settings",SettingsMenu);ActionButton(more,"Report a problem",ReportProblem);ActionButton(more,"Quit",()=>{_timeline?.End();GetTree().Quit();});
         Words(_menuContent,"Private alpha · "+ProblemReport.Build,13);
     }
     private void NewCareerMenu()
@@ -71,7 +71,9 @@ public partial class DebugMain
             _state=GameState.NewGame((int)seed.Value,rights.Selected==0?OwnershipMode.StudioRetention:OwnershipMode.CreatorRetention,name.Text);
             _state.Apply(difficulty());
             _state.Apply(new SetAppearanceCommand(SelectedLook()));
-            _presentation=new(){Page="Office"};_careerId=Guid.NewGuid().ToString("N");ResetManagementSession();SaveCareer("The first page");ShowOffice();
+            _presentation=new(){Page="Office"};_careerId=Guid.NewGuid().ToString("N");
+            LogTimeline($"new-career {CareerCode} {_state.Progression.Difficulty} sandbox={_state.Progression.EverSandbox}");
+            ResetManagementSession();SaveCareer("The first page");ShowOffice();
         });begin.ThemeTypeVariation="PrimaryAction";
         name.TextChanged+=text=>{begin.Disabled=text.Trim().Any(char.IsControl);name.TooltipText=begin.Disabled?"Use a name without control characters.":"Up to 40 characters. Leave blank to use Aki.";};
         ActionButton(actions,"Back",ShowMenu);
@@ -136,35 +138,38 @@ public partial class DebugMain
         _presentation.Scroll=_sideScroll.ScrollVertical;_presentation.ChartDays=_chartDays;_presentation.PersonalAccount=_personalAccount;
         _presentation.OfficeSidebar=_officeSidebar;_presentation.InboxFilter=_inboxFilter;
         _presentation.SelectedSeries=_progressSeriesId;_presentation.SelectedPerson=SelectedPerson.Id;_presentation.WorkspaceScroll=WorkspaceScroll();
-        var result=_careers.Save(_careerId,name,_state,_presentation,auto);Notify(auto?"Daily autosave kept.":"Career saved: "+name);return result;
+        var result=_careers.Save(_careerId,name,_state,_presentation,auto);Notify(auto?"Daily autosave kept.":"Career saved: "+name);
+        LogTimeline($"save {CareerCode} {(auto?"auto":"manual")}");
+        return result;
     }
     private void LoadCareerMenu()
     {
         Empty(_menuContent);Words(_menuContent,"Your careers",30);
         ActionButton(_menuContent,"Import career or previous save",()=>ChooseFile("Import career",FileDialog.FileModeEnum.OpenFile,["*.mangaka ; Portable career","*.json ; Previous save"],path=>
         {
-            if(path.EndsWith(".mangaka",StringComparison.OrdinalIgnoreCase))LoadCareer(_careers.Import(System.IO.File.ReadAllBytes(path)));
-            else{_state=GameState.ImportSupported(System.IO.File.ReadAllText(path));_careerId=Guid.NewGuid().ToString("N");_presentation=new();ResetManagementSession();SaveCareer("Imported career");}
+            if(path.EndsWith(".mangaka",StringComparison.OrdinalIgnoreCase)){LoadCareer(_careers.Import(System.IO.File.ReadAllBytes(path)));LogTimeline($"import {CareerCode}");}
+            else{_state=GameState.ImportSupported(System.IO.File.ReadAllText(path));_careerId=Guid.NewGuid().ToString("N");_presentation=new();LogTimeline($"import {CareerCode}");ResetManagementSession();SaveCareer("Imported career");}
         }));
         foreach(var save in _careers.List().Take(80)){var entry=save;ActionButton(_menuContent,$"{save.Name}   ·   {save.GameDate:d MMM yyyy}   ·   {save.Studio}"+(save.Auto?"   [auto]":""),()=>LoadCareer(entry));}
         ActionButton(_menuContent,"Back",ShowMenu);
     }
     private void LoadCareer(CareerSaveInfo save)
     {
-        var loaded=_careers.Load(save);_state=loaded.State;_presentation=loaded.View;_careerId=save.Career;ResetManagementSession();
+        var loaded=_careers.Load(save);_state=loaded.State;_presentation=loaded.View;_careerId=save.Career;LogTimeline($"load {CareerCode}");ResetManagementSession();
         if(_presentation.Camera.Length>0)try{_homeOffice.RestorePreferences(JsonSerializer.Deserialize<OfficeViewPreferences>(_presentation.Camera)!);}catch(JsonException){Notify("The office view was reset.");}
         _officeView.Effect=_homeOffice.Effect;_officeEffect.Select(2-_homeOffice.Effect);
         if(_presentation.Artwork.Values.Any(hash=>!System.IO.File.Exists(_careers.AssetPath(_careerId,hash))))Notify("Some custom artwork is missing. Bundled artwork is shown until it is restored or reset.");
     }
     private void ResetManagementSession()
     {
+        _milestones=new JourneyMilestones(_state);_timelineLastMessage=_presentation.Guidance.Thread.LastOrDefault();
         CancelOvernight();
         _disclosureStates.Clear();
         _guiAuthority="";
         _studioLocationKey="";StudioSection("Overview");_operationsFeedback.Text="";_operationsFeedback.Hide();
         _refreshPrintPanel=null;_refreshOnlinePanel=null;_refreshConvention=null;_printingBookId=0;
         _progressSeriesId=_presentation.Page is "Series details" or "Sell online" or "Print doujin" or "Showcase"?_presentation.Detail:_presentation.SelectedSeries;
-        Pause();_scanIndex=_state.Events.Count;_popupEvents.Clear();_recapDialog.Hide();_helperPopup.Hide();_storyOpen=false;
+        Pause();_scanIndex=_state.Events.Count;_popupEvents.Clear();_recapDialog.Hide();_pendingRecap=null;_helperPopup.Hide();_storyOpen=false;
         _viewLocation=_presentation.ViewedOffice;_selectedPersonId=_state.ControlledStaff.Any(p=>p.Id==_presentation.SelectedPerson)?_presentation.SelectedPerson:_state.ProtagonistPersonId;_scopeLocation=_presentation.Scope;_detailId=_presentation.Detail;_back.Clear();
         _page=new[]{"Office","Inbox","Books","Series","Series details","Staff","Person","Finances","Studios","Industry","Showcase","Help","Awards","Licenses","Legacy","Guidance","New doujin","New series","Conventions","Print doujin","Sell online"}.Contains(_presentation.Page)||WorkspaceTabs.ContainsKey(_presentation.Page)?_presentation.Page:"Inbox";
         _officeSidebar=_presentation.OfficeSidebar&&_page is "Inbox" or "Series";
@@ -180,7 +185,7 @@ public partial class DebugMain
     private void ChooseFile(string title,FileDialog.FileModeEnum mode,string[] filters,Action<string> selected)
     {
         var dialog=new FileDialog{Title=title,FileMode=mode,Access=FileDialog.AccessEnum.Filesystem,Filters=filters,UseNativeDialog=!OS.GetCmdlineUserArgs().Contains("--alpha-smoke")};AddChild(dialog);
-        dialog.FileSelected+=path=>{try{selected(path);}catch(Exception ex)when(ex is System.IO.IOException or System.IO.InvalidDataException or JsonException or InvalidOperationException or UnauthorizedAccessException){Notify(ex.Message);}finally{dialog.Hide();dialog.QueueFree();}};
+        dialog.FileSelected+=path=>{try{selected(path);}catch(Exception ex)when(ex is System.IO.IOException or System.IO.InvalidDataException or JsonException or InvalidOperationException or UnauthorizedAccessException){LogTimeline("error "+TimelineRedactor.Clean(ex.Message,_state));Notify(ex.Message);}finally{dialog.Hide();dialog.QueueFree();}};
         dialog.Canceled+=()=>{dialog.Hide();dialog.QueueFree();};dialog.PopupCentered(new(900,600));
     }
 }

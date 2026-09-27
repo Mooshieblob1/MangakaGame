@@ -104,6 +104,7 @@ public partial class DebugMain
     {
         if(_phone is null||_floatingUi is null)return;
         var wasOpen=_phoneOpen;_phoneOpen=true;_phone.Visible=true;_phoneIcon.Visible=false;
+        if(!wasOpen)LogTimeline("phone");
         _phoneLatest=LatestKey(_presentation.Guidance);
         if(buzz)_audio.Buzz();
         ResizeFloatingOffice();
@@ -139,6 +140,7 @@ public partial class DebugMain
         if(_phone is null||_floatingUi is null)return;
         var prefs=_presentation.Guidance;
         CareerGuidance.Observe(_state,prefs);
+        LogNewGuidance(prefs);
         var scale=(float)_presentation.UiScale;var modern=_state.Clock.Now.Year>=2010;
         var latest=LatestKey(prefs);
         var key=$"{latest}|{modern}|{scale}|{_darkMode}|{(ArrearsCoverable?_state.WageArrears:0)}";
@@ -312,13 +314,15 @@ public partial class DebugMain
         var note=new TextEdit{CustomMinimumSize=new(0,150),PlaceholderText="What were you doing? What went wrong?"};_menuContent.AddChild(note);
         var screenshot=new CheckBox{Text="Attach this screen",Disabled=picture is null};_menuContent.AddChild(screenshot);
         var save=new CheckBox{Text="Attach career (includes full history, entered text and custom artwork)"};_menuContent.AddChild(save);
+        var timeline=new CheckBox{Text="Attach session timeline",ButtonPressed=true};_menuContent.AddChild(timeline);
         var contents=Words(_menuContent,"");
-        void Preview()=>contents.Text=$"Contents: your note, build {ProblemReport.Build}, format versions, game date, difficulty/Sandbox status and record counts"+(screenshot.ButtonPressed?", screenshot":"")+(save.ButtonPressed?", portable career":"")+". No automatic upload.";
-        screenshot.Toggled+=_=>Preview();save.Toggled+=_=>Preview();Preview();
+        void Preview()=>contents.Text=$"Contents: your note, build {ProblemReport.Build}, format versions, game date, difficulty/Sandbox status and record counts"+(screenshot.ButtonPressed?", screenshot":"")+(save.ButtonPressed?", portable career":"")+(timeline.ButtonPressed?", session timeline":"")+". No automatic upload.";
+        screenshot.Toggled+=_=>Preview();save.Toggled+=_=>Preview();timeline.Toggled+=_=>Preview();Preview();
         ActionButton(_menuContent,"Export local report",()=>
         {
             var bytes=ProblemReport.Create(note.Text,_state,screenshot.ButtonPressed?picture:null,
-                save.ButtonPressed?_careers.ExportSnapshot(_careerId,_state,_presentation):null);
+                save.ButtonPressed?_careers.ExportSnapshot(_careerId,_state,_presentation):null,
+                timeline:timeline.ButtonPressed?_timeline?.Files():null);
             ChooseFile("Save problem report",FileDialog.FileModeEnum.SaveFile,["*.zip ; Problem report"],path=>
             {ProblemReport.Write(path,bytes);contents.Text="Report saved to "+path+". Review it before sharing.";});
         });

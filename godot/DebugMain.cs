@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using Godot;
@@ -30,6 +31,8 @@ public partial class DebugMain : Control
     private Label _speedLabel = null!;
     private RichTextLabel _log = null!;
     private AcceptDialog _recapDialog = null!;
+    // A recap that arrived with Helper-Chan notices waits until they are dealt with, so the two never stack.
+    private GameEvent? _pendingRecap;
 
     private LineEdit _titleEdit = null!;
     private OptionButton _genreOption = null!;
@@ -99,6 +102,7 @@ public partial class DebugMain : Control
         if (OS.GetCmdlineUserArgs().Contains("--family-home-smoke")) CallDeferred(nameof(RunFamilyHomeSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--quiet-speed-smoke")) CallDeferred(nameof(RunQuietSpeedSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--display-sweep-smoke")) CallDeferred(nameof(RunDisplaySweepSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--journey-smoke")) CallDeferred(nameof(RunJourneySmoke));
     }
 
     public override void _Process(double delta)
@@ -142,6 +146,7 @@ public partial class DebugMain : Control
     {
         var fresh = _state.EventsSince(_scanIndex).ToList();
         _scanIndex = _state.Events.Count;
+        if(_milestones is not null)foreach(var id in _milestones.Observe(_state,fresh))LogTimeline("milestone "+id);
 
         // At 32x routine days roll on; only events that need the player stop the game (Q27).
         var fast = _speed >= QuietSpeed && _overnightTarget is null && _managementReady;
@@ -177,7 +182,8 @@ public partial class DebugMain : Control
         if (stop) { Pause(); _resumeSpeed = _daySpeed; }
         else if (shouldPause) Pause();
         if (fast && recap != null && !shouldPause) { BeginOvernight(); return true; }
-        if (recap != null) ShowRecap(recap);
+        if (recap != null && _managementReady && (_helperPopup.Visible || _popupEvents.Count > 0)) _pendingRecap = recap;
+        else if (recap != null) ShowRecap(recap);
         return shouldPause;
     }
 
@@ -192,6 +198,7 @@ public partial class DebugMain : Control
         }
         CancelOvernight();
         var changed=_speed!=speed;
+        if(changed)LogTimeline(speed>0?$"speed {speed.ToString(CultureInfo.InvariantCulture)}x":"pause");
         if (speed > 0) _resumeSpeed = speed;
         if (speed > 0 && speed < QuietSpeed) _daySpeed = speed;
         _speed = speed;
@@ -243,6 +250,7 @@ public partial class DebugMain : Control
         }
         catch (InvalidCommandException ex)
         {
+            LogTimeline("error "+TimelineRedactor.Clean(ex.Message,_state));
             LogLine($"Command rejected: {ex.Message}");
             if(_managementReady)Notify(ex.Message);
         }
@@ -292,7 +300,7 @@ public partial class DebugMain : Control
 
         CancelOvernight();_state = loaded;
         LoadOfficePreferences();
-        _recapDialog.Hide();
+        _recapDialog.Hide();_pendingRecap = null;
         Pause();
         _log.Clear();
         foreach (var ev in _state.Events.TakeLast(LogLinesOnLoad)) AppendLog(ev);
@@ -340,7 +348,7 @@ public partial class DebugMain : Control
             SizeFlagsStretchRatio = 2.8f,
         };
 
-        column.AddChild(new Label{Text="Ongoing series: one chapter = one printable issue; five chapters = a collected book. Cadence is a personal target until you accept a publisher contract.",AutowrapMode=TextServer.AutowrapMode.WordSmart});
+        column.AddChild(new Label{Text="A one-shot is one complete book. Ongoing series: one chapter = one printable issue; five chapters = a collected book. Cadence is a personal target until you accept a publisher contract.",AutowrapMode=TextServer.AutowrapMode.WordSmart});
         column.AddChild(BuildSeriesForm());
         column.AddChild(BuildSeriesControls());
 
