@@ -98,6 +98,7 @@ public partial class DebugMain : Control
         if (OS.GetCmdlineUserArgs().Contains("--atmosphere-smoke")) CallDeferred(nameof(RunAtmosphereSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--family-home-smoke")) CallDeferred(nameof(RunFamilyHomeSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--quiet-speed-smoke")) CallDeferred(nameof(RunQuietSpeedSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--display-sweep-smoke")) CallDeferred(nameof(RunDisplaySweepSmoke));
     }
 
     public override void _Process(double delta)

@@ -283,13 +283,20 @@ playtesting.
   (early hire if cash lasts to the debut, convention, short doujin, part-time
   job) plus the buffer tip (Q24, Q25); no save or balance change. Record:
   `docs/superpowers/debut-wait-completion.md`.
-- **Tier 1 fix 6, mid-career pacing (done 2026-09-27, uncommitted):** a 32x
+- **Tier 1 fix 6, mid-career pacing (done 2026-09-27, commit `c6a90a4`):** a 32x
   speed (header and 1/2 keys) runs routine days without the recap and stops,
   back to the slower speed, for the Q27 list and new Helper-Chan texts; one
   introduction text after the first sale (Q26 to Q28); 8x unchanged, no save
   or balance change. About 1.1 to 1.6 real hours per in-game year instead of 4.
-  Record: `docs/superpowers/mid-career-pacing-completion.md`. Next: a T1.9
-  display sweep, then preparing the fresh-player test (T1.10).
+  Record: `docs/superpowers/mid-career-pacing-completion.md`.
+- **Tier 1 fix 7, display sweep (done 2026-09-27, uncommitted):** T1.9 ticked.
+  `--display-sweep-smoke` checks 24 core screens at 5 sizes, 100% and 150%
+  text and both themes (480 checks, 0 flagged), with my own review of the
+  captures (Q29, Q30). Fixed an empty Publishing page, drop-downs losing their
+  text, the dashboard overlapping with large text, invisible focused-button
+  text in the light theme and the cramped Publishing form on small windows.
+  Record: `docs/superpowers/display-sweep-completion.md`. Next: preparing the
+  fresh-player test (T1.10).
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

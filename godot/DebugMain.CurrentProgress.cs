@@ -17,7 +17,7 @@ public partial class DebugMain
     private void BuildCurrentProgress()
     {
         _currentProgress=new HFlowContainer();_currentProgress.AddThemeConstantOverride("v_separation",4);_currentProgress.AddThemeConstantOverride("h_separation",8);_shell.AddChild(_currentProgress);
-        _progressSeries=new OptionButton{ThemeTypeVariation="HeaderOption",FitToLongestItem=false,ClipText=true,CustomMinimumSize=new(150,32),SizeFlagsHorizontal=SizeFlags.ExpandFill,SizeFlagsVertical=SizeFlags.ShrinkCenter};
+        _progressSeries=new OptionButton{ThemeTypeVariation="HeaderOption",FitToLongestItem=false,ClipText=true,TextOverrunBehavior=TextServer.OverrunBehavior.TrimEllipsis,CustomMinimumSize=new(230,32),SizeFlagsHorizontal=SizeFlags.ExpandFill,SizeFlagsVertical=SizeFlags.ShrinkCenter};
         _currentProgress.AddChild(_progressSeries);
         _currentFans=new Label{CustomMinimumSize=new(85,0),VerticalAlignment=VerticalAlignment.Center};_currentProgress.AddChild(_currentFans);
         _currentCopies=new Label{CustomMinimumSize=new(200,0),VerticalAlignment=VerticalAlignment.Center};_currentProgress.AddChild(_currentCopies);

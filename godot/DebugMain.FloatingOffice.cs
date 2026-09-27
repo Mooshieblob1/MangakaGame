@@ -33,6 +33,7 @@ public partial class DebugMain
         _floatingUi.AddChild(_phone);_floatingUi.AddChild(_phoneIcon);
         // Wrapped text measures tall before it has a width, so settle again once the real minimum is known.
         _phone.MinimumSizeChanged+=ResizeFloatingOffice;
+        _side.MinimumSizeChanged+=ResizeFloatingOffice;_report.MinimumSizeChanged+=ResizeFloatingOffice;_officeDashboard.MinimumSizeChanged+=ResizeFloatingOffice;
     }
     // With large text on a small window a page needs the phone's column, so the phone waits as its icon while a page is open.
     private bool PhoneCrampsPage()
@@ -78,7 +79,8 @@ public partial class DebugMain
             var pageWidth=_officeSidebar?Math.Min(sidebarWidth,width-phoneColumn):width-phoneColumn;
             Place(_side,window.X-16-phoneColumn-pageWidth,top,pageWidth,pageHeight);
             Place(_report,left,top,width-phoneColumn,pageHeight);
-            var dashboardWidth=window.X<1500?320f:380f;
+            // Large text can need more than the usual width; place the dashboard at the width it will really take.
+            var dashboardWidth=Math.Max(window.X<1500?320f:380f,_officeDashboard.GetCombinedMinimumSize().X);
             _officeDashboard.Visible=_page=="Office"&&!_side.Visible&&!_report.Visible;
             Place(_officeDashboard,window.X-16-dashboardWidth,top,dashboardWidth,available);
             var obstruction=_officeDashboard.Visible?dashboardWidth+gap:_side.Visible&&_officeSidebar?pageWidth+gap:0;

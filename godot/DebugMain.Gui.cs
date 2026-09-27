@@ -71,8 +71,9 @@ public partial class DebugMain
         {var target=destination;ActionButton(_workspaceActions,label,()=>Navigate(target));}
         if(WorkspaceTabs[route]==3)
             StudioSection(route switch{"Team settings"=>"Team","Business actions"=>"Money","Distribution settings"=>"Publishing","Career moves"=>"Career","Properties"=>"Locations",_=>"Overview"});
-        _workbenchNotice.Text=route=="Publishing"?"Pitch to magazines and manage contracts here. For self-published printing or downloads, open Books & sales.":
-            "Choose the named person, series or studio in this form. Costs use the account shown beside the action.";
+        _workbenchNotice.Text=route=="Publishing"?PublishingWorkbenchHint:
+            GenericWorkbenchHint;
+        UpdateWorkbenchNotice();
         RefreshNavigation();_dirty=true;PageEntrance(_report);
     }
     private static (string Label,string Route)[] WorkspaceLinks(string route)=>route switch
@@ -85,9 +86,14 @@ public partial class DebugMain
         "Distribution settings"=>[("Books & sales","Books"),("Conventions","Conventions"),("Series overview","Series")],
         _=>[("Studios overview","Studios"),("Properties & branches","Properties"),("Tokyo map","Tokyo map"),("Business finances","Business actions"),("Career moves","Career moves")],
     };
+    // The standing hints give way to the form itself on short windows with large text (Publishing keeps its Books & sales link); action results stay.
+    private const string GenericWorkbenchHint="Choose the named person, series or studio in this form. Costs use the account shown beside the action.";
+    private const string PublishingWorkbenchHint="Pitch to magazines and manage contracts here. For self-published printing or downloads, open Books & sales.";
+    private void UpdateWorkbenchNotice()=>_workbenchNotice.Visible=_workbenchNotice.Text is not (GenericWorkbenchHint or PublishingWorkbenchHint)||GetViewportRect().Size.Y/_presentation.UiScale>=560;
     private void ResizeGui()
     {
         if(_rail is null||_side is null)return;
+        if(_workbenchNotice is not null)UpdateWorkbenchNotice();
         var width=GetViewportRect().Size.X;
         _rail.CustomMinimumSize=new(width<1500?120:148,0);
         _side.CustomMinimumSize=new(_officeSidebar?Math.Min(460,width*.40f):0,0);
@@ -156,6 +162,8 @@ public partial class DebugMain
         var publishingScroll=new ScrollContainer{Name="Publishing",HorizontalScrollMode=ScrollContainer.ScrollMode.Disabled};
         _mainTabs.AddChild(publishingScroll);_mainTabs.MoveChild(publishingScroll,1);
         var bounded=new GuiReadingColumn{SizeFlagsHorizontal=SizeFlags.ExpandFill};publishingScroll.AddChild(bounded);bounded.AddChild(publishing);
+        // The tab bar hid this page while it was an inactive tab; it is now shown by its scroll container instead.
+        publishing.Show();
         var publishingChildren=publishing.GetChildren().OfType<Control>().Where(c=>c!=_marketTabs).ToArray();
         FormSection(publishing,"PUBLISHING · title and magazine",publishingChildren);
         publishing.MoveChild(publishing.GetChild(publishing.GetChildCount()-1),0);
@@ -185,7 +193,11 @@ public partial class DebugMain
             if(child is Button button&&button.Text.StartsWith("Import previous"))child.Hide();
         }
         foreach(var choice in FindChildren("*","OptionButton",true,false).OfType<OptionButton>())
-        {choice.FitToLongestItem=false;choice.ClipText=choice!=_viewOffice;}
+        {
+            // Only choices that stretch across their row may clip; a fixed-size choice sizes to its longest item so its text never vanishes.
+            var stretches=(choice.SizeFlagsHorizontal&SizeFlags.Expand)!=0;
+            choice.FitToLongestItem=!stretches;choice.ClipText=stretches&&choice!=_viewOffice;
+        }
     }
     private void RefreshCandidateComparison()
     {

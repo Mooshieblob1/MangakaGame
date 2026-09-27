@@ -51,7 +51,8 @@ public partial class OfficeView : SubViewportContainer
     public event Action? RotateRequested;
     private bool _draggingFurniture;
     private Label _hint=null!;
-    public bool ShowNavigationHint { get; set; }=true;
+    public bool ShowNavigationHint { get=>_showNavigationHint; set{_showNavigationHint=value;if(_hint is not null)_hint.Visible=value;} }
+    private bool _showNavigationHint=true;
     public double LabelTextScale { get; set; }=1;
     public Rect2 PresentationArea { get; set; }
 
@@ -64,7 +65,7 @@ public partial class OfficeView : SubViewportContainer
         _room=new Node3D();_world.AddChild(_room);_actorsRoot=new Node3D();_world.AddChild(_actorsRoot);
         _camera=new Camera3D{Projection=Camera3D.ProjectionType.Orthogonal,KeepAspect=Camera3D.KeepAspectEnum.Height,Current=true,Far=300};_world.AddChild(_camera);
         BuildDaylight();BuildToiletPrivacy();
-        _hint=new Label{Text="Wheel: zoom · right drag: rotate · middle drag / WASD: pan",Position=new(14,14),Size=new(400,52),AutowrapMode=TextServer.AutowrapMode.WordSmart,MouseFilter=MouseFilterEnum.Ignore};AddChild(_hint);
+        _hint=new Label{Text="Wheel: zoom · right drag: rotate · middle drag / WASD: pan",Visible=_showNavigationHint,Position=new(14,14),Size=new(400,52),AutowrapMode=TextServer.AutowrapMode.WordSmart,MouseFilter=MouseFilterEnum.Ignore};AddChild(_hint);
         Resized+=()=>{_hint.Size=new(Math.Max(100,Size.X-28),52);UpdateCamera();};
         _hint.AddThemeColorOverride("font_color",new Color("f5f0e5"));_hint.AddThemeColorOverride("font_shadow_color",Colors.Black);_hint.AddThemeConstantOverride("shadow_offset_x",1);_hint.AddThemeConstantOverride("shadow_offset_y",1);
         VisibilityChanged+=()=>{if(_viewport is not null)_viewport.RenderTargetUpdateMode=IsVisibleInTree()?SubViewport.UpdateMode.Always:SubViewport.UpdateMode.Disabled;};

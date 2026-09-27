@@ -64,7 +64,7 @@ public partial class DebugMain
         var titles=new OptionButton{FitToLongestItem=false,ClipText=true};foreach(var series in ManagedSeries)titles.AddItem(series.Title,series.Id);titleField.AddChild(titles);
         titles.Select(Math.Max(0,titles.GetItemIndex(_detailId)));
         var people=new OptionButton{FitToLongestItem=false,ClipText=true};foreach(var person in ManagedPeople.Where(p=>p.Employment!.StartsAt<=_state.Clock.Now&&p.Employment.NoticeEndsAt is null))people.AddItem(person.Name,person.Id);personField.AddChild(people);
-        var events=new OptionButton{FitToLongestItem=false,ClipText=true};foreach(var name in new[]{"Free neighbourhood event","Regional event","Summer / winter convention"})events.AddItem(name);eventField.AddChild(events);
+        var events=new OptionButton();foreach(var name in new[]{"Free neighbourhood event","Regional event","Summer / winter convention"})events.AddItem(name);eventField.AddChild(events);
         var reserve=new SpinBox{Name="ConventionReservedCopies",MinValue=0,MaxValue=100000,Step=1};Field("Reserve copies").AddChild(reserve);
         var details=Words(_sideContent,"",14);Button? book=null;
         void Quote()

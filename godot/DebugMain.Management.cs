@@ -40,7 +40,7 @@ public partial class DebugMain
     {
         var theme=new Theme{DefaultFontSize=16};
         foreach(var kind in new[]{"Label","Button","OptionButton","LineEdit","TextEdit","RichTextLabel","CheckBox","Tree","ItemList","PopupMenu","TooltipLabel"})
-        {theme.SetColor("font_color",kind,Ink);theme.SetColor("font_hover_color",kind,Accent);theme.SetColor("font_pressed_color",kind,Ink);theme.SetColor("font_disabled_color",kind,Ink.Darkened(.35f));theme.SetColor("font_placeholder_color",kind,Ink.Darkened(.3f));theme.SetColor("caret_color",kind,Ink);theme.SetColor("selection_color",kind,SelectedSurface);}
+        {theme.SetColor("font_color",kind,Ink);theme.SetColor("font_hover_color",kind,Accent);theme.SetColor("font_pressed_color",kind,Ink);theme.SetColor("font_hover_pressed_color",kind,Accent);theme.SetColor("font_focus_color",kind,Ink);theme.SetColor("font_disabled_color",kind,Ink.Darkened(.35f));theme.SetColor("font_placeholder_color",kind,Ink.Darkened(.3f));theme.SetColor("caret_color",kind,Ink);theme.SetColor("selection_color",kind,SelectedSurface);}
         foreach(var kind in new[]{"Button","OptionButton","LineEdit","TextEdit","Tree","ItemList"})
         {
             theme.SetStylebox("normal",kind,Surface(Paper));theme.SetStylebox("hover",kind,Surface(Hover));
@@ -162,7 +162,7 @@ public partial class DebugMain
         GetViewport().SizeChanged+=ResizeGui;_managementReady=true;ResizeGui();
         _viewLocation=_state.Protagonist.Employment!.LocationId;RefreshManagement();ShowMenu();
     }
-    private void Notify(string text){if(_managementReady){_notice.Text=text;_workbenchNotice.Text=text;}else LogLine(text);}
+    private void Notify(string text){if(_managementReady){_notice.Text=text;_workbenchNotice.Text=text;_workbenchNotice.Show();}else LogLine(text);}
     public override void _UnhandledKeyInput(InputEvent ev)
     {
         if(!_managementReady||ev is not InputEventKey{Pressed:true,Echo:false,Keycode:Key.Escape})return;

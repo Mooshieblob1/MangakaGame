@@ -33,7 +33,7 @@ public partial class DebugMain
         var primary=new Color(_darkMode?"365fa0":"315f9b");
         foreach(var (state,color) in new[]{("normal",primary),("hover",primary.Lightened(.13f)),("pressed",primary.Darkened(.12f))})
             theme.SetStylebox(state,"PrimaryAction",ControlSurface(color));
-        foreach(var state in new[]{"font_color","font_hover_color","font_pressed_color"})theme.SetColor(state,"PrimaryAction",Colors.White);
+        foreach(var state in new[]{"font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"})theme.SetColor(state,"PrimaryAction",Colors.White);
         theme.SetTypeVariation("QuietLabel","Label");theme.SetColor("font_color","QuietLabel",MutedInk);
         theme.SetTypeVariation("SectionLabel","Label");theme.SetColor("font_color","SectionLabel",Accent);
         theme.SetTypeVariation("NavigationButton","Button");
@@ -62,7 +62,7 @@ public partial class DebugMain
         var active=new Color(_darkMode?"365fa0":"315f9b");
         foreach(var (state,color) in new[]{("normal",active),("hover",active.Lightened(.13f)),("pressed",active.Darkened(.12f))})
             theme.SetStylebox(state,"HeaderActiveButton",CompactSurface(color));
-        foreach(var state in new[]{"font_color","font_hover_color","font_pressed_color"})theme.SetColor(state,"HeaderActiveButton",Colors.White);
+        foreach(var state in new[]{"font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"})theme.SetColor(state,"HeaderActiveButton",Colors.White);
         var funds=CompactSurface(CardSurface);funds.ContentMarginLeft=funds.ContentMarginRight=8;
         theme.SetTypeVariation("HeaderFunds","PanelContainer");theme.SetStylebox("panel","HeaderFunds",funds);
         var panel=(StyleBoxFlat)theme.GetStylebox("panel","FloatingPanel").Duplicate();
