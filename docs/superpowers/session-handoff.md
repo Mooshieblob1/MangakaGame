@@ -4,17 +4,21 @@ Last updated: 2026-09-27. Read this after `CLAUDE.md` when a session starts or
 resumes after compaction. It records work in progress that is not yet in the
 roadmap or a completion record. Replace its contents when the task changes.
 
-## Current task: music system (plan executing, Native), after Tier 1 closeout
+## Current task: waiting for tester B and for Suno tracks (2026-09-28)
 
-- Music ledger: `.superpowers/sdd/2026-09-28-music-system/progress.md`
-  (plan `docs/superpowers/plans/2026-09-28-music-system.md`, spec
-  `docs/superpowers/specs/2026-09-28-music-system-design.md`).
-- Tier 1 closeout and tester A fixes are done but not committed; notes in
-  `.superpowers/sdd/tier1-closeout/notes.md`; record
-  `docs/superpowers/tier1-closeout-and-tester-a-completion.md`. T1.6 and T1.7
-  ticked by the user. A3, A6, A7 wait for tester B.
-- Build, test and Godot checks approved; packaging needs a separate go-ahead.
-  Nothing committed since `26057df`.
+- Committed `f9e8ac6`: Tier 1 closeout, tester A fixes (A1, A2, A4, A5, A8,
+  A9) and the music system. Records:
+  `docs/superpowers/tier1-closeout-and-tester-a-completion.md`,
+  `docs/superpowers/music-system-completion.md`. Deferred minors are listed in
+  those records' sessions (music: failed moment file loses the plan's place,
+  back-to-back transitions cut abruptly, logger try/catch, replay edge for
+  pre-fix adopted manuscripts).
+- Waiting: tester B's report (then triage A3 progressive disclosure incl. rival
+  job offers, A6 licence explanations, A7 setbacks feel random); the user's Suno
+  tracks (then `scripts/convert-music.ps1`, import, listen together; add the
+  credits line with the first track).
+- alpha.12 is what tester B plays; a new tester build (alpha.13) needs a
+  go-ahead. Not pushed since `26057df`... push only when asked.
 
 ## Context-saving changes made this session
 
