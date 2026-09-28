@@ -24,6 +24,7 @@ public partial class DebugMain
     private ScrollContainer _sideScroll=null!;
     private int _viewLocation,_scopeLocation,_detailId;
     private string _page="Inbox";
+    private Label _viewOfficeHeading=null!;
     private readonly Stack<(string Page,int Detail,int Scope,int Scroll,bool Sidebar,int Series,int Person)> _back=new();
     private bool _managementReady,_inMenu=true,_expanded,_storyOpen;
     private DateTime _lastAutosave=GameClock.Start.Date;
@@ -118,7 +119,7 @@ public partial class DebugMain
         _navigation["Office"]=ActionButton(_rail,"⌂  Office",ShowOffice);
         foreach(var (page,icon) in new[]{("Inbox","✉"),("Series","▤"),("Books","▥"),("Staff","♙"),("Finances","¥"),("Studios","▦"),("Industry","◇"),("Help","?")}){var name=page;_navigation[name]=ActionButton(_rail,icon+"  "+name,()=>Navigate(name));}
         foreach(var button in _navigation.Values){button.ToggleMode=true;button.ThemeTypeVariation="NavigationButton";button.Alignment=HorizontalAlignment.Left;}
-        Words(_rail,"VIEWING STUDIO",12);
+        _viewOfficeHeading=Words(_rail,"VIEWING STUDIO",12);
         // The current name determines the selector's minimum width at the chosen
         // text scale. Keep the district separate rather than clipping both together.
         _viewOffice=new OptionButton{FitToLongestItem=false,ClipText=false};_rail.AddChild(_viewOffice);
@@ -233,6 +234,8 @@ public partial class DebugMain
         var locations=_state.Locations.Where(l=>l.BusinessId==_state.ControlledBusinessId&&!l.Closed).ToArray();
         if(!locations.Any(l=>l.Id==_viewLocation))_viewLocation=_state.Protagonist.Employment!.LocationId;
         SyncOptions(_viewOffice,locations.Select(l=>(l.Id,l.Name)),_viewLocation);
+        // With one studio there is nothing to switch between, so the picker reads as a plain label (T1.8).
+        _viewOffice.Disabled=locations.Length<=1;_viewOfficeHeading.Text=locations.Length<=1?"YOUR STUDIO":"VIEWING STUDIO";
         var viewedLocation=locations.FirstOrDefault(l=>l.Id==_viewLocation);
         _viewOfficeDistrict.Text=viewedLocation?.District??"";
         _viewOffice.TooltipText=viewedLocation is null?"Choose a studio":$"Viewing {viewedLocation.Name} · {viewedLocation.District}";

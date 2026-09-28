@@ -19,7 +19,8 @@ public partial class DebugMain
     // Office motion stays readable: capped at 8x during the night and during 32x days.
     private double OfficePlaybackSpeed=>_speed<=0?0:_overnightDeparting?8:Math.Min(_speed,8);
 
-    private void BeginOvernight()
+    // keepPage: a 32x day rolls into the night while the player may be mid-action, so the open page stays (finding A2).
+    private void BeginOvernight(bool keepPage=false)
     {
         var hours=_state.HoursUntilNextWork();
         if(hours<=0){SetSpeed(_resumeSpeed);return;}
@@ -34,7 +35,8 @@ public partial class DebugMain
             _overnightStart=_state.Clock.Now;
             _overnightDeparting=true;_overnightHold=.2;
             _homeOffice.EndingDay=_officeView.EndingDay=true;
-            ShowOffice();Refresh();
+            if(!keepPage||!(_side.Visible||_report.Visible))ShowOffice();
+            Refresh();
         }
         finally{_timelineQuiet=false;}
         if(_overnightCaption is null)

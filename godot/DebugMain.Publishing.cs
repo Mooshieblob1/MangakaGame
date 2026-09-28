@@ -128,7 +128,10 @@ public partial class DebugMain
             (_state.HasInternet ? "Online" : "Offline");
         _onlineButton.Text = _state.HasInternet ? "Online" : $"Get online (¥{Economy.InternetCost(_state.TrendCatalog, _state.Clock.Now):N0})";
         _onlineButton.Disabled = _state.HasInternet || _state.AvailableBusinessCash < Economy.InternetCost(_state.TrendCatalog, _state.Clock.Now);
-        _pitchButton.Disabled = series is null || series.Status != SeriesStatus.Active || series.Publishing != PublishingStatus.Unpublished || series.StandaloneDoujin;
+        var inContest = series is not null && _state.Progression.Manuscripts.Any(m => m.SeriesId == series.Id && !m.Released);
+        _pitchButton.Disabled = series is null || series.Status != SeriesStatus.Active || series.Publishing != PublishingStatus.Unpublished || series.StandaloneDoujin || inContest;
+        _pitchButton.TooltipText = inContest ? "Release the contest manuscript in Awards & contests before pitching this title." :
+            series?.StandaloneDoujin == true ? "A complete one-shot doujin: choose Continue as ongoing series in Series details first." : "";
         _acceptButton.Disabled = _declineButton.Disabled = series?.Publishing != PublishingStatus.Offered;
         _withdrawButton.Disabled = series?.Publishing != PublishingStatus.Serialized;
         _endButton.Disabled = series is null || series.Status == SeriesStatus.Ended;

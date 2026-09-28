@@ -61,7 +61,7 @@ public static class TimelineRedactor
         }
         foreach(var local in new[]{Environment.UserName,Environment.MachineName})if(local.Length>=3)words.Add((local,"[name]"));
         foreach(var (value,placeholder) in words.OrderByDescending(w=>w.Value.Length))
-            clean=Regex.Replace(clean,Regex.Escape(value),placeholder,RegexOptions.IgnoreCase);
+            clean=Regex.Replace(clean,@"(?<![\p{L}\p{N}])"+Regex.Escape(value)+@"(?![\p{L}\p{N}])",placeholder,RegexOptions.IgnoreCase); // whole words only (finding A8)
         return clean;
     }
 }

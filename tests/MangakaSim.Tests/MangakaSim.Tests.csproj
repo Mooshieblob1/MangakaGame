@@ -16,5 +16,6 @@
     <ProjectReference Include="..\..\src\MangakaSim\MangakaSim.csproj" />
     <None Update="Fixtures/*.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Fixtures/*.mangaka" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Fixtures/*.career" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -77,3 +77,14 @@ the lo-fi sound still sits comfortably in 1996 Tokyo.
 | File | Suno plan | Date | Prompt used (if changed) | Notes |
 |---|---|---|---|---|
 | title-01 | | | | |
+
+## Adding tracks to the game
+
+1. Name each download after its cue (for example `day-01.wav`).
+2. Run `scripts/convert-music.ps1 -Source <download folder>`. It writes
+   loudness-matched OGG files to `godot/Assets/Music/`. Only those OGG files are
+   committed; keep the downloads outside the repository.
+3. Run the Godot import step, then start the game. Tracks are found by name.
+4. Fill in the provenance table above, and add the credits line to
+   `docs/superpowers/private-alpha-credits.txt` with the first real track:
+   "Music: AI-generated with Suno (see docs/superpowers/music-suno-prompts.md)."

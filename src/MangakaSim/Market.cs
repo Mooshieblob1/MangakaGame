@@ -165,6 +165,10 @@ public partial class Chapter
     public bool PitchResolved { get; set; }
     [JsonRequired]
     public bool DoujinEligible { get; set; }
+    /// <summary>An older draft of a revised contest manuscript: finished work kept for history, never a magazine or doujin chapter. Optional for older saves.</summary>
+    public bool Superseded { get; set; }
+    /// <summary>A chapter that belongs to the magazine run: not a pitch sample, not doujin material, not an old contest draft.</summary>
+    [JsonIgnore] public bool MagazineBound => !IsOneShot && !DoujinEligible && !Superseded;
     [JsonRequired]
     public DateTime? PublishedAt { get; set; }
     [JsonRequired]

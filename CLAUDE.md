@@ -308,6 +308,20 @@ playtesting.
   `docs/superpowers/plans/2026-09-27-fresh-player-test.md`. Preparation record
   (timeline, practice career, `--journey-smoke`, tester kit, recap and Publishing
   fixes): `docs/superpowers/fresh-player-test-preparation-completion.md`.
+- **Tier 1 closeout and tester A fixes (2026-09-28, not committed):** tester A
+  returned (findings A1 to A9 in `docs/superpowers/fresh-player-test-findings.md`,
+  triage approved). Fixed A1 contest guidance dead end, A2 32x closing pages,
+  A4 staff waiting status, A5 unusable buttons, A8 redactor, A9 unloadable save
+  after a revised contest manuscript; T1.6 old saves, T1.7 error catcher, T1.8
+  clarity fixes. A3 (progressive disclosure, incl. rival job offers), A6, A7
+  wait for tester B. Record: `docs/superpowers/tier1-closeout-and-tester-a-completion.md`.
+  Next: option 2, the music system (user chose "1, then 2").
+- **Music system (built 2026-09-28, not committed, waiting for tracks):**
+  spec `docs/superpowers/specs/2026-09-28-music-system-design.md` (Q35 gentle,
+  Q36 quiet stretches), plan `docs/superpowers/plans/2026-09-28-music-system.md`.
+  `MusicPlan` and `MusicMoments` (engine-free), `godot/Office/MusicPlayer.cs`,
+  Music slider, `--music-smoke`, `scripts/convert-music.ps1`. The user generates
+  Suno tracks when ready. Record: `docs/superpowers/music-system-completion.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

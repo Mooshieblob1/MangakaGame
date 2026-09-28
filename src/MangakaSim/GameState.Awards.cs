@@ -47,6 +47,7 @@ public partial class GameState
             if (Progression.Awards.Any(a => a.ManuscriptId == manuscript.Id && a.Prize > 0))
                 throw new InvalidCommandException("Prize-winning manuscripts cannot enter these newcomer contests again.");
             var revised = CreateNextChapter(s, current.Pages, ContestDeadline(Clock.Now));
+            current.Superseded = true;
             revised.DoujinEligible = false;
             manuscript.ChapterId = revised.Id;
             manuscript.Revision++;
@@ -75,13 +76,19 @@ public partial class GameState
         Emit(EventType.AwardNomination, $"{s.Title} entered the {manuscript.Category} newcomer contest. Results in {deadline.Date.AddMonths(2):MMMM yyyy}.", s.Id);
     }
     public void RegisterExistingManuscript(int chapterId) => Apply(new AdoptManuscriptCommand(chapterId));
+    /// <summary>Whether a finished chapter can become a contest manuscript; the Awards page offers only these (finding A5).</summary>
+    public bool CanAdoptManuscript(Chapter chapter)
+    {
+        var series = SeriesOf(chapter);
+        return series.Publishing == PublishingStatus.Unpublished && chapter.Status == ChapterStatus.Complete && chapter.PublishedAt is null &&
+            chapter.Pages is >= 16 and <= 64 && !series.Volumes.Any(v => v.ChapterIds.Contains(chapter.Id)) &&
+            !Progression.Manuscripts.Any(m => m.SeriesId == series.Id) && series.Chapters.All(ch => ch.Status == ChapterStatus.Complete);
+    }
     private void AdoptManuscript(int chapterId)
     {
         var chapter = FindChapter(chapterId) ?? throw new InvalidCommandException("Select a finished unpublished one-shot.");
         var series = RequireSeries(SeriesOf(chapter).Id);
-        if (series.Publishing != PublishingStatus.Unpublished || chapter.Status != ChapterStatus.Complete || chapter.PublishedAt is not null ||
-            chapter.Pages is < 16 or > 64 || series.Volumes.Any(v => v.ChapterIds.Contains(chapter.Id)) ||
-            Progression.Manuscripts.Any(m => m.SeriesId == series.Id) || series.Chapters.Any(ch => ch.Status != ChapterStatus.Complete))
+        if (!CanAdoptManuscript(chapter))
             throw new InvalidCommandException("Finish all current work and choose an uncollected 16–64 page unpublished manuscript.");
         chapter.DoujinEligible = false;
         Progression.Manuscripts.Add(new() { Id = AllocateId(), SeriesId = series.Id, ChapterId = chapter.Id,

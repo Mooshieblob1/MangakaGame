@@ -13,7 +13,7 @@ public partial class DebugMain
     {
         if(OfficeEditing){Notify("Apply or discard furniture changes before opening the menu.");return;}
         if(!_inMenu)CaptureReportScreen();
-        Pause();_inMenu=true;_menu.Show();Empty(_menuContent);
+        Pause();_inMenu=true;_titleMenu=true;_menu.Show();Empty(_menuContent);
         var hero=StudioCard(_menuContent,"");var heading=new HBoxContainer();hero.AddChild(heading);
         heading.AddChild(HelperPortrait(112,126));var title=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};heading.AddChild(title);
         Words(title,"MANGAKA STUDIO",36);Words(title,"A career told one page at a time.",20);
@@ -122,7 +122,7 @@ public partial class DebugMain
     private void OpenSaveMenu()
     {
         if(OfficeEditing){Notify("Finish your furniture changes before saving.");return;}
-        Pause();_inMenu=true;_menu.Show();Empty(_menuContent);Words(_menuContent,"Keep this chapter of your career",30);
+        Pause();_inMenu=true;_titleMenu=false;_menu.Show();Empty(_menuContent);Words(_menuContent,"Keep this chapter of your career",30);
         var name=new LineEdit{Text=$"{_state.ControlledBusiness.Name} · {_state.Clock.Now:d MMM yyyy}",MaxLength=100};_menuContent.AddChild(name);
         ActionButton(_menuContent,"Save snapshot",()=>{SaveCareer(name.Text);_menu.Hide();_inMenu=false;});
         ActionButton(_menuContent,"Export portable career",()=>
@@ -151,6 +151,13 @@ public partial class DebugMain
             else{_state=GameState.ImportSupported(System.IO.File.ReadAllText(path));_careerId=Guid.NewGuid().ToString("N");_presentation=new();LogTimeline($"import {CareerCode}");ResetManagementSession();SaveCareer("Imported career");}
         }));
         foreach(var save in _careers.List().Take(80)){var entry=save;ActionButton(_menuContent,$"{save.Name}   ·   {save.GameDate:d MMM yyyy}   ·   {save.Studio}"+(save.Auto?"   [auto]":""),()=>LoadCareer(entry));}
+        // Saves this version cannot read are left untouched on disk and named here rather than hidden (T1.6).
+        if(_careers.Unreadable is var unreadable and >0)
+        {
+            Words(_menuContent,unreadable==1?"1 saved file could not be read by this version, so it is not listed. It stays in the saves folder unchanged.":
+                $"{unreadable} saved files could not be read by this version, so they are not listed. They stay in the saves folder unchanged.",15);
+            LogTimeline($"error {unreadable} unreadable saves");
+        }
         ActionButton(_menuContent,"Back",ShowMenu);
     }
     private void LoadCareer(CareerSaveInfo save)

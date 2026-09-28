@@ -84,6 +84,11 @@ public partial class DebugMain
     {
         _digitalProposal.Text=$"Propose digital · ¥{_state.ChannelSetupFee(ReleaseChannel.DomesticDigital):N0}";
         _overseasProposal.Text=$"Propose overseas · ¥{_state.ChannelSetupFee(ReleaseChannel.Overseas):N0}";
+        // Publisher routes that do not exist yet in this era are shown but not clickable (T1.8).
+        _digitalProposal.Disabled=!_state.ChannelAvailable(ReleaseChannel.DomesticDigital);
+        _digitalProposal.TooltipText=_digitalProposal.Disabled?"Publishers do not offer digital editions yet. Industry news will announce it. Your own doujin can already sell online.":"";
+        _overseasProposal.Disabled=!_state.ChannelAvailable(ReleaseChannel.Overseas);
+        _overseasProposal.TooltipText=_overseasProposal.Disabled?"Publishers do not offer licensed overseas editions yet. Industry news will announce it.":"";
         void Fill(OptionButton choice, System.Collections.Generic.IEnumerable<(int Id, string Text)> rows)
         {SyncOptions(choice,rows,choice.GetSelectedId());}
         var business = _state.ControlledBusinessId;

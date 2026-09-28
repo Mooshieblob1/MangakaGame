@@ -20,6 +20,7 @@ public partial class DebugMain
         var smoke=OS.GetCmdlineUserArgs().Any(a=>a.EndsWith("-smoke")||a=="--smoke-test");
         var folder=smoke?Path.Combine(SmokeOutput,"timeline-"+Guid.NewGuid().ToString("N")):ProjectSettings.GlobalizePath("user://");
         _timeline=new SessionTimeline(folder,()=>DateTime.Now);
+        _errorLogger=new TimelineErrorLogger();OS.AddLogger(_errorLogger);
         var size=GetWindow().Size;
         _timeline.Start($"window {size.X}x{size.Y} text {(int)Math.Round(_presentation.UiScale*100)} theme {(_darkMode?"dark":"light")}");
     }
@@ -35,8 +36,23 @@ public partial class DebugMain
         foreach(var step in TimelineGuidance.NewSteps(prefs.Thread,_timelineLastMessage))LogTimeline("step "+step);
         _timelineLastMessage=prefs.Thread.LastOrDefault();
     }
+    private TimelineErrorLogger? _errorLogger;
+    private bool _unexpectedErrorShown;
+    // Unexpected errors reach the timeline on the main thread; the player hears about the first one only.
+    private void DrainUnexpectedErrors()
+    {
+        if(_errorLogger is null)return;
+        while(_errorLogger.TryTake(out var error))
+        {
+            LogTimeline("error unexpected "+TimelineRedactor.Clean(error,_state));
+            if(_unexpectedErrorShown||!_managementReady)continue;
+            _unexpectedErrorShown=true;
+            Notify("Something went wrong behind the scenes. It has been noted for the problem report. If anything looks wrong, save under a new name and send a report from the menu.");
+        }
+    }
     public override void _Notification(int what)
     {
-        if(what==NotificationWMCloseRequest)_timeline?.End();
+        if(what==NotificationWMCloseRequest){DrainUnexpectedErrors();_timeline?.End();}
+        if(what==NotificationPredelete&&_errorLogger is not null){OS.RemoveLogger(_errorLogger);_errorLogger=null;}
     }
 }

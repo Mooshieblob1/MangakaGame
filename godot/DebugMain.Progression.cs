@@ -28,14 +28,21 @@ public partial class DebugMain
             if(active is not null){Words(box,$"Submitted · results {active.ResolvesAt:d MMM yyyy}");continue;}
             if(c?.Status == ChapterStatus.Complete)
             {
-                ActionButton(box,"Submit eligible manuscript",()=>ProgressionAction(new RecognitionCommand(RecognitionAction.Submit,m.Id)));
-                ActionButton(box,"Produce a revised version",()=>ProgressionAction(new RecognitionCommand(RecognitionAction.Revise,m.Id)));
+                // Offer only what the contest rules accept (fresh-player finding A5).
+                var won=_state.Progression.Awards.Any(a=>a.ManuscriptId==m.Id&&a.Prize>0);
+                var entered=_state.Progression.Awards.Any(a=>a.ManuscriptId==m.Id&&a.Revision==m.Revision);
+                if(won)Words(box,"This manuscript already won a prize, so it cannot enter newcomer contests again. Release it for normal publishing.",14);
+                else if(entered)Words(box,"This version has already been entered. Produce a revised version to enter again.",14);
+                else ActionButton(box,"Submit eligible manuscript",()=>ProgressionAction(new RecognitionCommand(RecognitionAction.Submit,m.Id)));
+                if(!won)ActionButton(box,"Produce a revised version",()=>ProgressionAction(new RecognitionCommand(RecognitionAction.Revise,m.Id)));
             }
+            else Words(box,"Finish the manuscript's pages in Production first. They progress by themselves while time runs.",14);
             ActionButton(box,"Release for normal publishing",()=>ProgressionAction(new RecognitionCommand(RecognitionAction.ReleaseManuscript,m.Id)));
         }
-        foreach(var s in ManagedSeries.Where(s=>!_state.Progression.Manuscripts.Any(m=>m.SeriesId==s.Id)))
-        foreach(var c in s.Chapters.Where(c=>c.Status==ChapterStatus.Complete&&c.PublishedAt is null&&!s.Volumes.Any(v=>v.ChapterIds.Contains(c.Id))).TakeLast(1))
+        var adoptable=ManagedSeries.SelectMany(s=>s.Chapters.Where(_state.CanAdoptManuscript).TakeLast(1).Select(c=>(s,c))).ToArray();
+        foreach(var (s,c) in adoptable)
             ActionButton(_sideContent,$"Use existing manuscript: {s.Title}",()=>ProgressionAction(new AdoptManuscriptCommand(c.Id)));
+        if(adoptable.Length==0)QuietWords(_sideContent,"An existing title can enter when it is unpublished, has no unfinished chapters and has a finished 16 to 64 page chapter that is not in a book yet.");
         Words(_sideContent,"Honors & results",23);
         Words(_sideContent,"Published manga are considered automatically each January. Shortlisted work receives a smaller temporary discovery boost. Wins never guarantee serialization or an anime.",14);
         foreach(var a in _state.Progression.Awards.Where(a=>ManagedSeries.Any(s=>s.Id==a.SeriesId)||a.CreatorId==_state.ProtagonistPersonId).TakeLast(30).Reverse())

@@ -103,12 +103,20 @@ public partial class DebugMain : Control
         if (OS.GetCmdlineUserArgs().Contains("--quiet-speed-smoke")) CallDeferred(nameof(RunQuietSpeedSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--display-sweep-smoke")) CallDeferred(nameof(RunDisplaySweepSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--journey-smoke")) CallDeferred(nameof(RunJourneySmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--music-smoke")) CallDeferred(nameof(RunMusicSmoke));
     }
+
+    // Only the main menu plays the title music; the Save screen keeps the career rotation (final review).
+    private bool _titleMenu=true;
+    private MusicContext MusicNow()=>new(_inMenu&&_titleMenu,_state.Clock.Now,
+        _state.Protagonist.Employment is {} job&&_state.Locations.FirstOrDefault(l=>l.Id==job.LocationId) is {IsFamilyHome:false},
+        _overnightTarget is not null);
 
     public override void _Process(double delta)
     {
         if(_managementReady)PanWithKeys(delta);
         if(_managementReady)_audio.Update(delta,!_inMenu&&GetWindow().HasFocus(),_speed>0&&!OfficeEditing,_presentation.AmbienceVolume,_presentation.EffectsVolume);
+        if(_managementReady)_music.Update(delta,MusicNow(),_presentation.MusicVolume,GetWindow().HasFocus());
         if (_overnightTarget is not null) TickOvernight(delta);
         else if (_speed > 0)
         {
@@ -122,6 +130,7 @@ public partial class DebugMain : Control
         }
 
         if(_managementReady)TickMoneyFeedback(delta);
+        DrainUnexpectedErrors();
         if (_dirty) Refresh();
         var visualSpeed=OfficePlaybackSpeed;
         if (_managementReady){_homeOffice.Speed=visualSpeed;_homeOffice.HourFraction=_accumulator;}
@@ -146,7 +155,9 @@ public partial class DebugMain : Control
     {
         var fresh = _state.EventsSince(_scanIndex).ToList();
         _scanIndex = _state.Events.Count;
-        if(_milestones is not null)foreach(var id in _milestones.Observe(_state,fresh))LogTimeline("milestone "+id);
+        var reached=_milestones?.Observe(_state,fresh).ToList()??[];
+        foreach(var id in reached)LogTimeline("milestone "+id);
+        if(_managementReady)_music.Notice(MusicMoments.Classify(_state,fresh,reached),MusicNow());
 
         // At 32x routine days roll on; only events that need the player stop the game (Q27).
         var fast = _speed >= QuietSpeed && _overnightTarget is null && _managementReady;
@@ -181,7 +192,7 @@ public partial class DebugMain : Control
         if(_overnightTarget is not null)return false;
         if (stop) { Pause(); _resumeSpeed = _daySpeed; }
         else if (shouldPause) Pause();
-        if (fast && recap != null && !shouldPause) { BeginOvernight(); return true; }
+        if (fast && recap != null && !shouldPause) { BeginOvernight(keepPage: true); return true; }
         if (recap != null && _managementReady && (_helperPopup.Visible || _popupEvents.Count > 0)) _pendingRecap = recap;
         else if (recap != null) ShowRecap(recap);
         return shouldPause;
@@ -385,10 +396,10 @@ public partial class DebugMain : Control
         _seriesOption = new OptionButton { CustomMinimumSize = new Vector2(140, 0) };
         row.AddChild(_seriesOption);
 
-        var pause = new Button { Text = "Pause" };
+        var pause = _pauseButton = new Button { Text = "Pause" };
         pause.Pressed += () => WithSelectedSeries(id => TryApply(new PauseSeriesCommand(id)));
         row.AddChild(pause);
-        var resume = new Button { Text = "Resume" };
+        var resume = _resumeButton = new Button { Text = "Resume" };
         resume.Pressed += () => WithSelectedSeries(id => TryApply(new ResumeSeriesCommand(id)));
         row.AddChild(resume);
 
@@ -501,10 +512,15 @@ public partial class DebugMain : Control
         if (_managementReady) RefreshManagement();
     }
 
+    private Button? _pauseButton, _resumeButton;
     private void RefreshSeriesOption()
     {
         var previous = _seriesOption.ItemCount > 0 ? _seriesOption.GetSelectedId() : -1;
         SyncOptions(_seriesOption,_state.Series.Where(s=>!ManagementInterface||s.BusinessId==_state.ControlledBusinessId&&(_state.Control==ControlMode.OwnerDirector||s.LeadPersonId==_state.ProtagonistPersonId)).Select(s=>(s.Id,$"{s.Title} ({s.Status})")),previous);
+        // Pause and Resume offer only the change that applies (fresh-player finding A5).
+        var chosen = _seriesOption.ItemCount > 0 ? _state.FindSeries(_seriesOption.GetSelectedId()) : null;
+        if (_pauseButton is not null) { _pauseButton.Disabled = chosen?.Status != SeriesStatus.Active; _pauseButton.TooltipText = chosen?.Status == SeriesStatus.Paused ? "Already paused." : ""; }
+        if (_resumeButton is not null) { _resumeButton.Disabled = chosen?.Status != SeriesStatus.Paused; _resumeButton.TooltipText = chosen?.Status == SeriesStatus.Active ? "Already active." : ""; }
     }
 
     private void WithSelectedSeries(Action<int> action)

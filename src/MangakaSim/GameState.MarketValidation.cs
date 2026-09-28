@@ -103,7 +103,7 @@ public partial class GameState
             if (series.Contract is { } current)
             {
                 var magazine = PublisherCatalog.Get(current.MagazineId);
-                var waiting = series.Chapters.Where(c => !c.IsOneShot && !c.DoujinEligible && c.PublishedAt is null).ToArray();
+                var waiting = series.Chapters.Where(c => c.MagazineBound && c.PublishedAt is null).ToArray();
                 Check(series.Cadence == magazine.Cadence && waiting.Select(c => c.DueDate).Distinct().Count() == waiting.Length &&
                     waiting.All(c => c.DueDate >= current.FirstIssueClose && c.DueDate >= Clock.Now &&
                         IssueSchedule.FirstCloseAtOrAfter(magazine, c.DueDate) == c.DueDate), "publication slots");

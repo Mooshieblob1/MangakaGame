@@ -9,6 +9,7 @@ public sealed class CareerPresentation
     public GuidancePreferences Guidance { get; set; } = new();
     public double AmbienceVolume { get; set; } = .35;
     public double EffectsVolume { get; set; } = .6;
+    public double MusicVolume { get; set; } = .5;
     public HashSet<int> ReadEvents { get; set; } = new();
     public HashSet<string> Tutorials { get; set; } = new();
     public bool Tips { get; set; } = true;
@@ -88,9 +89,11 @@ public sealed class CareerStore(string root)
             File.Delete(SnapshotPath(old));
         return new(career,id,name,auto,data.SavedAt,state.Clock.Now,state.ControlledBusiness.Name);
     }
+    /// <summary>Saves the last List() call could not read, so the Load screen can say so instead of hiding them silently.</summary>
+    public int Unreadable { get; private set; }
     public IReadOnlyList<CareerSaveInfo> List()
     {
-        var items=new List<CareerSaveInfo>();if(!Directory.Exists(Root))return items;
+        var items=new List<CareerSaveInfo>();Unreadable=0;if(!Directory.Exists(Root))return items;
         foreach(var dir in Directory.EnumerateDirectories(Root).Where(d=>Guid.TryParseExact(Path.GetFileName(d),"N",out _)))
         foreach(var file in Directory.EnumerateFiles(dir).Where(f=>f.EndsWith(".json")||f.EndsWith(".career")))
         {
@@ -110,7 +113,7 @@ public sealed class CareerStore(string root)
                 var studio=state.GetProperty("Businesses").EnumerateArray().First(b=>b.GetProperty("Id").GetInt32()==business).GetProperty("Name").GetString()!;
                 items.Add(new(data.Career,Path.GetFileNameWithoutExtension(file),data.Name,data.Auto,data.SavedAt,state.GetProperty("Clock").GetProperty("Now").GetDateTime(),studio));
             }
-            catch(Exception ex)when(ex is IOException or InvalidDataException or JsonException or InvalidOperationException or KeyNotFoundException){ }
+            catch(Exception ex)when(ex is IOException or InvalidDataException or JsonException or InvalidOperationException or KeyNotFoundException){Unreadable++;}
         }
         return items.OrderByDescending(s=>s.SavedAt).ToArray();
     }
@@ -132,9 +135,10 @@ public sealed class CareerStore(string root)
             data.View.UiScale is <.75 or >1.75||!double.IsFinite(data.View.UiScale))throw new InvalidDataException("Invalid career package.");
         foreach(var pair in data.View.Artwork){HashCheck(pair.Value);if(pair.Key.Length>100)throw new InvalidDataException("Invalid artwork slot.");}
         var g=data.View.Guidance;
-        if(g is null || !CareerGuidance.Routes.Contains(g.Route) || g.Project<0 || g.Completed is null || g.Completed.Count>100 ||
+        if(g is null || !(CareerGuidance.Routes.Contains(g.Route) || CareerGuidance.LegacyRoutes.Contains(g.Route)) || g.Project<0 || g.Completed is null || g.Completed.Count>100 ||
             g.Completed.Any(x=>x is null||x.Length>80) || !double.IsFinite(data.View.AmbienceVolume) || data.View.AmbienceVolume is <0 or >1 ||
-            !double.IsFinite(data.View.EffectsVolume) || data.View.EffectsVolume is <0 or >1)throw new InvalidDataException("Invalid guidance or audio preferences.");
+            !double.IsFinite(data.View.EffectsVolume) || data.View.EffectsVolume is <0 or >1 ||
+            !double.IsFinite(data.View.MusicVolume) || data.View.MusicVolume is <0 or >1)throw new InvalidDataException("Invalid guidance or audio preferences.");
         if(data.View.Page is null||data.View.Scroll<0||data.View.WorkspaceScroll<0||data.View.SelectedSeries<0||data.View.SelectedPerson<0||data.View.ChartDays is not (0 or 30 or 90 or 365)||data.View.Synopses.Any(p=>p.Value is null||p.Value.Length>3000))throw new InvalidDataException("Invalid report preferences.");
     }
     public (GameState State,CareerPresentation View) Load(CareerSaveInfo info)

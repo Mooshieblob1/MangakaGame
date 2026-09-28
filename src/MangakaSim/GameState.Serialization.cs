@@ -70,8 +70,20 @@ public partial class GameState
         return state;
     }
 
+    // Saves written before the fix for fresh-player finding A9 left older drafts of revised contest manuscripts looking
+    // like magazine chapters, which made every save after a serialization unloadable. Mark those drafts before checking.
+    private void RepairSupersededDrafts()
+    {
+        foreach (var manuscript in Progression?.Manuscripts ?? [])
+            if (Series?.FirstOrDefault(s => s.Id == manuscript.SeriesId) is { } series)
+                foreach (var draft in series.Chapters.Where(c => c.Id < manuscript.ChapterId && !c.Superseded && !c.IsOneShot && !c.DoujinEligible &&
+                             c.PublishedAt is null && c.EditorMagazineId is null && c.Status == ChapterStatus.Complete))
+                    draft.Superseded = true;
+    }
+
     private void ValidateSave()
     {
+        RepairSupersededDrafts();
         static void Check([DoesNotReturnIf(false)] bool valid, string field)
         {
             if (!valid) throw new InvalidDataException($"Save file has invalid {field}.");

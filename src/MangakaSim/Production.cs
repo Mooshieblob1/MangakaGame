@@ -13,7 +13,7 @@ public sealed partial class Volume { public int EditionNumber { get; set; } }
 
 public partial class GameState
 {
-    public bool HasPublisherDeadline(Chapter chapter) => !chapter.IsOneShot && !chapter.DoujinEligible &&
+    public bool HasPublisherDeadline(Chapter chapter) => chapter.MagazineBound &&
         chapter.PublishedAt is null && SeriesOf(chapter).Contract is not null;
     public static string EditionName(Volume book) => book.Format==VolumeFormat.DoujinIssue
         ?$"Issue {book.FirstChapter}":book.IsDoujin&&book.ChapterIds.Count==1?"One-shot":$"Collected book {(book.EditionNumber>0?book.EditionNumber:book.Number)}";

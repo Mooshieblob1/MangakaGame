@@ -48,7 +48,7 @@ public partial class GameState
             var published = new Dictionary<int, Chapter>();
             foreach (var series in competitors)
             {
-                var chapter = series.Chapters.FirstOrDefault(c => !c.IsOneShot && !c.DoujinEligible &&
+                var chapter = series.Chapters.FirstOrDefault(c => c.MagazineBound &&
                     c.PublishedAt is null && c.DueDate == close.CloseTime);
                 series.LastRank = null;
                 if (chapter is { Status: ChapterStatus.Complete, Editor: EditorStatus.Approved })
@@ -76,7 +76,7 @@ public partial class GameState
                         if (!series.IsIconic) series.Fanbase *= .97;
                         ChangeTrackRecord(-1, series.BusinessId);
                     }
-                    var waiting = series.Chapters.Where(c => !c.IsOneShot && !c.DoujinEligible && c.PublishedAt is null &&
+                    var waiting = series.Chapters.Where(c => c.MagazineBound && c.PublishedAt is null &&
                         c.DueDate >= close.CloseTime).OrderBy(c => c.DueDate).ToArray();
                     foreach (var buffered in waiting) buffered.DueDate = IssueSchedule.AddIssues(magazine, buffered.DueDate, 1);
                     if (waiting.Length == 0) series.NextChapterDueOverride = IssueSchedule.AddIssues(magazine, close.CloseTime, 1);

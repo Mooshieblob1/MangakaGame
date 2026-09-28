@@ -137,6 +137,6 @@ public partial class DebugMain
         var activity=_state.OfficeActivities.FirstOrDefault(a=>a.PersonId==person.Id)?.Kind;
         if(activity is not null&&activity is not (OfficeActivityKind.Work or OfficeActivityKind.Idle))
             return Humanize(activity.ToString()!);
-        return person.CurrentTask is {} task?$"Working · {(task.Stage==Stage.Name?"Storyboard":task.Stage)}":"Available for work";
+        return person.CurrentTask is {} task?$"Working · {(task.Stage==Stage.Name?"Storyboard":task.Stage)}":_state.WaitingReason(person)??"Available for work";
     }
 }

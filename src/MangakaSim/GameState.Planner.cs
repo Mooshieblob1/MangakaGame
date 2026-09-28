@@ -56,7 +56,7 @@ public partial class GameState
         var deadline = due ?? series.NextChapterDueOverride;
         if (deadline is null && series.Contract is { } contract)
         {
-            var lastSlot = series.Chapters.Where(c => !c.IsOneShot && !c.DoujinEligible).OrderBy(c => c.DueDate).LastOrDefault();
+            var lastSlot = series.Chapters.Where(c => c.MagazineBound).OrderBy(c => c.DueDate).LastOrDefault();
             deadline = lastSlot is null ? contract.FirstIssueClose : IssueSchedule.FirstCloseAfter(PublisherCatalog.Get(contract.MagazineId), lastSlot.DueDate);
         }
         series.NextChapterDueOverride = null;
@@ -152,6 +152,22 @@ public partial class GameState
         person.CurrentTask = ordered.Cast<QueueRef?>().FirstOrDefault(r => IsStartable(r!.Value));
     }
 
+    /// <summary>Why someone with assigned pages has nothing to start right now, or null when nothing is assigned or work can start.</summary>
+    public string? WaitingReason(Person person)
+    {
+        if (person.CurrentTask is { } task && IsStartable(task)) return null;
+        var refs = person.Queue.Concat(UnfinishedRefs(person)).Distinct().ToArray();
+        if (refs.Length == 0 || refs.Any(IsStartable)) return null;
+        var chapter = FindChapter(refs[0].ChapterId)!; var series = SeriesOf(chapter);
+        if (series.Publishing is PublishingStatus.Pitching or PublishingStatus.Offered && !chapter.IsOneShot)
+            return $"Waiting · {series.Title} is out for a pitch";
+        var blocking = chapter.Stages.TakeWhile(w => w.Stage != refs[0].Stage).FirstOrDefault(w => !w.IsDone);
+        if (blocking is null) return $"Waiting for the editor · {series.Title}";
+        var who = blocking.AssignedTo is { } id && FindPerson(id) is { } p ? p.Name : null;
+        var what = blocking.Stage == Stage.Name ? "storyboard" : blocking.Stage.ToString().ToLowerInvariant();
+        return who is null ? $"Waiting for the {what} · {series.Title}" : $"Waiting for {who}'s {what} · {series.Title}";
+    }
+
     internal bool IsStartable(QueueRef r)
     {
         var chapter = FindChapter(r.ChapterId);
@@ -166,5 +182,5 @@ public partial class GameState
 
     /// <summary>Finished magazine chapters waiting to publish, against the finished-chapter buffer the planner fills before it stops.</summary>
     public (int Ready, int Target) ChaptersReadyAhead(Series series) =>
-        (series.Chapters.Count(c => c.Status == ChapterStatus.Complete && c.PublishedAt is null && !c.IsOneShot && !c.DoujinEligible), Math.Max(1, series.BufferLimit));
+        (series.Chapters.Count(c => c.Status == ChapterStatus.Complete && c.PublishedAt is null && c.MagazineBound), Math.Max(1, series.BufferLimit));
 }

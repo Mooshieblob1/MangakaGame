@@ -73,6 +73,45 @@ public class GuidanceTests
         Assert.All(p.Thread.SelectMany(m => m.Texts), t => Assert.True(t.Length <= CareerGuidance.TextLimit, t));
     }
 
+    /// <summary>Fresh-player finding A1: choosing a contest silenced the career guidance for good.</summary>
+    [Fact]
+    public void Contest_detour_gives_way_to_career_moments_that_need_the_player()
+    {
+        var s = Sold(); var p = new GuidancePreferences { Route = "contest" };
+        s.Apply(new ContinueOneShotCommand(s.Series[0].Id)); var series = s.Series[0];
+        Assert.StartsWith("contest-", Step(s, p));
+        for (int day = 0; day < 400 && series.Publishing != PublishingStatus.Offered; day++)
+        {
+            if (series.Publishing == PublishingStatus.Unpublished && CareerGuidance.PitchOutlooks(s, series).FirstOrDefault(o => o.Open) is { } best)
+                s.Apply(new PitchSeriesCommand(series.Id, best.Magazine.Id));
+            s.Advance(24);
+        }
+        Assert.Equal("offer", Step(s, p));
+        s.Apply(new AcceptOfferCommand(series.Id));
+        Assert.Equal("first-deadline", Step(s, p));
+        Assert.Equal("contest", p.Route);
+    }
+
+    [Fact]
+    public void Contest_detour_returns_to_the_career_once_the_manuscript_is_entered()
+    {
+        var s = Sold(); var p = new GuidancePreferences { Route = "contest" };
+        s.Apply(new RecognitionCommand(RecognitionAction.CreateManuscript, Text: "Contest", Category: "story"));
+        Assert.Equal("contest-review", Step(s, p));
+        var manuscript = s.Progression.Manuscripts.Last();
+        for (int day = 0; day < 120 && s.FindChapter(manuscript.ChapterId)!.Status != ChapterStatus.Complete; day++) s.Advance(24);
+        s.Apply(new RecognitionCommand(RecognitionAction.Submit, manuscript.Id));
+        var step = Step(s, p);
+        Assert.Equal("career", p.Route);
+        Assert.DoesNotContain("contest-", step);
+        Assert.Contains(p.Thread, m => m.Step == "contest-entered");
+        Assert.All(p.Thread.SelectMany(m => m.Texts), t => Assert.True(t.Length <= CareerGuidance.TextLimit, t));
+        // Final review: choosing the contest route again while judging runs is respected, without a repeated text.
+        p.Route = "contest"; Step(s, p); s.Advance(24); Step(s, p);
+        Assert.Equal("contest", p.Route);
+        Assert.Single(p.Thread, m => m.Step == "contest-entered");
+    }
+
     [Fact]
     public void Old_routes_join_the_career_path()
     {

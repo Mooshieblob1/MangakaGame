@@ -108,16 +108,29 @@ public partial class DebugMain
             Check(Warned(),"Practice career reaches the cancellation warning");
             await JourneyStep("setback");
 
-            // 7. The oldest save fixture and an alpha.11 career: each loads, or is refused with a clear message.
+            // 7. The oldest save fixture and an alpha.11 career (two in-game years, made by the alpha.11 simulation): each loads,
+            // or is refused with a clear message.
             var v1=Path.Combine(ProjectSettings.GlobalizePath("res://"),"..","tests","MangakaSim.Tests","Fixtures","v1-minimal.json");
             Check(LoadsOrRefuses(()=>GameState.ImportSupported(File.ReadAllText(v1))),"Oldest save fixture loads or is refused clearly");
             var oldCareer=OS.GetCmdlineUserArgs().FirstOrDefault(a=>a.StartsWith("--old-career="))?["--old-career=".Length..]
-                ??Path.Combine(ProjectSettings.GlobalizePath("res://"),"..","TestResults","fresh-player","alpha11-career.mangaka");
+                ??Path.Combine(ProjectSettings.GlobalizePath("res://"),"..","tests","MangakaSim.Tests","Fixtures","alpha11-year2.mangaka");
             if(File.Exists(oldCareer))
-                Check(LoadsOrRefuses(()=>{var old=_careers.Import(File.ReadAllBytes(oldCareer));LoadCareer(old);}),"alpha.11 career loads or is refused clearly");
+            {
+                LoadCareer(_careers.Import(File.ReadAllBytes(oldCareer)));await SettleUi();_helperPopup.Hide();
+                Check(_state.Series.Any(s=>s.BusinessId==_state.ControlledBusinessId&&s.Contract is not null),"alpha.11 career loads in the real screens");
+                _state.Advance(48);ScanEvents();RefreshManagement();await SettleUi();
+                Check(_presentation.Guidance.Route=="career","alpha.11 career plays on and its old guidance route moves to the career path");
+            }
             else GD.Print("JOURNEY NOTE: no alpha.11 career at "+oldCareer+"; make one with the alpha.11 package and rerun.");
 
-            // 8. The timeline recorded the journey.
+            // 8. An unexpected exception inside the game is noted in the timeline and told to the player once (T1.7).
+            Callable.From(()=>throw new InvalidOperationException("Journey smoke deliberate exception")).CallDeferred();
+            await SettleUi();await SettleUi();DrainUnexpectedErrors();
+            var noted=string.Join("",_timeline!.Files().Select(f=>f.Text));
+            Check(noted.Contains("error unexpected")&&noted.Contains("Journey smoke deliberate exception"),"An unexpected exception is written to the session timeline");
+            Check(_workbenchNotice.Text.Contains("Something went wrong"),"The player is told once that something went wrong");
+
+            // 9. The timeline recorded the journey.
             var log=string.Join("",_timeline!.Files().Select(f=>f.Text));
             foreach(var line in new[]{"session start","new-career","milestone first-doujin-completed","milestone first-sale","milestone later-sale",
                 "milestone first-pitch","milestone serialization-accepted","milestone first-magazine-chapter","milestone first-hire",

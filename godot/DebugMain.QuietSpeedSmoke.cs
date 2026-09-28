@@ -75,11 +75,15 @@ public partial class DebugMain
 
             // At 32x the day rolls into the night without the recap, and the next morning continues at 32x.
             var overnights=0;
+            // Fresh-player finding A2: the page the player is using stays open, at its scroll position, through the night.
+            Navigate("Finances");await SettleUi();_sideScroll.ScrollVertical=60;await SettleUi();var scrolled=_sideScroll.ScrollVertical;
             Run(QuietSpeed,()=>_overnightTarget is not null);
+            Check(_side.Visible&&_page=="Finances"&&_sideScroll.ScrollVertical==scrolled,$"At 32x the night keeps the open page and its scroll position (page {_page}, scroll {_sideScroll.ScrollVertical} of {scrolled})");
             Check(_overnightTarget is not null&&!_recapDialog.Visible,"At 32x the working day ends without the recap dialog and the night begins");
             Check(_state.Events.Last(e=>e.Type==EventType.DailyRecap).Time<=_state.Clock.Now,"The day's recap is still recorded for the inbox");
             Run(QuietSpeed,()=>_overnightTarget is null);overnights++;
             Check(_overnightTarget is null&&_speed==32&&_resumeSpeed==32,"The next morning continues at 32x");
+            Check(_side.Visible&&_page=="Finances"&&_sideScroll.ScrollVertical==scrolled,$"The open page and scroll position survive into the next 32x morning (page {_page}, scroll {_sideScroll.ScrollVertical})");
             _speedTween?.Kill();_speedFlash?.Hide();
             foreach(var (size,name,scale) in new(Vector2I,string,double)[]{(new(1920,1080),"1080",1),(new(1280,720),"720-150",1.5)})
             {

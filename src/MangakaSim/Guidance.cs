@@ -38,6 +38,10 @@ public static class CareerGuidance
     public const int ThreadLimit = 200;
     public const int TextLimit = 140;
     public static readonly string[] Routes = ["career", "contest", "employment"];
+    // Routes saved before Tier 1 fix 1 (alpha.11 and earlier); Observe moves them onto "career".
+    public static readonly string[] LegacyRoutes = ["opening", "doujin"];
+    // Contests and employment are detours (fresh-player finding A1): only these career steps give way to them.
+    private static readonly HashSet<string> CalmCareerSteps = ["pitch", "pitch-wait", "next-series", "continue-series", "serial-rhythm", "career-settled"];
 
     public static GuidanceStep Evaluate(GameState state, GuidancePreferences preferences)
     {
@@ -47,6 +51,9 @@ public static class CareerGuidance
         bool sale = protagonistTitles.Any(s => s.Volumes.Any(v => v.CopiesSold > 0)) ||
             state.Career.Sales.Any(x => protagonistTitles.Any(s => s.Id == x.Series) && x.Physical + x.Digital + x.Overseas > 0);
         bool established = protagonistTitles.Any(s => s.Chapters.Any(c => c.PublishedAt is not null)) || sale || preferences.Completed.Contains("first-sale");
+        if (preferences.Route is "contest" or "employment" && established && state.Control == ControlMode.OwnerDirector &&
+            Career(state, preferences, owned) is { } career && !CalmCareerSteps.Contains(career.Id))
+            return career;
         if (preferences.Route == "employment")
             return state.Control == ControlMode.OwnerDirector
                 ? new("employment", "Explore studio employment", "Review the employer, pay and title rights before confirming a move.\nYour career follows the mangaka wherever you go.", "employment")
@@ -322,7 +329,18 @@ public static class CareerGuidance
     public static void Observe(GameState state, GuidancePreferences preferences)
     {
         // Presentation-only and idempotent; history remains authoritative and no popup backlog is created.
-        if (preferences.Route is "opening" or "doujin" || !Routes.Contains(preferences.Route)) preferences.Route = "career";
+        if (LegacyRoutes.Contains(preferences.Route) || !Routes.Contains(preferences.Route)) preferences.Route = "career";
+        // The contest detour ends once its manuscript is entered; the result arrives as its own notice.
+        if (preferences.Route == "contest" && state.Progression.Awards.LastOrDefault(a => a.ResolvedAt is null &&
+                state.Series.Any(s => s.Id == a.SeriesId && s.BusinessId == state.ControlledBusinessId)) is { } entry &&
+            state.Progression.Manuscripts.Any(m => m.Id == entry.ManuscriptId && !m.Released) &&
+            // Once per entry: choosing the contest route again during judging is the player's call (final review).
+            !preferences.Thread.Any(m => m.Step == "contest-entered" && m.Time >= entry.SubmittedAt))
+        {
+            preferences.Route = "career";
+            Append(preferences, new() { Step = "contest-entered", Time = state.Clock.Now, Texts =
+                [$"Your manuscript is entered! Results come in {entry.ResolvesAt:MMMM yyyy}.", "Back to your career path meanwhile. I'll tell you when judging is done."] });
+        }
         var titles = state.Series.Where(s => WasCreator(state,s)).ToArray();
         if (titles.Length > 0) preferences.Completed.Add("create");
         if (titles.Any(s => s.Chapters.Any(c => c.Status == ChapterStatus.Complete))) preferences.Completed.Add("produce");

@@ -77,6 +77,14 @@ public class SessionTimelineTests
         Assert.Equal("Not enough money.",TimelineRedactor.Clean("Not enough money.",state));
         Assert.Equal("[path] missing",TimelineRedactor.Clean(@"D:\x\y.png missing",null));
     }
+    // Fresh-player finding A8: a staff member called Ren turned "current" into "cur[name]t".
+    [Fact]public void Redactor_replaces_whole_names_only()
+    {
+        var state=GameState.NewGame(0);state.People[0].Name="Ren";
+        Assert.Equal("Finish all current work.",TimelineRedactor.Clean("Finish all current work.",state));
+        Assert.Equal("[name] is busy.",TimelineRedactor.Clean("Ren is busy.",state));
+        Assert.Equal("Ask [name]'s editor.",TimelineRedactor.Clean("Ask Ren's editor.",state));
+    }
     [Fact]public void Redactor_removes_the_windows_user_and_machine_names()
     {
         var clean=TimelineRedactor.Clean($"Access denied for {Environment.UserName} on {Environment.MachineName}",null);

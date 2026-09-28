@@ -4,17 +4,17 @@ Last updated: 2026-09-27. Read this after `CLAUDE.md` when a session starts or
 resumes after compaction. It records work in progress that is not yet in the
 roadmap or a completion record. Replace its contents when the task changes.
 
-## Current task: T1.10 preparation done, alpha.12 packaged; waiting on testers
+## Current task: music system (plan executing, Native), after Tier 1 closeout
 
-- Ledger (rulings, run logs): `.superpowers/sdd/2026-09-27-fresh-player-test/`,
-  git-ignored scratch that can be deleted once no longer useful.
-- Package: `builds/MangakaStudio-0.8.0-private-alpha.12-Windows.zip`, see
-  `docs/superpowers/alpha-12-build-verification.md`. START-HERE.md is left out
-  by the user's decision (the guide counts as outside help).
-- Committed on `main` as `5ceb97a` (not pushed). Next: the user recruits two fresh
-  testers and sends alpha.12 (never contact testers or share builds myself).
-  Returned reports go in `TestResults/fresh-player/`; results in
-  `docs/superpowers/fresh-player-test-findings.md`.
+- Music ledger: `.superpowers/sdd/2026-09-28-music-system/progress.md`
+  (plan `docs/superpowers/plans/2026-09-28-music-system.md`, spec
+  `docs/superpowers/specs/2026-09-28-music-system-design.md`).
+- Tier 1 closeout and tester A fixes are done but not committed; notes in
+  `.superpowers/sdd/tier1-closeout/notes.md`; record
+  `docs/superpowers/tier1-closeout-and-tester-a-completion.md`. T1.6 and T1.7
+  ticked by the user. A3, A6, A7 wait for tester B.
+- Build, test and Godot checks approved; packaging needs a separate go-ahead.
+  Nothing committed since `26057df`.
 
 ## Context-saving changes made this session
 

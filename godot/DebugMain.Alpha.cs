@@ -12,6 +12,7 @@ public partial class DebugMain
     private ScrollContainer _phoneScroll=null!;
     private Label _phoneDate=null!;
     private OfficeAudio _audio=null!;
+    private MusicPlayer _music=null!;
     private Button _showGuidance=null!;
     private Tween? _phoneTween;
     private bool _phoneOpen;
@@ -28,6 +29,8 @@ public partial class DebugMain
     private void BuildAlpha()
     {
         _audio=new OfficeAudio();AddChild(_audio);
+        _music=new MusicPlayer();AddChild(_music);_music.UseFolder(System.Environment.TickCount);
+        _music.Failed=id=>LogTimeline("error music "+id+" could not be loaded");
         // Helper-Chan texts the player. Both controls join the floating layer in BuildFloatingOffice.
         _phone=new PhoneFrame{Name="HelperPhone",Visible=false,MouseFilter=MouseFilterEnum.Stop};
         _phoneIcon=new PhoneIcon{Name="HelperPhoneIcon",Visible=false};_phoneIcon.Pressed+=()=>OpenPhone(false);
@@ -212,6 +215,7 @@ public partial class DebugMain
     private void GuidancePage()
     {
         Words(_sideContent,"Choose what you would like to work toward. Every career action remains available.");
+        Words(_sideContent,"A contest or employment is a side trip: Helper-Chan still texts you about offers, deadlines and setbacks, and a contest hands back to the career path once your manuscript is entered.",14);
         foreach(var (route,label) in new[]{("career","Follow the career path"),("contest","Enter a contest"),("employment","Seek studio employment")})
         {var id=route;ActionButton(_sideContent,label,()=>{_presentation.Guidance.Route=id;SetGuidanceVisible(true);});}
         Words(_sideContent,"Project to follow");var projects=new OptionButton();projects.AddItem("Choose automatically",0);
@@ -244,13 +248,16 @@ public partial class DebugMain
         var dark=new CheckBox{Text="Dark mode",ButtonPressed=_darkMode};parent.AddChild(dark);dark.Toggled+=SetDarkMode;
         Words(parent,"Controls: WASD or middle drag to pan · wheel to zoom · right drag to rotate. Space pauses/resumes; 1 slows down; 2 speeds up. Shortcuts stay off while typing or in dialogs.",14);
         var guidance=new CheckBox{Text="Helper-Chan's phone pops up for new messages",ButtonPressed=_presentation.Guidance.Visible};parent.AddChild(guidance);guidance.Toggled+=SetGuidanceVisible;
-        foreach(var ambience in new[]{true,false})
+        foreach(var (label,read,write) in new (string,Func<double>,Action<double>)[]{
+            ("Music · 0 mutes",()=>_presentation.MusicVolume,v=>_presentation.MusicVolume=v),
+            ("Office ambience · 0 mutes",()=>_presentation.AmbienceVolume,v=>_presentation.AmbienceVolume=v),
+            ("Sound effects · 0 mutes",()=>_presentation.EffectsVolume,v=>_presentation.EffectsVolume=v)})
         {
-            Words(parent,ambience?"Office ambience · 0 mutes":"Sound effects · 0 mutes");
-            var slider=new HSlider{MinValue=0,MaxValue=1,Step=.05,Value=ambience?_presentation.AmbienceVolume:_presentation.EffectsVolume};parent.AddChild(slider);
-            slider.ValueChanged+=v=>{if(ambience)_presentation.AmbienceVolume=v;else _presentation.EffectsVolume=v;};
+            Words(parent,label);
+            var slider=new HSlider{MinValue=0,MaxValue=1,Step=.05,Value=read()};parent.AddChild(slider);
+            slider.ValueChanged+=v=>write(v);
         }
-        Words(parent,"Sounds stay natural at every speed. Office ambience pauses in menus and when the window is unfocused.",14);
+        Words(parent,"Sounds stay natural at every speed. Office ambience pauses in menus, where the title music plays. Everything pauses when the window is unfocused.",14);
     }
     private void AlphaPrintingPage()
     {
