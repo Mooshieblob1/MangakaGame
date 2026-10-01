@@ -28,6 +28,7 @@ public partial class DebugMain
     }
     private void BuildAlpha()
     {
+        LoadAudioSettings();
         _audio=new OfficeAudio();AddChild(_audio);
         _music=new MusicPlayer();AddChild(_music);_music.UseFolder(System.Environment.TickCount);
         _music.Failed=id=>LogTimeline("error music "+id+" could not be loaded");
@@ -178,7 +179,7 @@ public partial class DebugMain
                 hint="Here's printing. Ten copy-shop copies is a safe first order.";break;
             case "series":Navigate("Series details",step.Project);focus=VisibleButton("Continue as ongoing series");
                 hint="Press \"Continue as ongoing series\" here. Magazines only take ongoing series.";break;
-            case "publishing":OpenWorkspace("Publishing");focus=_pitchButton;
+            case "publishing":OpenWorkspace("Publishing");if(_state.FindSeries(step.Project) is {} pitching)PreselectSuggestedMagazine(pitching);focus=_pitchButton;
                 hint="Choose the magazine I named, then press Pitch. My estimate for each one is shown here.";break;
             case "employment":OpenWorkspace("Career moves");focus=FindChildren("*","Button",true,false).OfType<Button>().FirstOrDefault(b=>b.Name=="GuidanceEmployment");
                 hint="Studio jobs are listed here. Pick one that suits you.";break;
@@ -243,21 +244,15 @@ public partial class DebugMain
             var s=_state.Series.Last();_presentation.Guidance.Project=s.Id;_dirty=true;ScanEvents();Navigate("Series details",s.Id);RefreshGuidance();
         });
     }
-    private void AlphaSettings(Control parent)
+    private void AlphaSettings(Control parent,bool career=true)
     {
         var dark=new CheckBox{Text="Dark mode",ButtonPressed=_darkMode};parent.AddChild(dark);dark.Toggled+=SetDarkMode;
         Words(parent,"Controls: WASD or middle drag to pan · wheel to zoom · right drag to rotate. Space pauses/resumes; 1 slows down; 2 speeds up. Shortcuts stay off while typing or in dialogs.",14);
-        var guidance=new CheckBox{Text="Helper-Chan's phone pops up for new messages",ButtonPressed=_presentation.Guidance.Visible};parent.AddChild(guidance);guidance.Toggled+=SetGuidanceVisible;
-        foreach(var (label,read,write) in new (string,Func<double>,Action<double>)[]{
-            ("Music · 0 mutes",()=>_presentation.MusicVolume,v=>_presentation.MusicVolume=v),
-            ("Office ambience · 0 mutes",()=>_presentation.AmbienceVolume,v=>_presentation.AmbienceVolume=v),
-            ("Sound effects · 0 mutes",()=>_presentation.EffectsVolume,v=>_presentation.EffectsVolume=v)})
-        {
-            Words(parent,label);
-            var slider=new HSlider{MinValue=0,MaxValue=1,Step=.05,Value=read()};parent.AddChild(slider);
-            slider.ValueChanged+=v=>write(v);
-        }
-        Words(parent,"Sounds stay natural at every speed. Office ambience pauses in menus, where the title music plays. Everything pauses when the window is unfocused.",14);
+        if(career){var guidance=new CheckBox{Text="Helper-Chan's phone pops up for new messages",ButtonPressed=_presentation.Guidance.Visible};parent.AddChild(guidance);guidance.Toggled+=SetGuidanceVisible;}
+        AudioSliders(parent);
+        var unfocused=new CheckBox{Text="Play sound even while unfocused",ButtonPressed=_audioSettings.PlayWhileUnfocused};parent.AddChild(unfocused);
+        unfocused.Toggled+=on=>{_audioSettings.PlayWhileUnfocused=on;SaveAudioSettings();};
+        Words(parent,"These settings apply to every career on this computer. Office ambience pauses in menus.",14);
     }
     private void AlphaPrintingPage()
     {
@@ -316,11 +311,12 @@ public partial class DebugMain
         // Capture the current view before replacing the menu; attachments remain opt-in.
         if(_reportScreen is null)CaptureReportScreen();
         byte[]? picture=_reportScreen;
-        Pause();_inMenu=true;_menu.Show();Empty(_menuContent);Words(_menuContent,"Report a problem",30);
+        OpenMenuPanel();Empty(_menuContent);Words(_menuContent,"Report a problem",30);
         Words(_menuContent,"Write what happened and what you expected. This tool only saves a local file for you to review and share manually.");
         var note=new TextEdit{CustomMinimumSize=new(0,150),PlaceholderText="What were you doing? What went wrong?"};_menuContent.AddChild(note);
         var screenshot=new CheckBox{Text="Attach this screen",Disabled=picture is null};_menuContent.AddChild(screenshot);
         var save=new CheckBox{Text="Attach career (includes full history, entered text and custom artwork)"};_menuContent.AddChild(save);
+        if(TitleOpen){save.Disabled=true;save.TooltipText="No career is open on the title screen.";}
         var timeline=new CheckBox{Text="Attach session timeline",ButtonPressed=true};_menuContent.AddChild(timeline);
         var contents=Words(_menuContent,"");
         void Preview()=>contents.Text=$"Contents: your note, build {ProblemReport.Build}, format versions, game date, difficulty/Sandbox status and record counts"+(screenshot.ButtonPressed?", screenshot":"")+(save.ButtonPressed?", portable career":"")+(timeline.ButtonPressed?", session timeline":"")+". No automatic upload.";

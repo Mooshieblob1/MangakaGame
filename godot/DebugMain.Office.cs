@@ -167,6 +167,9 @@ public partial class DebugMain
         for(var i=0;i<_mainTabs.GetTabCount();i++)_mainTabs.SetTabDisabled(i,locked&&i!=officeTab);
         foreach(var button in _clockLabel.GetParent().FindChildren("*","BaseButton",true,false).OfType<BaseButton>())button.Disabled=locked;
         if(locked)_mainTabs.CurrentTab=officeTab;
+        // The rail and speed buttons refuse while furnishing, so they are locked rather than left to toggle (finding B7).
+        foreach(var button in _navigation.Values.Concat(_speedButtons.Values))button.Disabled=locked;
+        if(!locked&&_managementReady){RefreshNavigation();RefreshSpeedFeedback(false);}
     }
     private void EndOfficeEditor()
     {

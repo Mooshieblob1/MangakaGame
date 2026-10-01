@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using MangakaSim;
 
 namespace MangakaGame;
 
@@ -10,10 +11,15 @@ public partial class PhoneFrame : MarginContainer
     public bool Dark { get; private set; }
     public float TextScale { get; private set; } = 1;
     public static readonly Color LcdScreen=new("b9c9a0"),LcdText=new("1f2a14"),LcdLine=new("7d8d66");
-    public Color ScreenColor=>Modern?(Dark?new Color("2c3038"):new Color("e6e8ec")):LcdScreen;
-    public Color TextColor=>Modern?(Dark?new Color("e3ecee"):new Color("1d2330")):LcdText;
-    public Color BubbleColor=>Modern?(Dark?new Color("3a4252"):Colors.White):new Color("aebe93");
-    public Color BubbleEdge=>Modern?(Dark?new Color("4c566a"):new Color("cfd4dc")):LcdLine;
+    // The period PHS keeps its LCD; the smartphone's screen follows the logo palette (spec 2026-09-29).
+    public static Color ModernScreen(bool dark)=>new(BrandPalette.For(dark).Card);
+    public static Color ModernText(bool dark)=>new(BrandPalette.For(dark).Text);
+    public static Color ModernBubble(bool dark)=>new(BrandPalette.For(dark).Hover);
+    public static Color ModernEdge(bool dark)=>new(BrandPalette.For(dark).Outline);
+    public Color ScreenColor=>Modern?ModernScreen(Dark):LcdScreen;
+    public Color TextColor=>Modern?ModernText(Dark):LcdText;
+    public Color BubbleColor=>Modern?ModernBubble(Dark):new Color("aebe93");
+    public Color BubbleEdge=>Modern?ModernEdge(Dark):LcdLine;
 
     public void Configure(bool modern,bool dark,float scale)
     {
@@ -78,7 +84,7 @@ public partial class PhoneIcon : Button
         box.BorderColor=new Color("8a939c");box.SetBorderWidthAll(2);
         if(!Modern)DrawRect(new Rect2(body.End.X-9*s,body.Position.Y-8*s,4*s,10*s),new Color("30363b"));
         DrawStyleBox(box,body);
-        var screen=new StyleBoxFlat{BgColor=Modern?new Color("85d8ca"):PhoneFrame.LcdScreen};screen.SetCornerRadiusAll((int)(3*s));
+        var screen=new StyleBoxFlat{BgColor=Modern?new Color(BrandPalette.Mint):PhoneFrame.LcdScreen};screen.SetCornerRadiusAll((int)(3*s));
         DrawStyleBox(screen,new Rect2(body.Position.X+4*s,body.Position.Y+6*s,body.Size.X-8*s,Modern?body.Size.Y-14*s:18*s));
         if(_unread<=0)return;
         var badge=new Vector2(body.End.X,body.Position.Y+2*s);var radius=10*s;

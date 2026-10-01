@@ -8,8 +8,10 @@ namespace MangakaGame;
 
 public partial class DebugMain
 {
-    private Color MutedInk=>new(_darkMode?"adbecd":"536568");
-    private Color OutlineInk=>new(_darkMode?"3b5066":"c6d0ce");
+    private Color MutedInk=>new(Brand.Muted);
+    private Color OutlineInk=>new(Brand.Outline);
+    private SlabStyleBox SlabStyle(string face,string @base,float depth,float padX,float padY)=>
+        SlabStyleBox.Create(new Color(face),new Color(@base),new Color(BrandPalette.Ink),depth,padX,padY);
 
     private void PolishTheme(Theme theme)
     {
@@ -19,26 +21,41 @@ public partial class DebugMain
             var style=Surface(color,padding);style.ContentMarginLeft=style.ContentMarginRight=14;
             style.BorderColor=OutlineInk;style.SetBorderWidthAll(1);return style;
         }
-        foreach(var kind in new[]{"Button","OptionButton","LineEdit","TextEdit"})
+        // Buttons are logo slabs (spec 2026-09-29): quiet face normally, mint when pressed or ticked; text fields stay flat.
+        var slabY=_presentation.CompactUi?5f:8f;
+        foreach(var kind in new[]{"Button","OptionButton"})
         {
-            theme.SetStylebox("normal",kind,ControlSurface(Paper));
-            theme.SetStylebox("hover",kind,ControlSurface(Hover));
-            theme.SetStylebox("pressed",kind,ControlSurface(SelectedSurface));
-            theme.SetStylebox("disabled",kind,ControlSurface(Wash));
+            theme.SetStylebox("normal",kind,SlabStyle(Brand.QuietFace,Brand.QuietBase,4,14,slabY));
+            theme.SetStylebox("hover",kind,SlabStyle(Brand.Pressed,Brand.QuietBase,4,14,slabY));
+            theme.SetStylebox("pressed",kind,SlabStyle(BrandPalette.Mint,BrandPalette.MintBase,1,14,slabY));
+            theme.SetStylebox("hover_pressed",kind,SlabStyle(BrandPalette.MintLit,BrandPalette.MintBase,1,14,slabY));
+            theme.SetStylebox("disabled",kind,SlabStyle(Brand.Wash,Brand.QuietBase,4,14,slabY));
+            theme.SetColor("font_hover_color",kind,Ink);
+            theme.SetColor("font_pressed_color",kind,new Color(BrandPalette.Ink));theme.SetColor("font_hover_pressed_color",kind,new Color(BrandPalette.Ink));
             theme.SetColor("font_disabled_color",kind,MutedInk);
-            theme.SetColor("font_placeholder_color",kind,MutedInk);
+        }
+        // Check boxes inherit the Button slabs, so a ticked one sits on mint and needs the logo's ink too (final review).
+        foreach(var kind in new[]{"CheckBox","CheckButton"})
+        {theme.SetColor("font_pressed_color",kind,new Color(BrandPalette.Ink));theme.SetColor("font_hover_pressed_color",kind,new Color(BrandPalette.Ink));}
+        foreach(var kind in new[]{"LineEdit","TextEdit"})
+        {
+            theme.SetStylebox("normal",kind,ControlSurface(Paper));theme.SetStylebox("hover",kind,ControlSurface(Hover));
+            theme.SetStylebox("disabled",kind,ControlSurface(Wash));
+            theme.SetColor("font_disabled_color",kind,MutedInk);theme.SetColor("font_placeholder_color",kind,MutedInk);
         }
         var card=Surface(CardSurface,_presentation.CompactUi?10:16);card.BorderColor=OutlineInk;card.SetBorderWidthAll(1);
         theme.SetStylebox("panel","StudioCard",card);
-        var primary=new Color(_darkMode?"365fa0":"315f9b");
-        foreach(var (state,color) in new[]{("normal",primary),("hover",primary.Lightened(.13f)),("pressed",primary.Darkened(.12f))})
-            theme.SetStylebox(state,"PrimaryAction",ControlSurface(color));
-        foreach(var state in new[]{"font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"})theme.SetColor(state,"PrimaryAction",Colors.White);
+        // Main actions are gold slabs with the logo's ink.
+        foreach(var (state,face,depth) in new[]{("normal",BrandPalette.Gold,4f),("hover",BrandPalette.GoldLit,4f),("pressed",BrandPalette.Gold,1f),("hover_pressed",BrandPalette.GoldLit,1f)})
+            theme.SetStylebox(state,"PrimaryAction",SlabStyle(face,BrandPalette.GoldBase,depth,14,slabY));
+        foreach(var state in new[]{"font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"})theme.SetColor(state,"PrimaryAction",new Color(BrandPalette.Ink));
         theme.SetTypeVariation("QuietLabel","Label");theme.SetColor("font_color","QuietLabel",MutedInk);
         theme.SetTypeVariation("SectionLabel","Label");theme.SetColor("font_color","SectionLabel",Accent);
         theme.SetTypeVariation("NavigationButton","Button");
         theme.SetStylebox("normal","NavigationButton",Surface(new Color(0,0,0,0),12));
-        theme.SetStylebox("pressed","NavigationButton",ControlSurface(SelectedSurface));
+        theme.SetStylebox("pressed","NavigationButton",SlabStyle(BrandPalette.Gold,BrandPalette.GoldBase,3,12,6)); // the selected rail item
+        theme.SetStylebox("hover_pressed","NavigationButton",SlabStyle(BrandPalette.GoldLit,BrandPalette.GoldBase,3,12,6));
+        theme.SetStylebox("hover","NavigationButton",Surface(Hover,12));
         theme.SetConstant("h_separation","GridContainer",_presentation.CompactUi?8:14);
         theme.SetConstant("v_separation","GridContainer",_presentation.CompactUi?8:14);
         PolishHeaderTheme(theme);
@@ -55,14 +72,16 @@ public partial class DebugMain
         foreach(var (kind,basis) in new[]{("HeaderButton","Button"),("HeaderOption","OptionButton")})
         {
             theme.SetTypeVariation(kind,basis);
-            foreach(var (state,color) in new[]{("normal",Paper),("hover",Hover),("pressed",SelectedSurface),("disabled",Wash)})
-                theme.SetStylebox(state,kind,CompactSurface(color));
+            theme.SetStylebox("normal",kind,SlabStyle(Brand.QuietFace,Brand.QuietBase,3,10,3));
+            theme.SetStylebox("hover",kind,SlabStyle(Brand.Pressed,Brand.QuietBase,3,10,3));
+            theme.SetStylebox("pressed",kind,SlabStyle(BrandPalette.Mint,BrandPalette.MintBase,1,10,3));
+            theme.SetStylebox("hover_pressed",kind,SlabStyle(BrandPalette.MintLit,BrandPalette.MintBase,1,10,3)); // else the larger Button slab is inherited
+            theme.SetStylebox("disabled",kind,SlabStyle(Brand.Wash,Brand.QuietBase,3,10,3));
         }
         theme.SetTypeVariation("HeaderActiveButton","HeaderButton");
-        var active=new Color(_darkMode?"365fa0":"315f9b");
-        foreach(var (state,color) in new[]{("normal",active),("hover",active.Lightened(.13f)),("pressed",active.Darkened(.12f))})
-            theme.SetStylebox(state,"HeaderActiveButton",CompactSurface(color));
-        foreach(var state in new[]{"font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"})theme.SetColor(state,"HeaderActiveButton",Colors.White);
+        foreach(var (state,face,depth) in new[]{("normal",BrandPalette.Gold,3f),("hover",BrandPalette.GoldLit,3f),("pressed",BrandPalette.Gold,1f),("hover_pressed",BrandPalette.GoldLit,1f)})
+            theme.SetStylebox(state,"HeaderActiveButton",SlabStyle(face,BrandPalette.GoldBase,depth,10,3));
+        foreach(var state in new[]{"font_color","font_hover_color","font_pressed_color","font_hover_pressed_color","font_focus_color"})theme.SetColor(state,"HeaderActiveButton",new Color(BrandPalette.Ink));
         var funds=CompactSurface(CardSurface);funds.ContentMarginLeft=funds.ContentMarginRight=8;
         theme.SetTypeVariation("HeaderFunds","PanelContainer");theme.SetStylebox("panel","HeaderFunds",funds);
         var panel=(StyleBoxFlat)theme.GetStylebox("panel","FloatingPanel").Duplicate();
@@ -102,7 +121,7 @@ public partial class DebugMain
         QuietWords(copy,$"{entry.Time.ToString(fullDate?"d MMM yyyy · HH:mm":"d MMM · HH:mm")} · {Humanize(entry.Kind.ToString())}",12);
         var amount=Words(row,$"{(entry.Amount<0?"−":"+")}¥{Math.Abs((decimal)entry.Amount):N0}",18);
         amount.HorizontalAlignment=HorizontalAlignment.Right;amount.SizeFlagsVertical=SizeFlags.ShrinkCenter;
-        amount.AddThemeColorOverride("font_color",new Color(entry.Amount<0?(_darkMode?"ff929b":"b52035"):(_darkMode?"78e6a2":"16703a")));
+        amount.AddThemeColorOverride("font_color",entry.Amount<0?LossColour:GainColour);
         // Theme changes recolor transaction rows without rebuilding the page or losing scroll.
         amount.SetMeta("cash_sign",entry.Amount<0?-1:1);
         parent.AddChild(new HSeparator());

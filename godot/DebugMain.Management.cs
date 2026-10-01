@@ -27,6 +27,8 @@ public partial class DebugMain
     private Label _viewOfficeHeading=null!;
     private readonly Stack<(string Page,int Detail,int Scope,int Scroll,bool Sidebar,int Series,int Person)> _back=new();
     private bool _managementReady,_inMenu=true,_expanded,_storyOpen;
+    private bool _menuCompact;
+    private Label? _menuNotice;
     private DateTime _lastAutosave=GameClock.Start.Date;
     private int _lastUiEvents=-1;
     private double _storyResume;
@@ -37,9 +39,29 @@ public partial class DebugMain
         var box=new StyleBoxFlat{BgColor=color,CornerRadiusTopLeft=8,CornerRadiusTopRight=8,CornerRadiusBottomLeft=8,CornerRadiusBottomRight=8};
         box.ContentMarginLeft=box.ContentMarginRight=box.ContentMarginTop=box.ContentMarginBottom=padding;return box;
     }
+    // Lilita One for buttons and headings (spec 2026-09-29, Q46); body text and numbers keep the reading font.
+    private string _fontPath="res://Assets/Fonts/LilitaOne-Regular.ttf";
+    private static Font? HeadingFont;
+    private Font? LoadHeadingFont()
+    {
+        if(ResourceLoader.Exists(_fontPath)&&ResourceLoader.Load<Font>(_fontPath) is {} font)
+        {
+            // Lilita One lacks symbols such as the pause bars and arrows; the reading font supplies them (final review).
+            var fallbacks=font.Fallbacks;if(!fallbacks.Contains(ThemeDB.FallbackFont)){fallbacks.Add(ThemeDB.FallbackFont);font.Fallbacks=fallbacks;}
+            return font;
+        }
+        LogTimeline("error heading font missing: "+_fontPath);return null;
+    }
     private Theme EditorialTheme()
     {
         var theme=new Theme{DefaultFontSize=16};
+        HeadingFont=LoadHeadingFont();
+        if(HeadingFont is not null)
+        {
+            theme.SetFont("font","Button",HeadingFont);theme.SetFont("font","TabContainer",HeadingFont);
+            // Drop-downs show values and check boxes read as options, so they keep the reading font.
+            foreach(var kind in new[]{"OptionButton","CheckBox","CheckButton"})theme.SetFont("font",kind,ThemeDB.FallbackFont);
+        }
         foreach(var kind in new[]{"Label","Button","OptionButton","LineEdit","TextEdit","RichTextLabel","CheckBox","Tree","ItemList","PopupMenu","TooltipLabel"})
         {theme.SetColor("font_color",kind,Ink);theme.SetColor("font_hover_color",kind,Accent);theme.SetColor("font_pressed_color",kind,Ink);theme.SetColor("font_hover_pressed_color",kind,Accent);theme.SetColor("font_focus_color",kind,Ink);theme.SetColor("font_disabled_color",kind,Ink.Darkened(.35f));theme.SetColor("font_placeholder_color",kind,Ink.Darkened(.3f));theme.SetColor("caret_color",kind,Ink);theme.SetColor("selection_color",kind,SelectedSurface);}
         foreach(var kind in new[]{"Button","OptionButton","LineEdit","TextEdit","Tree","ItemList"})
@@ -56,10 +78,11 @@ public partial class DebugMain
         theme.SetColor("default_color","RichTextLabel",Ink);
         foreach(var kind in new[]{"PopupMenu","TooltipPanel","Window","AcceptDialog"})theme.SetStylebox("panel",kind,Surface(Paper));
         theme.SetStylebox("hover","PopupMenu",Surface(Hover));
-        foreach(var state in new[]{"tab_selected","tab_unselected","tab_hovered"})theme.SetStylebox(state,"TabContainer",Surface(state=="tab_selected"?SelectedSurface:Wash,10));
-        theme.SetColor("font_selected_color","TabContainer",Ink);theme.SetColor("font_unselected_color","TabContainer",Ink);
+        theme.SetStylebox("tab_selected","TabContainer",SlabStyle(BrandPalette.Mint,BrandPalette.MintBase,3,12,4)); // where you are
+        theme.SetStylebox("tab_unselected","TabContainer",Surface(Wash,10));theme.SetStylebox("tab_hovered","TabContainer",Surface(Hover,10));
+        theme.SetColor("font_selected_color","TabContainer",new Color(BrandPalette.Ink));theme.SetColor("font_unselected_color","TabContainer",Ink);
         theme.SetTypeVariation("PrimaryAction","Button");theme.SetStylebox("normal","PrimaryAction",Surface(SelectedSurface));
-        var track=Surface(CardSurface,0);track.BorderColor=Ink.Darkened(.5f);track.SetBorderWidthAll(1);theme.SetStylebox("background","ProgressBar",track);theme.SetStylebox("fill","ProgressBar",Surface(Accent,0));
+        var track=Surface(CardSurface,0);track.BorderColor=Ink.Darkened(.5f);track.SetBorderWidthAll(1);theme.SetStylebox("background","ProgressBar",track);theme.SetStylebox("fill","ProgressBar",Surface(new Color(Brand.Progress),0));
         theme.SetColor("font_color","ProgressBar",Ink);theme.SetColor("font_outline_color","ProgressBar",Wash);theme.SetConstant("outline_size","ProgressBar",3);
         var spacing=_presentation.CompactUi?6:12;
         theme.SetConstant("separation","VBoxContainer",spacing);theme.SetConstant("separation","HBoxContainer",spacing);
@@ -81,8 +104,12 @@ public partial class DebugMain
     private static Label Words(Control parent,string text,int size=16)
     {
         var label=new Label{Text=text,AutowrapMode=TextServer.AutowrapMode.WordSmart,SizeFlagsHorizontal=SizeFlags.ExpandFill};label.SetMeta("base_font_size",size);parent.AddChild(label);
-        var root=parent.IsInsideTree()?parent.GetTree().Root.GetChildren().OfType<DebugMain>().FirstOrDefault():null;label.AddThemeFontSizeOverride("font_size",(int)(size*(root?._presentation.UiScale??1)));return label;
+        var root=parent.IsInsideTree()?parent.GetTree().Root.GetChildren().OfType<DebugMain>().FirstOrDefault():null;label.AddThemeFontSizeOverride("font_size",(int)(size*(root?._presentation.UiScale??1)));
+        if(size>=20&&HeadingFont is not null)label.AddThemeFontOverride("font",HeadingFont); // headings (20 px and above)
+        return label;
     }
+    // Numbers keep the reading font even at heading sizes (spec 2026-09-29).
+    private static Label Figure(Label label){label.RemoveThemeFontOverride("font");return label;}
     private void ApplyTextScale()
     {
         Theme.DefaultFontSize=(int)(16*_presentation.UiScale);
@@ -103,7 +130,7 @@ public partial class DebugMain
         var railPanel=new PanelContainer{ThemeTypeVariation="FloatingPanel"};layout.AddChild(railPanel);
         var railScroll=new ScrollContainer{HorizontalScrollMode=ScrollContainer.ScrollMode.Disabled};railPanel.AddChild(railScroll);
         _rail=new VBoxContainer{CustomMinimumSize=new(148,0)};railScroll.AddChild(_rail);
-        Words(_rail,"MANGAKA\nSTUDIO",21).AutowrapMode=TextServer.AutowrapMode.Off;
+        Words(_rail,"MANGAKA\nDAYS",21).AutowrapMode=TextServer.AutowrapMode.Off;
         Words(_rail,"マンガスタジオ",12);
         _shell=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};_shell.AddThemeConstantOverride("separation",4);layout.AddChild(_shell);
         var header=new HFlowContainer();_managementHeader=header;_shell.AddChild(header);header.AddThemeConstantOverride("v_separation",4);
@@ -115,7 +142,7 @@ public partial class DebugMain
         foreach(var speed in new[]{0,1,2,4,8,32}){var s=speed;var button=HeaderButton(header,s==0?"Ⅱ":$"{s}×",()=>{if(GameKeysAvailable()){if(s==0)TogglePause();else ChooseSpeed(s);}});button.ToggleMode=true;_speedButtons[s]=button;button.TooltipText="Space: pause / resume · 1: slower · 2: faster";}
         HeaderButton(header,"Save",()=>OpenSaveMenu());
         _overnightSpeedBadge=Words(header,"▶▶ 32× NIGHT",14);_overnightSpeedBadge.SizeFlagsVertical=SizeFlags.ShrinkCenter;_overnightSpeedBadge.Hide();
-        _overnightSpeedBadge.AddThemeColorOverride("font_color",new Color("8fe4d5"));
+        _overnightSpeedBadge.ThemeTypeVariation="SectionLabel";
         _navigation["Office"]=ActionButton(_rail,"⌂  Office",ShowOffice);
         foreach(var (page,icon) in new[]{("Inbox","✉"),("Series","▤"),("Books","▥"),("Staff","♙"),("Finances","¥"),("Studios","▦"),("Industry","◇"),("Help","?")}){var name=page;_navigation[name]=ActionButton(_rail,icon+"  "+name,()=>Navigate(name));}
         foreach(var button in _navigation.Values){button.ToggleMode=true;button.ThemeTypeVariation="NavigationButton";button.Alignment=HorizontalAlignment.Left;}
@@ -146,6 +173,8 @@ public partial class DebugMain
         ActionButton(reportNav,"← Back",GoBack);_workspaceTitle=Words(reportNav,"Production",24);ActionButton(reportNav,"Office",ShowOffice);
         _workspaceActions=new HFlowContainer();reportBox.AddChild(_workspaceActions);
         _mainTabs.Reparent(reportBox);_mainTabs.TabsVisible=false;_report.Hide();
+        // A workspace shows notices under its own form, so the bottom bar steps aside rather than repeat them (finding B7).
+        _report.VisibilityChanged+=()=>_notice.Visible=!_report.Visible;
         var production=(Control)_mainTabs.GetChild(0);_mainTabs.RemoveChild(production);
         var productionScroll=new ScrollContainer{Name="Production"};_mainTabs.AddChild(productionScroll);_mainTabs.MoveChild(productionScroll,0);productionScroll.AddChild(production);
         production.SizeFlagsHorizontal=production.SizeFlagsVertical=SizeFlags.ExpandFill;_mainTabs.CurrentTab=0;
@@ -154,7 +183,10 @@ public partial class DebugMain
         _log.Hide();
         var shade=new ColorRect{Color=new Color(0,0,0,.30f)};shade.SetAnchorsPreset(LayoutPreset.FullRect);AddChild(shade);
         _menu=new PanelContainer();_menu.SetAnchorsPreset(LayoutPreset.FullRect);_menu.OffsetLeft=180;_menu.OffsetTop=90;_menu.OffsetRight=-180;_menu.OffsetBottom=-70;AddChild(_menu);
-        var menuScroll=new ScrollContainer{HorizontalScrollMode=ScrollContainer.ScrollMode.Disabled};_menu.AddChild(menuScroll);_menuContent=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};menuScroll.AddChild(_menuContent);
+        // The notice sits outside the rebuilt page, so a failed save or load on any sub-page is seen (final review).
+        var menuBox=new VBoxContainer();_menu.AddChild(menuBox);_menuNotice=Words(menuBox,"",15);_menuNotice.Hide();
+        var menuScroll=new ScrollContainer{HorizontalScrollMode=ScrollContainer.ScrollMode.Disabled,SizeFlagsVertical=SizeFlags.ExpandFill};menuBox.AddChild(menuScroll);_menuContent=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};menuScroll.AddChild(_menuContent);
+        _pauseMenuContent=_menuContent;
         _helperPopup=new PanelContainer();_helperPopup.SetAnchorsPreset(LayoutPreset.Center);_helperPopup.Position=new(-420,-260);_helperPopup.Size=new(840,520);AddChild(_helperPopup);_helperPopup.Hide();
         _menu.VisibilityChanged+=()=>shade.Visible=_menu.Visible||_helperPopup.Visible;
         _helperPopup.VisibilityChanged+=()=>{shade.Visible=_menu.Visible||_helperPopup.Visible;_dirty=true;};
@@ -162,11 +194,24 @@ public partial class DebugMain
         BuildFloatingOffice(margin,railPanel,body,shade);
         _side.VisibilityChanged+=RefreshNavigation;_report.VisibilityChanged+=RefreshNavigation;
         GetViewport().SizeChanged+=ResizeGui;_managementReady=true;ResizeGui();
-        _viewLocation=_state.Protagonist.Employment!.LocationId;RefreshManagement();ShowMenu();
+        GetTree().AutoAcceptQuit=false; // the close button keeps a safety save first (HandleCloseRequest)
+        _viewLocation=_state.Protagonist.Employment!.LocationId;RefreshManagement();OpenTitle();
+        // A real launch starts black behind the start-up screens; the title screen fades up when they end.
+        BuildCurtain(startBlack:!SmokeRun);
+        if(!SmokeRun)BeginStartup(!_audioSettings.SetupDone||OS.GetCmdlineUserArgs().Contains("--first-launch"));
     }
-    private void Notify(string text){if(_managementReady){_notice.Text=text;_workbenchNotice.Text=text;_workbenchNotice.Show();}else LogLine(text);}
+    private void Notify(string text)
+    {
+        if(!_managementReady){LogLine(text);return;}
+        _notice.Text=text;_workbenchNotice.Text=text;_workbenchNotice.Show();
+        if(_titleNotice is not null){_titleNotice.Text=text;_titleNotice.Visible=text.Length>0;Callable.From(LayoutTitle).CallDeferred();}
+        if(_titlePageNotice is not null&&_titlePage is {Visible:true}){_titlePageNotice.Text=text;_titlePageNotice.Visible=text.Length>0;}
+        if(_menu.Visible&&_menuNotice is not null){_menuNotice.Text=text;_menuNotice.Visible=text.Length>0;}
+    }
     public override void _UnhandledKeyInput(InputEvent ev)
     {
+        if(_startup is not null||Fading)return; // keys belong to the start-up screens, and wait for fades
+        if(TitleOpen){if(ev is InputEventKey{Keycode:Key.Escape})GetViewport().SetInputAsHandled();return;} // nothing to go back to
         if(!_managementReady||ev is not InputEventKey{Pressed:true,Echo:false,Keycode:Key.Escape})return;
         if(_storyOpen){Notify("Choose an answer, Read later or Skip to close this conversation.");return;}
         if(_helperPopup.Visible)_helperPopup.Hide();

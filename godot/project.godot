@@ -6,8 +6,10 @@ config_version=5
 
 [application]
 
-config/name="MangakaGame"
+config/name="Mangaka Days"
 run/main_scene="res://ManagementMain.tscn"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="Godot/app_userdata/MangakaGame"
 config/features=PackedStringArray("4.7", "C#", "Forward Plus")
 
 [display]

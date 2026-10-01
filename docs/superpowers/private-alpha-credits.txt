@@ -1,11 +1,18 @@
-Mangaka Studio — private alpha 0.8.0-private-alpha.9
+Mangaka Days — private alpha 0.8.0-private-alpha.9
 
 Game direction and Helper-Chan references supplied by the project owner.
 Helper-Chan portraits and the desk illustration use the supplied references;
 expression variants and manga showcase atlases were generated for this project.
 Customizable chibi employees, furniture and environments use original procedural geometry. Fixed Helper-Chan and parent models were generated and rigged with Tripo from the owner-supplied references and generated chibi adaptations. Their animation clips were authored locally for this project.
 Room tone, pencil activity and soft interface effects are original procedural
-audio authored for this project. No music or voice recordings are bundled.
+audio authored for this project.
+Music: AI-generated with Suno (Pro plan, which grants commercial use) from
+prompts written for this project. No voice recordings are bundled.
+Logo and title screen art: AI-generated with NovelAI Diffusion V5 from prompts by
+the project owner.
+Interface font: Copyright (c) 2011 Juan Montoreano (juan@remolacha.biz), with
+Reserved Font Name Lilita. Lilita One, used under the SIL Open Font License 1.1
+(see OFL-LilitaOne.txt).
 
 Built with Godot Engine and Microsoft .NET. See GODOT-LICENSES.txt for the engine's
 MIT license and full bundled third-party notices, and the .NET runtime's LICENSE

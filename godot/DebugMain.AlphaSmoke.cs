@@ -83,7 +83,7 @@ public partial class DebugMain
             Check(_state.ToJson()==before,"Reporting leaves simulation untouched");
             _menuContent.GetChildren().OfType<Button>().Single(b=>b.Text=="Cancel").EmitSignal(BaseButton.SignalName.Pressed);
             Press("Settings");await SettleUi();Check(_menuContent.FindChildren("*","HSlider",true,false).OfType<HSlider>().Count()>=3,"Volume controls and text scale present");
-            _menuContent.GetChildren().OfType<Button>().Single(b=>b.Text=="Back").EmitSignal(BaseButton.SignalName.Pressed);Press("Return to this studio");
+            _menuContent.GetChildren().OfType<Button>().Single(b=>b.Text=="Back").EmitSignal(BaseButton.SignalName.Pressed);Press("Resume");
             var activity=_audio.ActivityCount;var effects=_audio.EffectCount;
             for(int frame=0;frame<600;frame++){_audio.Update(1d/60,true,true,.35,.6);_audio.Cue();}
             Check(_audio.ActivityCount-activity<=2&&_audio.EffectCount-effects<=40,"Audio budgets use real time and bounded voices");

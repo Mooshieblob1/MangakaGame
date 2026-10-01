@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using MangakaSim;
 
@@ -15,6 +16,12 @@ public partial class DebugMain
         try
         {
             await SettleUi();
+            // Every real track in Assets/Music is found by name and loads (also covers renamed files in exports).
+            var real = MusicPlan.Discover(DirAccess.DirExistsAbsolute(MusicPlayer.Folder) ? DirAccess.GetFilesAt(MusicPlayer.Folder) : [], MusicPlayer.Folder);
+            var unloadable = real.Where(p => ResourceLoader.Load<AudioStream>(p.Value) is null).Select(p => p.Key).ToList();
+            Check(unloadable.Count == 0, $"Every music file in Assets/Music loads ({real.Count} found{(unloadable.Count > 0 ? "; failed: " + string.Join(", ", unloadable) : "")})");
+            GD.Print($"MUSIC TRACKS: {string.Join(", ", real.Keys.OrderBy(k => k))}");
+
             var failures = new List<string>(); _music.Failed = failures.Add;
             var day = new MusicContext(false, new DateTime(1996, 4, 1, 10, 0, 0), false, false);
 
@@ -56,12 +63,12 @@ public partial class DebugMain
             _music.Update(.1, day with { InMenu = true }, .5, true);
             Check(_music.Current == "title-01", "The main menu plays the title track");
 
-            // Final review: saving from the header keeps the career music; only the main menu plays the title.
-            _managementReady=true;OpenSaveMenu();await SettleUi();
+            // Final review, updated for the title screen: only the title screen plays the title track.
+            CloseTitle();_managementReady=true;OpenSaveMenu();await SettleUi();
             Check(!MusicNow().InMenu, "The Save screen keeps the career music");
-            ShowMenu();await SettleUi();
-            Check(MusicNow().InMenu, "The main menu counts as a menu for the music");
-            _menu.Hide();_inMenu=false;
+            _menu.Hide();_inMenu=false;OpenTitle();await SettleUi();
+            Check(MusicNow().InMenu, "The title screen plays the title music");
+            CloseTitle();
 
             GD.Print($"MUSIC SMOKE PASSED: {_smokeChecks} checks.");
             var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => tree.Quit(); QueueFree();

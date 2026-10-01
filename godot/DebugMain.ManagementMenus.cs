@@ -11,31 +11,31 @@ public partial class DebugMain
 {
     private void ShowMenu()
     {
+        if(TitleOpen){ShowTitleMenu();return;}
+        ShowPauseMenu();
+    }
+    // The in-game menu (Q40): a small panel over the paused game. New careers start from the title screen.
+    private void ShowPauseMenu()
+    {
         if(OfficeEditing){Notify("Apply or discard furniture changes before opening the menu.");return;}
         if(!_inMenu)CaptureReportScreen();
-        Pause();_inMenu=true;_titleMenu=true;_menu.Show();Empty(_menuContent);
-        var hero=StudioCard(_menuContent,"");var heading=new HBoxContainer();hero.AddChild(heading);
-        heading.AddChild(HelperPortrait(112,126));var title=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};heading.AddChild(title);
-        Words(title,"MANGAKA STUDIO",36);Words(title,"A career told one page at a time.",20);
-        Words(title,"TOKYO · 1996",14);
-        var cards=new HFlowContainer();_menuContent.AddChild(cards);
-        var play=StudioCard(cards,"YOUR NEXT PAGE");play.GetParent<Control>().CustomMinimumSize=new(370,0);
-        ActionButton(play,"Return to this studio",()=>{_inMenu=false;_menu.Hide();}).ThemeTypeVariation="PrimaryAction";
-        ActionButton(play,"Continue latest career",()=>
-        {
-            string? failure=null;
-            foreach(var save in _careers.List())try{LoadCareer(save);if(failure is not null)Notify("Loaded an earlier valid snapshot. The latest could not be read: "+failure);return;}
-                catch(Exception ex)when(ex is System.IO.IOException or System.IO.InvalidDataException or JsonException){failure=ex.Message;}
-            Notify(failure??"No saved careers yet. Choose New Career to begin.");
-        });
-        ActionButton(play,"New Career",NewCareerMenu);ActionButton(play,"Load Career",LoadCareerMenu);
-        var more=StudioCard(cards,"MAKE YOURSELF AT HOME","Begin at your parents' house, with a drawing desk and a dream.");more.GetParent<Control>().CustomMinimumSize=new(300,0);
-        ActionButton(more,"Settings",SettingsMenu);ActionButton(more,"Report a problem",ReportProblem);ActionButton(more,"Quit",()=>{_timeline?.End();GetTree().Quit();});
+        OpenMenuPanel();_menuCompact=true;ResizeGui();Empty(_menuContent);
+        Words(_menuContent,"Paused",30);
+        Words(_menuContent,$"{_state.ControlledBusiness.Name} · {_state.Clock.Now:d MMM yyyy}",15);
+        // The pause menu frames the game like the title screen, so it uses the same sticker slabs (spec 2026-09-29).
+        var resume=StickerButton(_menuContent,"Resume",()=>{_menu.Hide();_inMenu=false;},true);resume.ThemeTypeVariation="PrimaryAction";
+        StickerButton(_menuContent,"Save",OpenSaveMenu,false);
+        StickerButton(_menuContent,"Load Career",LoadCareerMenu,false);
+        StickerButton(_menuContent,"Settings",SettingsMenu,false);
+        StickerButton(_menuContent,"Report a problem",ReportProblem,false);
+        StickerButton(_menuContent,"Quit to title",QuitToTitle,false);
+        foreach(var slab in _menuContent.FindChildren("*","Button",true,false).OfType<Button>())slab.CustomMinimumSize=new(300*(float)_presentation.UiScale,0);
         Words(_menuContent,"Private alpha · "+ProblemReport.Build,13);
+        FocusLater(resume);
     }
     private void NewCareerMenu()
     {
-        Empty(_menuContent);Words(_menuContent,"A new career",30);
+        OpenMenuPanel();Empty(_menuContent);Words(_menuContent,"A new career",30);
         Words(_menuContent,"1 April 1996 · A rent-free room at your parents' home",16);
         var sections=MenuSections("Your mangaka","Career rules");
         var character=new HFlowContainer();sections[0].AddChild(character);
@@ -66,7 +66,7 @@ public partial class DebugMain
         Words(world,"When other lead creators leave",14);var rights=new OptionButton();rights.AddItem("Studio keeps future rights unless released");rights.AddItem("Creator keeps future rights");world.AddChild(rights);
         var difficulty = DifficultyControls(sections[1], true);
         var actions=new HFlowContainer();_menuContent.AddChild(actions);
-        var begin=ActionButton(actions,"Begin career",()=>
+        var begin=ActionButton(actions,"Begin career",()=>EnterCareer(()=>
         {
             _state=GameState.NewGame((int)seed.Value,rights.Selected==0?OwnershipMode.StudioRetention:OwnershipMode.CreatorRetention,name.Text);
             _state.Apply(difficulty());
@@ -74,13 +74,15 @@ public partial class DebugMain
             _presentation=new(){Page="Office"};_careerId=Guid.NewGuid().ToString("N");
             LogTimeline($"new-career {CareerCode} {_state.Progression.Difficulty} sandbox={_state.Progression.EverSandbox}");
             ResetManagementSession();SaveCareer("The first page");ShowOffice();
-        });begin.ThemeTypeVariation="PrimaryAction";
+        }));begin.ThemeTypeVariation="PrimaryAction";
         name.TextChanged+=text=>{begin.Disabled=text.Trim().Any(char.IsControl);name.TooltipText=begin.Disabled?"Use a name without control characters.":"Up to 40 characters. Leave blank to use Aki.";};
         ActionButton(actions,"Back",ShowMenu);
     }
     private void SettingsMenu()
     {
-        Empty(_menuContent);Words(_menuContent,"Settings",30);
+        OpenMenuPanel();Empty(_menuContent);Words(_menuContent,"Settings",30);
+        // On the title screen no career is loaded, so only this computer's settings show (spec 2026-09-28).
+        if(TitleOpen){var computer=StudioCard(_menuContent,"DISPLAY & SOUND");AlphaSettings(computer,career:false);ActionButton(_menuContent,"Back",ShowMenu);return;}
         var sections=MenuSections("Display & sound","Helper & pauses","Difficulty & Sandbox");
         var display=StudioCard(sections[0],"COMFORT & CONTROLS");AlphaSettings(display);
         var help=StudioCard(sections[1],"HELPER-CHAN","Important gameplay notices stay enabled independently of tutorials and stories.");
@@ -122,7 +124,7 @@ public partial class DebugMain
     private void OpenSaveMenu()
     {
         if(OfficeEditing){Notify("Finish your furniture changes before saving.");return;}
-        Pause();_inMenu=true;_titleMenu=false;_menu.Show();Empty(_menuContent);Words(_menuContent,"Keep this chapter of your career",30);
+        OpenMenuPanel();Empty(_menuContent);Words(_menuContent,"Keep this chapter of your career",30);
         var name=new LineEdit{Text=$"{_state.ControlledBusiness.Name} · {_state.Clock.Now:d MMM yyyy}",MaxLength=100};_menuContent.AddChild(name);
         ActionButton(_menuContent,"Save snapshot",()=>{SaveCareer(name.Text);_menu.Hide();_inMenu=false;});
         ActionButton(_menuContent,"Export portable career",()=>
@@ -144,13 +146,13 @@ public partial class DebugMain
     }
     private void LoadCareerMenu()
     {
-        Empty(_menuContent);Words(_menuContent,"Your careers",30);
-        ActionButton(_menuContent,"Import career or previous save",()=>ChooseFile("Import career",FileDialog.FileModeEnum.OpenFile,["*.mangaka ; Portable career","*.json ; Previous save"],path=>
+        OpenMenuPanel();Empty(_menuContent);Words(_menuContent,"Your careers",30);
+        ActionButton(_menuContent,"Import career or previous save",()=>ChooseFile("Import career",FileDialog.FileModeEnum.OpenFile,["*.mangaka ; Portable career","*.json ; Previous save"],path=>EnterCareer(()=>
         {
             if(path.EndsWith(".mangaka",StringComparison.OrdinalIgnoreCase)){LoadCareer(_careers.Import(System.IO.File.ReadAllBytes(path)));LogTimeline($"import {CareerCode}");}
             else{_state=GameState.ImportSupported(System.IO.File.ReadAllText(path));_careerId=Guid.NewGuid().ToString("N");_presentation=new();LogTimeline($"import {CareerCode}");ResetManagementSession();SaveCareer("Imported career");}
-        }));
-        foreach(var save in _careers.List().Take(80)){var entry=save;ActionButton(_menuContent,$"{save.Name}   ·   {save.GameDate:d MMM yyyy}   ·   {save.Studio}"+(save.Auto?"   [auto]":""),()=>LoadCareer(entry));}
+        })));
+        foreach(var save in _careers.List().Take(80)){var entry=save;ActionButton(_menuContent,$"{save.Name}   ·   {save.GameDate:d MMM yyyy}   ·   {save.Studio}"+(save.Auto?"   [auto]":""),()=>EnterSaved(entry));}
         // Saves this version cannot read are left untouched on disk and named here rather than hidden (T1.6).
         if(_careers.Unreadable is var unreadable and >0)
         {
@@ -160,15 +162,27 @@ public partial class DebugMain
         }
         ActionButton(_menuContent,"Back",ShowMenu);
     }
-    private void LoadCareer(CareerSaveInfo save)
+    private void LoadCareer(CareerSaveInfo save)=>ApplyCareer(save,_careers.Load(save));
+    // A chosen save is read before the safety save runs: keeping that save trims old autosaves, which could
+    // delete the very snapshot being loaded (final review).
+    private void EnterSaved(CareerSaveInfo save)
     {
-        var loaded=_careers.Load(save);_state=loaded.State;_presentation=loaded.View;_careerId=save.Career;LogTimeline($"load {CareerCode}");ResetManagementSession();
+        if(TitleOpen){EnterCareer(()=>LoadCareer(save));return;}
+        (GameState State,CareerPresentation View) loaded;
+        try{loaded=_careers.Load(save);}
+        catch(Exception ex)when(ex is System.IO.IOException or System.IO.InvalidDataException or JsonException){LogTimeline("error "+TimelineRedactor.Clean(ex.Message,_state));Notify(ex.Message);return;}
+        EnterCareer(()=>ApplyCareer(save,loaded));
+    }
+    private void ApplyCareer(CareerSaveInfo save,(GameState State,CareerPresentation View) loaded)
+    {
+        _state=loaded.State;_presentation=loaded.View;_careerId=save.Career;LogTimeline($"load {CareerCode}");ResetManagementSession();
         if(_presentation.Camera.Length>0)try{_homeOffice.RestorePreferences(JsonSerializer.Deserialize<OfficeViewPreferences>(_presentation.Camera)!);}catch(JsonException){Notify("The office view was reset.");}
         _officeView.Effect=_homeOffice.Effect;_officeEffect.Select(2-_homeOffice.Effect);
         if(_presentation.Artwork.Values.Any(hash=>!System.IO.File.Exists(_careers.AssetPath(_careerId,hash))))Notify("Some custom artwork is missing. Bundled artwork is shown until it is restored or reset.");
     }
     private void ResetManagementSession()
     {
+        CloseTitle(); // every way into a career (new, continue, load, import) passes through here
         _milestones=new JourneyMilestones(_state);_timelineLastMessage=_presentation.Guidance.Thread.LastOrDefault();
         CancelOvernight();
         _disclosureStates.Clear();

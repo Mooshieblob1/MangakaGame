@@ -7,7 +7,7 @@ Parts 5 and 6. Preparation:
 Testers are called A, B and C. No names or contact details go in this file.
 Returned reports stay out of git in `TestResults/fresh-player/`.
 
-Status: round 1 in progress. Tester A returned 2026-09-28; tester B pending.
+Status: round 1 returned. Tester A returned 2026-09-28; tester B returned 2026-10-01.
 
 ## Round 1 (alpha.12)
 
@@ -119,12 +119,75 @@ by more than one tester; deferred to Tier 2 with a reason.
 | A8 | Timeline cleaner garbles words containing a staff name ("cur[name]t") | A (report) | Timeline | Fixed (cheap, already a deferred minor) | Approved; fixed |
 | A9 | The tester's own career could not be loaded ("invalid publication slots"). A revised contest manuscript left its old draft looking like a waiting magazine chapter; once that title was serialized (23 Aug 1997), every later save was refused. Found by loading the returned career, not reported by the tester | A (career) | Replay of the career's command history | Always fixed (unloadable save) | Fixed; the tester's career now loads and plays on |
 
+### Tester B
+
+Returned 2026-10-01: questionnaire and own career report with timeline only (no
+career file, no screenshot), `TestResults/fresh-player/tester-B/`. Played
+alpha.12, which predates the title screen, the UI restyle and the tester A
+fixes. Not in the target audience: "Not my type of game" (would keep playing:
+2 of 5).
+
+- Hardware and screen: 1600x900 (questionnaire 11; laptop or desktop not
+  stated).
+- Sessions and total real time: about 1 h 26 min in two sessions (7 min, then
+  1 h 19 min). New Career to 21 Jun 1996, under three in-game months. Briefly
+  loaded the imported practice career at minute 4.
+- Real time to each T1.1 step (playing time from New Career):
+
+  | Step | Real time | Game date |
+  |---|---|---|
+  | First doujin completed | 0:19 | 6 Apr 1996 |
+  | First sale | 0:23 | 8 Apr 1996 |
+  | First pitch | 0:24 | 8 Apr 1996 |
+  | Pitch rejected | 0:34 | 25 Apr 1996 |
+  | First hire | 0:56 | 28 May 1996 |
+  | Serialization, setback, growing readership | not reached | |
+
+- From the timeline: four pitch attempts during the rejecting magazine's
+  cooldown (each an error), three "only Paused series can be resumed" errors
+  (A5, fixed since), four minutes on the Furniture screen early, 40 visits to
+  Staff and Person after the hire, 49 to Print doujin; 58 choices of 32x.
+- Questionnaire, in short:
+  1. No help or lookups.
+  2. Stuck: "Hired worker was always unassigned except for conventions."
+  3. Pace: "at the beginning only had to wait and nothing to do."
+  4. 32x: used most of the time except in menus.
+  5. Money: "only way to track money was print stock and sold, others were
+     just numbers."
+  6. Setback: pitch rejected, "I just continued working on the masterpiece."
+  7. Saving: worked, "but once continue used older save."
+  8. No crash or error.
+  9. Keep playing: 2, not their type of game.
+  10. One change: "hard to keep track where all menus were hidden."
+  11. 1600x900.
+  12. Furnishing: clicking outside the furniture menu leaves several buttons
+      looking selected, with duplicated text at the bottom.
+
+### Tester B findings and proposed triage
+
+Checked against the current code (2026-10-01), not alpha.12.
+
+| # | Finding | Seen by | Evidence | Proposed triage | User decision |
+|---|---|---|---|---|---|
+| B1 | A hire sits idle. Aki starts at 95 in every stage and wins every stage unless the hire is put on a team; a one-shot has one open stage at a time; a person off duty still holds their stage, so the hire cannot even cover Aki's absences. Status says "Available for work"; Helper-Chan says the planner assigns work and that an assistant can take Backgrounds or Tones, which it never does by default | A (A4), B | Questionnaire 2, report note, 40 Staff visits; Planner.cs:98-121, Guidance.cs:77, 122 | Always fixed (paid hire with no work, misleading guidance): design question on who takes which stages || Approved 2026-10-01; fixed ([record](tester-b-fixes-completion.md)) |
+| B2 | The start feels like waiting with nothing to do | B | Questionnaire 3 | Covered by the career goals board (spec 2026-10-01) || Approved 2026-10-01 |
+| B3 | Money is only legible through print stock and copies sold | B | Questionnaire 5 | Observe; the goals board's money goals and progress bars address part || Approved 2026-10-01 |
+| B4 | Pitch stays enabled during a magazine's cooldown and errors; Helper-Chan's rejection tip names a better magazine but opens Publishing on the rejected one | B | 4 errors; Publishing.cs:132, Alpha.cs:182 | Always fixed (A5 class): disable with the date, preselect the suggested magazine || Approved 2026-10-01; fixed ([record](tester-b-fixes-completion.md)) |
+| B5 | Continue opens the newest save across all careers by real time; importing a career makes it the newest, so Continue can open the wrong career | B | Questionnaire 7; CareerStore.cs:118, 158-171 | Always fixed (save confusion): Continue opens the career played most recently, imports do not count as play || Approved 2026-10-01; fixed ([record](tester-b-fixes-completion.md)) |
+| B6 | Hard to keep track of where the menus are | A (A3), B | Questionnaire 10 | Part of A3 (progressive disclosure), now seen twice || Approved 2026-10-01 |
+| B7 | While furnishing, clicking the rail or speed buttons leaves them looking pressed; every notice shows twice (shell and workspace) | B | Questionnaire 12; Management.cs:142-148, 201-204 | Fixed if cheap (it is): lock the rail and header while furnishing, show a notice once || Approved 2026-10-01; fixed ([record](tester-b-fixes-completion.md)) |
+| B8 | Resume on an active series errors | A (A5), B | 3 errors | Already fixed after round 1 || Approved 2026-10-01 |
+
+A3, A6 and A7 after tester B: A3 is now seen twice (B6, and B2 in part); A6
+(licences) was not reached by B; A7 (setbacks feel random) was not reported by
+B, who ignored the rejection rather than finding it unfair.
+
 ### T1.1 completion per tester
 
 | Tester | Every step in timeline | Setback | No help or lookups | Completes T1.1 |
 |---|---|---|---|---|
 | A | Yes | Yes (own career: warning, rejection, cancellation; practice warning too) | Yes | Yes, formally; but guidance failed from 31 min (A1), so T1.2 is not met |
-| B | | | | |
+| B | No (serialization, setback and growing readership not reached in 1 h 26 min) | No | Yes | No; stopped early, not the target audience |
 
 ## Round 2 (alpha.13)
 

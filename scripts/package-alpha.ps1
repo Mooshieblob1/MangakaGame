@@ -18,13 +18,14 @@ if(-not (Test-Path -LiteralPath $template)) { throw 'Extract the matching offici
 New-Item -ItemType Directory -Path $output | Out-Null
 $log = Join-Path $output 'export.log'
 $err = Join-Path $output 'export-error.log'
-$arguments = @('--headless','--path',('"'+(Join-Path $repo 'godot')+'"'),'--export-release','"Windows Private Alpha"',('"'+(Join-Path $output 'MangakaStudio.exe')+'"'),'--quit')
+$arguments = @('--headless','--path',('"'+(Join-Path $repo 'godot')+'"'),'--export-release','"Windows Private Alpha"',('"'+(Join-Path $output 'MangakaDays.exe')+'"'),'--quit')
 $process = Start-Process -FilePath $Godot -ArgumentList $arguments -WindowStyle Hidden -RedirectStandardOutput $log -RedirectStandardError $err -PassThru
 # Wait for the exporter, not the persistent MSBuild server it can spawn.
 if(-not $process.WaitForExit(180000)) { $process.Kill(); throw "Export timed out; see $log and $err" }
 if($process.ExitCode -ne 0) { throw "Export failed; see $log and $err" }
 # The step-by-step guide (docs/superpowers/private-alpha-testing.md) is left out while fresh players test the game's own guidance (T1.10).
 Copy-Item -LiteralPath (Join-Path $repo 'docs/superpowers/private-alpha-credits.txt') -Destination (Join-Path $output 'CREDITS.txt')
+Copy-Item -LiteralPath (Join-Path $repo 'godot/Assets/Fonts/OFL-LilitaOne.txt') -Destination (Join-Path $output 'OFL-LilitaOne.txt')
 # T1.10 fresh-player kit: tester instructions, questionnaire and the practice career.
 $kit = Join-Path $repo 'docs/superpowers/fresh-player-kit'
 Copy-Item -LiteralPath (Join-Path $kit 'READ ME FIRST.txt') -Destination $output
@@ -34,7 +35,7 @@ Copy-Item -LiteralPath (Join-Path $repo 'tests/MangakaSim.Tests/Fixtures/Practic
 $smoke = Join-Path $repo 'TestResults/package-check'
 New-Item -ItemType Directory -Path $smoke -Force | Out-Null
 $arguments = @('--headless','--','--alpha-smoke',('"--alpha-output='+$smoke+'"'))
-$process = Start-Process -FilePath (Join-Path $output 'MangakaStudio.exe') -ArgumentList $arguments -WorkingDirectory $output -WindowStyle Hidden -RedirectStandardOutput (Join-Path $smoke 'stdout.log') -RedirectStandardError (Join-Path $smoke 'stderr.log') -Wait -PassThru
+$process = Start-Process -FilePath (Join-Path $output 'MangakaDays.exe') -ArgumentList $arguments -WorkingDirectory $output -WindowStyle Hidden -RedirectStandardOutput (Join-Path $smoke 'stdout.log') -RedirectStandardError (Join-Path $smoke 'stderr.log') -Wait -PassThru
 if($process.ExitCode -ne 0) { throw "Exported game checks failed; see $smoke" }
 Copy-Item -LiteralPath (Join-Path $smoke 'GODOT-LICENSES.txt') -Destination $output
 $runtimeDirectory = Join-Path $output 'data_MangakaGame_windows_x86_64'

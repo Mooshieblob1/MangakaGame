@@ -18,7 +18,8 @@ public partial class DebugMain
             _careers=new CareerStore(Path.Combine(SmokeOutput,"atmosphere-"+Guid.NewGuid().ToString("N")));
             foreach(var size in new[]{new Vector2I(1280,720),new Vector2I(1920,1080),new Vector2I(2560,1080)})
             {
-                GetWindow().Size=size;ShowMenu();await SettleUi();
+                // New careers start from the title screen (spec 2026-09-28, Q40), not the in-game menu.
+                GetWindow().Size=size;OpenTitle();await SettleUi();
                 Check(ButtonNamed("New Career").IsVisibleInTree(),"Main menu exposes career actions");
                 Check(_homeOffice.GetGlobalRect().IsEqualApprox(GetViewportRect()),"Office fills the whole canvas behind floating panels");
                 Check(_floatingUi!.FindChildren("*","Button",true,false).OfType<Button>().Count(b=>b.Text=="Menu")==1,"Floating controls contain one Menu action");

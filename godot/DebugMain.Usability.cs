@@ -16,13 +16,17 @@ public partial class DebugMain
     private Action? _refreshPrintPanel;
     private int _printingBookId;
     private readonly Dictionary<string,Button> _navigation=new();
-    private Color Paper=>new(_darkMode?"1b2938":"f5f0e5");
-    private Color Ink=>new(_darkMode?"e3ecee":"283b3c");
-    private Color Accent=>new(_darkMode?"85d8ca":"397f82");
-    private Color Wash=>new(_darkMode?"151c23":"e6e1d5");
-    private Color Hover=>new(_darkMode?"2c4057":"e5ece5");
-    private Color SelectedSurface=>new(_darkMode?"34568a":"cbded7");
-    private Color CardSurface=>new(_darkMode?"223344":"fffdf6");
+    // The logo palette (spec 2026-09-29): evening studio when dark, manuscript paper when light.
+    private BrandTheme Brand=>BrandPalette.For(_darkMode);
+    private Color Paper=>new(Brand.Card);
+    private Color Ink=>new(Brand.Text);
+    private Color Accent=>new(Brand.Accent);
+    private Color Wash=>new(Brand.Wash);
+    private Color Hover=>new(Brand.Hover);
+    private Color SelectedSurface=>new(Brand.Pressed);
+    private Color CardSurface=>new(Brand.Card);
+    private Color GainColour=>new(Brand.Gain);
+    private Color LossColour=>new(Brand.Loss);
 
     private void LoadUiPreferences()
     {
@@ -47,7 +51,7 @@ public partial class DebugMain
         foreach(var card in FindChildren("*","PanelContainer",true,false).OfType<PanelContainer>().Where(c=>c.HasMeta("card_surface")))
         {card.RemoveThemeStyleboxOverride("panel");card.ThemeTypeVariation="StudioCard";}
         foreach(var amount in FindChildren("*","Label",true,false).OfType<Label>().Where(l=>l.HasMeta("cash_sign")))
-            amount.AddThemeColorOverride("font_color",new Color((int)amount.GetMeta("cash_sign")<0?(_darkMode?"ff929b":"b52035"):(_darkMode?"78e6a2":"16703a")));
+            amount.AddThemeColorOverride("font_color",(int)amount.GetMeta("cash_sign")<0?LossColour:GainColour);
         foreach(var plot in FindChildren("*","Control",true,false).OfType<ReportPlot>()){plot.DarkMode=_darkMode;plot.QueueRedraw();}
         foreach(var plan in FindChildren("*","Control",true,false).OfType<StudioPlanPreview>()){plan.DarkMode=_darkMode;plan.QueueRedraw();}
         ApplyTextScale();
@@ -60,6 +64,8 @@ public partial class DebugMain
     }
     public override void _Input(InputEvent ev)
     {
+        // The curtain stops the mouse; keys and controller buttons wait for the fade too (final review).
+        if(Fading&&ev is InputEventKey or InputEventJoypadButton){GetViewport().SetInputAsHandled();return;}
         if(ev is not InputEventKey key||!key.Pressed||key.Echo||key.CtrlPressed||key.AltPressed||key.MetaPressed)return;
         // Consume the first Escape before GUI handling so it only leaves text entry.
         // A second Escape can then close the current panel or menu normally.

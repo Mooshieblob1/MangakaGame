@@ -36,15 +36,17 @@ public partial class DebugMain
 
             void Reset()
             {
-                _menu.Hide();_inMenu=false;ClosePhone();_recapDialog.Hide();_helperPopup.Hide();_speedFlash?.Hide();ShowOffice();
+                CloseTitle();_menu.Hide();_inMenu=false;ClosePhone();_recapDialog.Hide();_helperPopup.Hide();_speedFlash?.Hide();ShowOffice();
             }
             var screens=new List<(string Name,Action Open)>
             {
-                ("new-career",()=>{ShowMenu();NewCareerMenu();}),
-                ("new-career-rules",()=>{ShowMenu();NewCareerMenu();Press("Career rules");}),
+                ("title",OpenTitle),
+                ("title-settings",()=>{OpenTitle();SettingsMenu();}),
+                ("new-career",()=>{OpenTitle();NewCareerMenu();}),
+                ("new-career-rules",()=>{OpenTitle();NewCareerMenu();Press("Career rules");}),
                 ("office",()=>{}),
                 ("phone",()=>{OpenPhone(false);_phoneTween?.Kill();_phoneSlide=0;ResizeFloatingOffice();}),
-                ("menu",ShowMenu),
+                ("pause-menu",ShowMenu),
                 ("production",()=>OpenWorkspace("Production")),
                 ("recap",()=>ShowRecap(recap!)),
                 ("publishing",()=>OpenWorkspace("Publishing")),
@@ -116,6 +118,7 @@ public partial class DebugMain
     {
         var excluded=new HashSet<Node>{_helperPopup,_homeOffice,_officeView,_backdrop};
         if(_speedFlash is not null)excluded.Add(_speedFlash);
+        if(_titleArt is not null)excluded.Add(_titleArt); // scaled a little past the window by the slow push-in, by design
         var panels=new List<Control>{_side,_report,_officeDashboard};
         foreach(var panel in new Control?[]{_floatingRail,_floatingTop,_floatingBottom})if(panel is not null)panels.Add(panel);
         return DisplaySweep.Inspect(this,GetViewport().GetVisibleRect(),excluded,panels);

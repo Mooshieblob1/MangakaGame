@@ -69,6 +69,24 @@ public partial class GameState
     }
 
     /// <summary>
+    /// True once a scheduled day's regular hours are over and nobody worked, so no recap will come to end the day.
+    /// The presentation begins the night on this, as it does after a recap. Days off are not scheduled days.
+    /// </summary>
+    public bool IsQuietDayOver()
+    {
+        if (RecapFiredToday || ControlledStaff.Any(p => p.HoursWorkedToday > 0)) return false;
+        var today = Clock.Now.Date;
+        var scheduled = false;
+        for (var hour = today; hour.Date == today; hour = hour.AddHours(1))
+        {
+            if (!ControlledStaff.Any(p => p.Schedule.IsRegularHour(hour))) continue;
+            if (hour >= Clock.Now) return false;
+            scheduled = true;
+        }
+        return scheduled;
+    }
+
+    /// <summary>
     /// Hours until the next regular scheduled hour of any person, counting from Clock.Now.
     /// Returns 0 when the hour starting now is already scheduled, or when nobody has any scheduled day.
     /// Overtime is ignored.

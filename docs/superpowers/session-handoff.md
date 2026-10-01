@@ -1,40 +1,35 @@
 # Session handoff
 
-Last updated: 2026-09-27. Read this after `CLAUDE.md` when a session starts or
+Last updated: 2026-10-01. Read this after `CLAUDE.md` when a session starts or
 resumes after compaction. It records work in progress that is not yet in the
 roadmap or a completion record. Replace its contents when the task changes.
 
-## Current task: waiting for tester B and for Suno tracks (2026-09-28)
+## Current state (2026-09-29)
 
-- Committed `f9e8ac6`: Tier 1 closeout, tester A fixes (A1, A2, A4, A5, A8,
-  A9) and the music system. Records:
-  `docs/superpowers/tier1-closeout-and-tester-a-completion.md`,
-  `docs/superpowers/music-system-completion.md`. Deferred minors are listed in
-  those records' sessions (music: failed moment file loses the plan's place,
-  back-to-back transitions cut abruptly, logger try/catch, replay edge for
-  pre-fix adopted manuscripts).
-- Waiting: tester B's report (then triage A3 progressive disclosure incl. rival
-  job offers, A6 licence explanations, A7 setbacks feel random); the user's Suno
-  tracks (then `scripts/convert-music.ps1`, import, listen together; add the
-  credits line with the first track).
-- alpha.12 is what tester B plays; a new tester build (alpha.13) needs a
-  go-ahead. Not pushed since `26057df`... push only when asked.
+- Last commit `3fd30d5`. About 90 files are uncommitted, all verified on this
+  computer (678 xUnit, all 18 Godot checks, display sweep 520 / 0 flagged):
+  - start-up disclaimer and volume (`startup-flow-and-volume-completion.md`);
+  - 13 Suno music tracks and the music credits;
+  - title screen and pause menu, rename to Mangaka Days, NovelAI logo and title
+    art (`title-screen-and-pause-menu-completion.md`);
+  - in-game UI restyle around the logo (`brand-ui-restyle-completion.md`);
+  - night skip on days with no work (`quiet-day-night-skip-fix.md`);
+  - tester B fixes B1, B4, B5, B7 (`tester-b-fixes-completion.md`).
+- Commit only when the user asks. Push only when asked.
+- Tester B returned 2026-10-01 (findings B1 to B8, triage approved). Next:
+  the career goals board, spec `specs/2026-10-01-career-goals-design.md`
+  awaiting the user's review (notes `.superpowers/sdd/goals/notes.md`), then A3
+  progressive disclosure (seen by both testers). A6, A7 not confirmed by B.
+  A new tester build (alpha.13) needs the user's go-ahead.
+- Promised before any store use of NovelAI art: check NovelAI's commercial
+  terms.
+- Deferred minors: see the title screen and restyle completion records.
+- Workspaces kept until the user commits: `.superpowers/sdd/2026-09-28-title-screen-and-pause-menu/`,
+  `.superpowers/sdd/2026-09-29-brand-ui-restyle/` (ledgers, rulings, run logs,
+  `smoke.ps1` runner with timeouts).
 
-## Context-saving changes made this session
+## Working habits
 
-- Disabled the `huggingface-skills` plugin in `~/.claude/settings.json` and
-  turned off the Hugging Face claude.ai connector (not needed for Tier 1 or 2).
-- The design plugin is a claude.ai account plugin; only the user can turn it
-  off (claude.ai or the app's plugin settings). Its servers (asana, atlassian,
-  figma, intercom, linear, notion, slack) are unauthorized and not needed.
-- The `autoCompactWindow` limit is gone from `~/.claude/settings.json`. After the
-  restart on 2026-09-27 the session reports a 1,000,000 token window, still on
-  Opus 5.5, with auto-compact at 97%. About 122k tokens were in use at restart.
-- Working habit: delegate broad file reading to Explore agents and keep only
-  their summaries in the main session.
-
-## Uncommitted work in the tree
-
-- `CLAUDE.md` and `docs/superpowers/specs/2026-09-22-roadmap.md` (T1.10 design
-  and plan notes, T1.1 rewording), the T1.10 record, the T1.10 plan and this
-  file are not committed yet. Commit only when the user asks.
+- Delegate broad file reading to Explore agents and keep only their summaries.
+- Run Godot through `.superpowers/sdd/2026-09-29-brand-ui-restyle/smoke.ps1`
+  (Start-Process with a timeout) so a hung run cannot block the session.

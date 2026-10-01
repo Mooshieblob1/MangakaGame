@@ -23,6 +23,8 @@ public partial class DebugMain
         _errorLogger=new TimelineErrorLogger();OS.AddLogger(_errorLogger);
         var size=GetWindow().Size;
         _timeline.Start($"window {size.X}x{size.Y} text {(int)Math.Round(_presentation.UiScale*100)} theme {(_darkMode?"dark":"light")}");
+        // The first theme is built before the timeline exists, so a missing heading font is noted here (final review).
+        if(HeadingFont is null)LogTimeline("error heading font missing: "+_fontPath);
     }
     private bool _timelineQuiet;
     // During the overnight transition only the speed and screen lines are held back; guidance and errors still log.
@@ -52,7 +54,12 @@ public partial class DebugMain
     }
     public override void _Notification(int what)
     {
-        if(what==NotificationWMCloseRequest){DrainUnexpectedErrors();_timeline?.End();}
+        if(what==NotificationWMCloseRequest)
+        {
+            if(_managementReady&&!HandleCloseRequest())return;
+            DrainUnexpectedErrors();_timeline?.End();
+            if(_managementReady)GetTree().Quit();
+        }
         if(what==NotificationPredelete&&_errorLogger is not null){OS.RemoveLogger(_errorLogger);_errorLogger=null;}
     }
 }

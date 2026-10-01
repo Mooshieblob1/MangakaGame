@@ -279,7 +279,7 @@ public partial class DebugMain
     }
     private void BuildHelp()
     {
-        Words(_sideContent,"Your first reader, always beside you.",22);ActionButton(_sideContent,"Objectives and direction",()=>Navigate("Guidance"));ActionButton(_sideContent,"Tutorial and notification settings",()=>{Pause();_inMenu=true;_menu.Show();SettingsMenu();});
+        Words(_sideContent,"Your first reader, always beside you.",22);ActionButton(_sideContent,"Objectives and direction",()=>Navigate("Guidance"));ActionButton(_sideContent,"Tutorial and notification settings",SettingsMenu);
         foreach(var page in new[]{"Inbox","Series","Staff","Finances","Studios","Industry"})Words(Card(page,"Guide"),TutorialText(page)!);
         if(_state.Career.PendingScene is {} scene)ActionButton(_sideContent,"Talk to Helper-Chan",()=>ShowStory(scene));
         Words(_sideContent,"Our conversations",23);foreach(var entry in _state.Career.Journal.AsEnumerable().Reverse().Take(40))

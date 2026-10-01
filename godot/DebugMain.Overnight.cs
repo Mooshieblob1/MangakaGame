@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Godot;
+using MangakaSim;
 
 namespace MangakaGame;
 
@@ -42,11 +43,11 @@ public partial class DebugMain
         if(_overnightCaption is null)
         {
             var panel=new PanelContainer{MouseFilter=MouseFilterEnum.Ignore};_homeOffice.AddChild(panel);
-            panel.AddThemeStyleboxOverride("panel",Surface(new Color("203d46"),14));
+            panel.AddThemeStyleboxOverride("panel",Surface(new Color(BrandPalette.Evening.Card),14));
             var content=new VBoxContainer{MouseFilter=MouseFilterEnum.Ignore};panel.AddChild(content);
             _overnightCaption=new Label{HorizontalAlignment=HorizontalAlignment.Center,CustomMinimumSize=new(350,0),MouseFilter=MouseFilterEnum.Ignore};content.AddChild(_overnightCaption);
             _overnightCaption.AddThemeFontSizeOverride("font_size",22);
-            _overnightCaption.AddThemeColorOverride("font_color",new Color("b2f4e6"));
+            _overnightCaption.AddThemeColorOverride("font_color",new Color(BrandPalette.Evening.Text)); // shown over the office in either theme
             _overnightProgress=new ProgressBar{ShowPercentage=false,CustomMinimumSize=new(0,8),MouseFilter=MouseFilterEnum.Ignore};content.AddChild(_overnightProgress);
         }
         OvernightPanel!.Show();_overnightProgress!.Value=0;

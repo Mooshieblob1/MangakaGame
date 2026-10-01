@@ -10,11 +10,11 @@ public partial class ChapterProgressBar : ProgressBar
 {
     public static readonly (Stage Stage,string Name,Color Color)[] Stages=
     [
-        (Stage.Name,"Storyboard",new("65b6e8")),
-        (Stage.Pencils,"Pencils",new("c19bea")),
-        (Stage.Inks,"Inks",new("ecaa65")),
-        (Stage.Backgrounds,"Backgrounds",new("72c7ab")),
-        (Stage.Tones,"Tones",new("e68ca9"))
+        (Stage.Name,"Storyboard",new("8fb8de")),
+        (Stage.Pencils,"Pencils",new("c3a3e6")),
+        (Stage.Inks,"Inks",new(BrandPalette.Gold)),
+        (Stage.Backgrounds,"Backgrounds",new(BrandPalette.Mint)),
+        (Stage.Tones,"Tones",new("f0a0b8"))
     ];
     private (double Weight,double Done,Color Color)[] _sections=[];
     private Control? _segments;
@@ -34,7 +34,7 @@ public partial class ChapterProgressBar : ProgressBar
         _percentage=new Label{HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center,
             MouseFilter=MouseFilterEnum.Ignore};AddChild(_percentage);_percentage.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         _percentage.AddThemeColorOverride("font_color",Colors.White);
-        _percentage.AddThemeColorOverride("font_outline_color",new("17222d"));_percentage.AddThemeConstantOverride("outline_size",3);
+        _percentage.AddThemeColorOverride("font_outline_color",new(BrandPalette.Ink));_percentage.AddThemeConstantOverride("outline_size",3);
         SetChapter(Chapter);
     }
     public static double PercentComplete(Chapter chapter)
@@ -71,7 +71,7 @@ public partial class ChapterProgressBar : ProgressBar
             var extent=(float)(width*section.Weight/total);
             canvas.DrawRect(new Rect2(x,2,extent,height),new Color(section.Color,.18f));
             if(section.Done>0)canvas.DrawRect(new Rect2(x,2,(float)(extent*section.Done/section.Weight),height),section.Color);
-            if(x>2)canvas.DrawLine(new(x,2),new(x,canvas.Size.Y-2),new("17222d"),1);
+            if(x>2)canvas.DrawLine(new(x,2),new(x,canvas.Size.Y-2),new(BrandPalette.Ink),1);
             x+=extent;
         }
     }

@@ -104,7 +104,14 @@ public partial class DebugMain
         if(_pageRefresh is not null)_pageRefresh.Text=_officeSidebar?"↻":"Refresh";
         if(_sidebarToggle is not null){_sidebarToggle.Visible=_page is "Inbox" or "Series";_sidebarToggle.Text=_officeSidebar?"Full page":"Beside office";}
         foreach(var b in _navigation.Values)b.CustomMinimumSize=new(0,_presentation.CompactUi?34:44);
-        if(_menu is not null){var inset=Math.Max(24,(width-1040)/2);_menu.OffsetLeft=inset;_menu.OffsetRight=-inset;_menu.OffsetTop=40;_menu.OffsetBottom=-40;}
+        if(_menu is not null)
+        {
+            // The pause menu is a small centred panel; its sub-pages use the full panel.
+            var ui=(float)_presentation.UiScale;var height=GetViewportRect().Size.Y;
+            var insetX=Math.Max(24,(width-(_menuCompact?460*ui:1040))/2);var insetY=_menuCompact?Math.Max(40,(height-600*ui)/2):40;
+            _menu.OffsetLeft=insetX;_menu.OffsetRight=-insetX;_menu.OffsetTop=insetY;_menu.OffsetBottom=-insetY;
+        }
+        LayoutTitle();
         ResizeFloatingOffice();
     }
     private void PageEntrance(Control target)

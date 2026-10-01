@@ -124,8 +124,8 @@ public partial class DebugMain
             badge.Loss.TooltipText=feedback.Losses>0?$"Recent money spent. Latest: {feedback.LossReason}":"";
             if(updateColors)
             {
-                badge.Gain.AddThemeColorOverride("font_color",new Color(_darkMode?"78e6a2":"16703a"));
-                badge.Loss.AddThemeColorOverride("font_color",new Color(_darkMode?"ff929b":"b52035"));
+                badge.Gain.AddThemeColorOverride("font_color",GainColour);
+                badge.Loss.AddThemeColorOverride("font_color",LossColour);
             }
             badge.Gain.Modulate=new(1,1,1,_presentation.ReducedUiMotion?1:feedback.GainOpacity);
             badge.Loss.Modulate=new(1,1,1,_presentation.ReducedUiMotion?1:feedback.LossOpacity);

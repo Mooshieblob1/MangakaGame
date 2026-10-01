@@ -104,19 +104,23 @@ public partial class DebugMain : Control
         if (OS.GetCmdlineUserArgs().Contains("--display-sweep-smoke")) CallDeferred(nameof(RunDisplaySweepSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--journey-smoke")) CallDeferred(nameof(RunJourneySmoke));
         if (OS.GetCmdlineUserArgs().Contains("--music-smoke")) CallDeferred(nameof(RunMusicSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--startup-smoke")) CallDeferred(nameof(RunStartupSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--title-smoke")) CallDeferred(nameof(RunTitleSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--brand-smoke")) CallDeferred(nameof(RunBrandSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--tester-b-smoke")) CallDeferred(nameof(RunTesterBSmoke));
     }
 
-    // Only the main menu plays the title music; the Save screen keeps the career rotation (final review).
-    private bool _titleMenu=true;
-    private MusicContext MusicNow()=>new(_inMenu&&_titleMenu,_state.Clock.Now,
+    // Only the title screen plays the title music; the pause menu keeps the career rotation (spec 2026-09-28).
+    private MusicContext MusicNow()=>new(TitleOpen,_state.Clock.Now,
         _state.Protagonist.Employment is {} job&&_state.Locations.FirstOrDefault(l=>l.Id==job.LocationId) is {IsFamilyHome:false},
         _overnightTarget is not null);
 
     public override void _Process(double delta)
     {
         if(_managementReady)PanWithKeys(delta);
-        if(_managementReady)_audio.Update(delta,!_inMenu&&GetWindow().HasFocus(),_speed>0&&!OfficeEditing,_presentation.AmbienceVolume,_presentation.EffectsVolume);
-        if(_managementReady)_music.Update(delta,MusicNow(),_presentation.MusicVolume,GetWindow().HasFocus());
+        ApplyAudioSettings();
+        if(_managementReady)_audio.Update(delta,!_inMenu&&AudioFocused,_speed>0&&!OfficeEditing,AmbienceBalance,1);
+        UpdateMusic(delta);
         if (_overnightTarget is not null) TickOvernight(delta);
         else if (_speed > 0)
         {
@@ -193,6 +197,8 @@ public partial class DebugMain : Control
         if (stop) { Pause(); _resumeSpeed = _daySpeed; }
         else if (shouldPause) Pause();
         if (fast && recap != null && !shouldPause) { BeginOvernight(keepPage: true); return true; }
+        // A day with no work has no recap to end it, so the night begins once its hours are over, at any speed (user report 2026-09-29).
+        if (recap == null && !shouldPause && _managementReady && _state.IsQuietDayOver()) { BeginOvernight(keepPage: true); return true; }
         if (recap != null && _managementReady && (_helperPopup.Visible || _popupEvents.Count > 0)) _pendingRecap = recap;
         else if (recap != null) ShowRecap(recap);
         return shouldPause;

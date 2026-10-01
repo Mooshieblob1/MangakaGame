@@ -1,4 +1,4 @@
-# Mangaka Studio private alpha
+# Mangaka Days private alpha
 
 Build: 0.8.0-private-alpha.12. Windows x64, standalone, no Steam required.
 
@@ -6,7 +6,7 @@ This build adds a shorter top bar, clear screen-sized nametags, total chapter pr
 
 ## Play
 
-Extract the whole archive to a folder and run `MangakaStudio.exe`. Keep the
+Extract the whole archive to a folder and run `MangakaDays.exe`. Keep the
 executable, `.pck` and data directory together. Choose New Career or load an
 existing career. Your previous saves remain in the application user-data folder,
 normally `%APPDATA%/Godot/app_userdata/MangakaGame/careers`.

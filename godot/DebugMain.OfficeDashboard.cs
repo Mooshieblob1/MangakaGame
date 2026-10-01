@@ -41,7 +41,7 @@ public partial class DebugMain
         Label Tile(string caption)
         {
             var card=StudioCard(grid,"");card.GetParent<Control>().SizeFlagsHorizontal=SizeFlags.ExpandFill;QuietWords(card,caption,12);
-            return Words(card,"0",22);
+            return Figure(Words(card,"0",22));
         }
         _dashboardFans=Tile("Title fans");_dashboardSold=Tile("Copies sold");
         _dashboardStock=Tile("In stock");_dashboardReserved=Tile("Reserved");

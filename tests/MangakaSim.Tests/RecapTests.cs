@@ -162,4 +162,36 @@ public class RecapTests
         state.Advance(1);
         Assert.Equal(16.0, state.Series[0].Chapters[0].StageWork(Stage.Name).HoursDone, 6);
     }
+
+    // A day with no work has no recap, but the night still needs to begin (user report 2026-09-29).
+    [Fact]
+    public void QuietDayOver_after_the_last_scheduled_hour_of_a_day_with_no_work()
+    {
+        var state = GameState.NewGame();
+        Assert.False(state.IsQuietDayOver());
+        state.Advance(9); // 17:00, still a scheduled hour
+        Assert.False(state.IsQuietDayOver());
+        state.Advance(1); // 18:00
+        Assert.Empty(Recaps(state));
+        Assert.True(state.IsQuietDayOver());
+        state.Advance(14); // next morning
+        Assert.False(state.IsQuietDayOver());
+    }
+
+    [Fact]
+    public void QuietDayOver_is_false_on_a_working_day_which_ends_with_its_recap()
+    {
+        var state = WithSeries(Cadence.Monthly);
+        state.Advance(10);
+        Assert.Single(Recaps(state));
+        Assert.False(state.IsQuietDayOver());
+    }
+
+    [Fact]
+    public void QuietDayOver_is_false_on_a_day_off()
+    {
+        var state = GameState.NewGame();
+        state.Advance(6 * 24 + 10); // Sunday 18:00, nobody scheduled
+        Assert.False(state.IsQuietDayOver());
+    }
 }

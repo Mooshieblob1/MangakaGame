@@ -87,7 +87,7 @@ public partial class DebugMain
             Check(((Label)_sideContent.FindChild("DistributionStatus",true,false)).Text=="On sale locally","Loading on printing page rebinds controls to the loaded career");
             ShowMenu();Press("Settings");await SettleUi();
             var themeToggle=_menuContent.FindChildren("*","CheckBox",true,false).OfType<CheckBox>().Single(c=>c.Text=="Dark mode");themeToggle.ButtonPressed=false;
-            Check(!_darkMode&&_backdrop.Color==new Color("e6e1d5"),"Light mode applies immediately");
+            Check(!_darkMode&&_backdrop.Color==new Color(BrandPalette.Paper.Wash),"Light mode applies immediately");
             _darkMode=true;LoadUiPreferences();Check(!_darkMode,"Light preference persists independently of career");await CaptureSmokeImage("usability-light-settings");
             themeToggle.ButtonPressed=true;_darkMode=false;LoadUiPreferences();Check(_darkMode,"Dark preference persists");
             _menu.Hide();_inMenu=false;Navigate("Finances");await CaptureSmokeImage("usability-dark-finances");

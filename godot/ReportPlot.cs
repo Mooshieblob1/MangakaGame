@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Godot;
+using MangakaSim;
 
 namespace MangakaGame;
 
@@ -22,16 +23,19 @@ public partial class ReportPlot : Control
         if(ev is InputEventMouseMotion motion&&_points.Length>0)
         {var at=_points[0].At.AddTicks((long)(Math.Clamp((motion.Position.X-12)/Math.Max(1,Size.X-24),0,1)*(_points[^1].At-_points[0].At).Ticks));var p=_points.MinBy(p=>Math.Abs((p.At-at).Ticks));TooltipText=$"{p.At:d MMM yyyy}: {p.Value:N0}";}
     }
+    // Charts follow the logo palette (final review, spec 2026-09-29).
+    public static Color Background(bool dark)=>new(BrandPalette.For(dark).Wash);
+    public static Color Line(bool dark)=>new(BrandPalette.For(dark).Accent);
     public override void _Draw()
     {
-        DrawRect(new Rect2(Vector2.Zero,Size),new(DarkMode?"1b252d":"ece8dc"));if(_points.Length==0)return;
+        DrawRect(new Rect2(Vector2.Zero,Size),Background(DarkMode));if(_points.Length==0)return;
         var max=Math.Max(1,_points.Max(p=>p.Value));var min=_rank?1:Math.Min(0,_points.Min(p=>p.Value));
-        var font=ThemeDB.FallbackFont;DrawString(font,new(8,18),$"{(_rank?min:max):N0}",fontSize:13,modulate:new(DarkMode?"cbdadf":"52615d"));
-        for(var i=1;i<4;i++)DrawLine(new(8,25+(Size.Y-42)*i/4),new(Size.X-8,25+(Size.Y-42)*i/4),new(DarkMode?"3e4e57":"d8d6c9"));
+        var font=ThemeDB.FallbackFont;DrawString(font,new(8,18),$"{(_rank?min:max):N0}",fontSize:13,modulate:new(BrandPalette.For(DarkMode).Muted));
+        for(var i=1;i<4;i++)DrawLine(new(8,25+(Size.Y-42)*i/4),new(Size.X-8,25+(Size.Y-42)*i/4),new(BrandPalette.For(DarkMode).Outline));
         Vector2 Point(int n){var value=(_points[n].Value-min)/Math.Max(1,max-min);var x=(_points[n].At-_points[0].At).TotalHours/Math.Max(1,(_points[^1].At-_points[0].At).TotalHours);return new(12+(Size.X-24)*(float)x,25+(Size.Y-42)*(float)(_rank?value:1-value));}
         var stride=Math.Max(1,_points.Length/400);var previous=Point(0);
-        for(var i=stride;i<_points.Length;i+=stride){var next=Point(i);DrawLine(previous,next,new(DarkMode?"85d8ca":"397f82"),2,true);previous=next;}
-        DrawLine(previous,Point(_points.Length-1),new(DarkMode?"85d8ca":"397f82"),2,true);
+        for(var i=stride;i<_points.Length;i+=stride){var next=Point(i);DrawLine(previous,next,Line(DarkMode),2,true);previous=next;}
+        DrawLine(previous,Point(_points.Length-1),Line(DarkMode),2,true);
         DrawCircle(Point(_points.Length-1),3,new("b5684e"));
     }
 }

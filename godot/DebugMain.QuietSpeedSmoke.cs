@@ -117,6 +117,18 @@ public partial class DebugMain
             _state.Events.Add(new(){Time=_state.Clock.Now,ActivityDate=_state.Clock.Now.Date,Type=EventType.ChapterCompleted,Message="Staged chapter"});
             Check(ScanEvents()&&_speed==0&&_resumeSpeed==8,"At 8x Auto-pause still applies as before");
 
+            // A day with no work has no recap, but the night still begins, at any speed (user report 2026-09-29).
+            foreach(var speed in new double[]{8,QuietSpeed})
+            {
+                _state=GameState.NewGame(0);ResetManagementSession();ShowOffice();_helperPopup.Hide();_popupEvents.Clear();
+                CareerGuidance.Observe(_state,prefs);CareerGuidance.MarkRead(prefs);SetSpeed(speed);
+                Run(speed,()=>_overnightTarget is not null||_state.Clock.Now.Hour>=20);
+                Check(_overnightTarget is not null&&!_recapDialog.Visible&&!_state.Events.Any(e=>e.Type==EventType.DailyRecap),
+                    $"A day with no work still ends in the night skip at {speed}x (now {_state.Clock.Now:HH:mm})");
+                Run(speed,()=>_overnightTarget is null);
+                Check(_state.Clock.Now==new DateTime(1996,4,2,8,0,0)&&_speed==speed,$"After a quiet day's night the morning continues at {speed}x (now {_state.Clock.Now}, speed {_speed})");
+            }
+
             GD.Print($"QUIET SPEED SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
         }
         catch(Exception ex)

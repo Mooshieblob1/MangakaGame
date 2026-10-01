@@ -27,7 +27,7 @@ public partial class MusicPlayer : Node
     public bool Paused => _players[_active].StreamPaused;
     public bool Audible => _players.Any(p => p.Playing && !p.StreamPaused);
 
-    public override void _Ready() { foreach (var player in _players) AddChild(player); }
+    public override void _Ready() { foreach (var player in _players) { player.Bus = "Music"; AddChild(player); } }
 
     public void UseFolder(int seed)
     {

@@ -15,7 +15,11 @@ foreach($file in Get-ChildItem -LiteralPath $Source -File | Where-Object { $_.Ex
     $name = $file.BaseName.ToLowerInvariant()
     if(-not ($prefixes | Where-Object { $name.StartsWith($_) })) { Write-Warning "Skipped $($file.Name): the name must start with one of $($prefixes -join ', ')"; continue }
     $out = Join-Path $OutputDirectory ($name + '.ogg')
-    & $ffmpeg -hide_banner -loglevel error -y -i $file.FullName -af 'loudnorm=I=-16:TP=-1.5:LRA=11' -ar 44100 -c:a libvorbis -q:a 5 $out
+    # A 1.5-second fade at the very end so every track finishes smoothly when it plays once in the game.
+    $probe = Join-Path (Split-Path $found.Source) 'ffprobe.exe'
+    $duration = [double]::Parse((& $probe -v error -show_entries format=duration -of csv=p=0 $file.FullName), [Globalization.CultureInfo]::InvariantCulture)
+    $fadeStart = [Math]::Max(0, $duration - 1.5).ToString('0.###', [Globalization.CultureInfo]::InvariantCulture)
+    & $ffmpeg -hide_banner -loglevel error -y -i $file.FullName -af "loudnorm=I=-16:TP=-1.5:LRA=11,afade=t=out:st=$($fadeStart):d=1.5" -ar 44100 -c:a libvorbis -q:a 5 $out
     if($LASTEXITCODE -ne 0) { throw "ffmpeg failed on $($file.Name)" }
     $converted++
     Write-Output "Converted $($file.Name) -> $out"

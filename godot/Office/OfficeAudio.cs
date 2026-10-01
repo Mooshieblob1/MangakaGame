@@ -12,24 +12,30 @@ public partial class OfficeAudio : Node
     public int EffectCount { get; private set; }
     public int ActivityCount { get; private set; }
     public int BuzzCount { get; private set; }
+    public bool EffectPlaying => _effect.Playing;
     public override void _Ready()
     {
         AddChild(_room);AddChild(_activity);AddChild(_effect);AddChild(_buzz);
         _room.Stream=Wave(12,0,true);_activity.Stream=Wave(.24,1);_effect.Stream=Wave(.13,2);_buzz.Stream=Wave(.42,3);
+        foreach (var player in new[] { _room, _activity, _effect, _buzz }) player.Bus = "Effects";
     }
     public void Update(double delta,bool active,bool working,double ambience,double effects)
     {
-        _elapsed+=Math.Min(delta,1);_active=active;
+        _elapsed+=Math.Min(delta,1);_active=active;_previewLeft-=delta;
         _room.VolumeDb=Mathf.LinearToDb((float)Math.Max(.00001,ambience));
         _activity.VolumeDb=_room.VolumeDb;_effect.VolumeDb=Mathf.LinearToDb((float)Math.Max(.00001,effects));_buzz.VolumeDb=_effect.VolumeDb;
         if(active&&ambience>0){if(!_room.Playing)_room.Play();}
         else{_room.Stop();_activity.Stop();}
-        if(!active||effects==0){_effect.Stop();_buzz.Stop();}
+        // A slider preview may play in menus, where everything else here is paused (final review).
+        if((!active||effects==0)&&_previewLeft<=0){_effect.Stop();_buzz.Stop();}
         _effectsOn=effects>0;
         if(active&&working&&ambience>0&&_elapsed>=_nextActivity)
         {_activity.Play();ActivityCount++;_nextActivity=_elapsed+7.5;}
         if(!active||!working)_nextActivity=_elapsed+3;
     }
+    /// <summary>A pencil scratch at the current level, for the Sound effects slider.</summary>
+    public void Preview() { if (!_effect.Playing) _effect.Play(); _previewLeft = .3; }
+    private double _previewLeft;
     public void Cue()
     {
         if(!_active||_elapsed<_nextEffect)return;

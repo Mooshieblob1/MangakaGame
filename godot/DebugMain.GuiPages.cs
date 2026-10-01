@@ -13,13 +13,13 @@ public partial class DebugMain
         foreach(var (label,run) in actions)ActionButton(row,label,run);
         return row;
     }
-    private void LiveWords(Control parent,Func<string> text,int size=16)
-    {var label=Words(parent,text(),size);_pageLiveValues.Add(()=>label.Text=text());}
+    private Label LiveWords(Control parent,Func<string> text,int size=16)
+    {var label=Words(parent,text(),size);_pageLiveValues.Add(()=>label.Text=text());return label;}
     private void Metric(Control parent,string title,Func<string> value,string caption="")
     {
         var box=StudioCard(parent,"");box.GetParent<Control>().CustomMinimumSize=new(175,0);
         QuietWords(box,title,12);
-        LiveWords(box,value,25);
+        Figure(LiveWords(box,value,25));
         if(caption.Length>0)QuietWords(box,caption,12);
     }
     private void SeriesLifecycle(Control parent,Series series)
@@ -106,7 +106,7 @@ public partial class DebugMain
         {
             var card=StudioCard(flow,l.Name,l.District+(l.Closed?" · Closed":l.IsFamilyHome?" · Family home":" · Tier "+l.PropertyTier));card.GetParent<Control>().CustomMinimumSize=new(330,0);
             card.AddChild(new StudioPlanPreview{State=_state,Location=l,DarkMode=_darkMode,CustomMinimumSize=new(0,170)});
-            Words(card,$"¥{l.MonthlyRent:N0} / month",24);
+            Figure(Words(card,$"¥{l.MonthlyRent:N0} / month",24));
             LiveWords(card,()=>$"{_state.ControlledStaff.Count(p=>p.Employment!.LocationId==l.Id)} staff · {_state.UsableWorkspaces(l.Id)} usable desks\n{l.BreakSeats} break seats · {l.Storage:N0} copy storage",15);
             if(l.Closed)continue;
             var row=new HFlowContainer();card.AddChild(row);

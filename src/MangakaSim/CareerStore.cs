@@ -77,10 +77,10 @@ public sealed class CareerStore(string root)
         }
         finally{if(File.Exists(temp))File.Delete(temp);}
     }
-    public CareerSaveInfo Save(string career,string name,GameState state,CareerPresentation view,bool auto=false)
+    public CareerSaveInfo Save(string career,string name,GameState state,CareerPresentation view,bool auto=false,DateTime? savedAt=null)
     {
         if(string.IsNullOrWhiteSpace(name)||name.Length>100)throw new InvalidDataException("Use a save name of 1–100 characters.");
-        var data=new CareerSnapshot(1,career,name,auto,DateTime.UtcNow,state.ToJson(),view);
+        var data=new CareerSnapshot(1,career,name,auto,savedAt??DateTime.UtcNow,state.ToJson(),view);
         Validate(data);
         foreach(var hash in view.Artwork.Values.Distinct())if(!File.Exists(AssetPath(career,hash)))throw new InvalidDataException("An imported artwork file is missing; restore it or reset that slot before saving.");
         var id=Guid.NewGuid().ToString("N");var target=Path.Combine(DirectoryFor(career),id+".career");
@@ -168,7 +168,8 @@ public sealed class CareerStore(string root)
             using var input=asset.Open();using var bytes=new MemoryStream();input.CopyTo(bytes);
             if(ImportAsset(career,bytes.ToArray())!=hash)throw new InvalidDataException("Artwork checksum mismatch.");
         }
-        return Save(career,data.Name,state,data.View);
+        // An import keeps its own save time, so Continue still opens the career last played (finding B5).
+        return Save(career,data.Name,state,data.View,savedAt:data.SavedAt);
     }
 
     private string SnapshotPath(CareerSaveInfo info)

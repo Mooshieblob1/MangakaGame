@@ -47,7 +47,7 @@ public partial class DebugMain
         Label Metric(string title,string caption)
         {
             var card=StudioCard(metrics,"","");card.GetParent<Control>().CustomMinimumSize=new(210,0);
-            Words(card,title,14);var value=Words(card,"—",24);Words(card,caption,12);return value;
+            Words(card,title,14);var value=Figure(Words(card,"—",24));Words(card,caption,12);return value;
         }
         _studioCash=Metric("AVAILABLE BUSINESS CASH","After reserved wages");
         _studioRent=Metric("MONTHLY RENT","All open locations");
@@ -122,7 +122,7 @@ public partial class DebugMain
                 card.GetParent<Control>().CustomMinimumSize=new(310,0);
                 var map=new StudioPlanPreview{State=_state,Location=location,DarkMode=_darkMode,CustomMinimumSize=new(0,150)};card.AddChild(map);
                 Words(card,"Floor plan · green desks / blue chairs",12);
-                Words(card,$"¥{location.MonthlyRent:N0} / month",22);
+                Figure(Words(card,$"¥{location.MonthlyRent:N0} / month",22));
                 var capacity=Words(card,"",14);var bar=new ProgressBar{CustomMinimumSize=new(0,22),ShowPercentage=false};card.AddChild(bar);
                 Words(card,$"{location.BreakSeats} break seats · {location.Storage:N0} copy storage",14);
                 _studioLiveValues.Add(()=>

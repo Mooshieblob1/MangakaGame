@@ -101,6 +101,13 @@ public partial class DebugMain
         for (var i = 0; i < values.Length; i++) item.SetText(i, values[i]);
         return item;
     }
+    // Helper-Chan's route opens Publishing on the open magazine she suggests, not one on cooldown (finding B4).
+    private void PreselectSuggestedMagazine(Series series)
+    {
+        var best = CareerGuidance.PitchOutlooks(_state, series).FirstOrDefault(o => o.Open)?.Magazine;
+        var index = best is null ? -1 : _state.PublisherCatalog.Magazines.ToList().FindIndex(m => m.Id == best.Id);
+        if (index >= 0) _magazineOption.Select(index);
+    }
     private string SelectedMagazineId() => _state.PublisherCatalog.Magazines[Math.Max(0, _magazineOption.Selected)].Id;
     private void PublishingCommand(Func<int, ICommand> command)
     {
@@ -129,8 +136,10 @@ public partial class DebugMain
         _onlineButton.Text = _state.HasInternet ? "Online" : $"Get online (¥{Economy.InternetCost(_state.TrendCatalog, _state.Clock.Now):N0})";
         _onlineButton.Disabled = _state.HasInternet || _state.AvailableBusinessCash < Economy.InternetCost(_state.TrendCatalog, _state.Clock.Now);
         var inContest = series is not null && _state.Progression.Manuscripts.Any(m => m.SeriesId == series.Id && !m.Released);
-        _pitchButton.Disabled = series is null || series.Status != SeriesStatus.Active || series.Publishing != PublishingStatus.Unpublished || series.StandaloneDoujin || inContest;
+        DateTime? cooldown = series is not null && series.PitchCooldowns.TryGetValue(magazine.Id, out var reopens) && reopens > _state.Clock.Now ? reopens : null;
+        _pitchButton.Disabled = series is null || series.Status != SeriesStatus.Active || series.Publishing != PublishingStatus.Unpublished || series.StandaloneDoujin || inContest || cooldown is not null;
         _pitchButton.TooltipText = inContest ? "Release the contest manuscript in Awards & contests before pitching this title." :
+            cooldown is { } date ? $"{magazine.Name} accepts another pitch after {date:d MMM yyyy}. Choose another magazine." :
             series?.StandaloneDoujin == true ? "A complete one-shot doujin: choose Continue as ongoing series in Series details first." : "";
         _acceptButton.Disabled = _declineButton.Disabled = series?.Publishing != PublishingStatus.Offered;
         _withdrawButton.Disabled = series?.Publishing != PublishingStatus.Serialized;
@@ -164,7 +173,7 @@ public partial class DebugMain
         foreach (var rank in market.LastRanking)
         {
             var item = Row(_rankingTree, rankingRoot, rank.Rank.ToString(), rank.Title, rank.Score.ToString("F1"), rank.SeriesId is null ? "Roster" : "YOUR STUDIO");
-            if (rank.SeriesId is not null) for (var i = 0; i < 4; i++) item.SetCustomColor(i, new Color("79ddb0"));
+            if (rank.SeriesId is not null) for (var i = 0; i < 4; i++) item.SetCustomColor(i, Accent);
         }
         _volumeTree.Clear();
         var volumeRoot = _volumeTree.CreateItem();

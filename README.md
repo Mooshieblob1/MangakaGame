@@ -1,4 +1,4 @@
-# Mangaka Studio
+# Mangaka Days
 
 A real-time manga studio management simulation. Sub-projects 1 and 2 are
 implemented: chapter production, doujin publishing, magazine pitches and
@@ -191,6 +191,15 @@ New-Item -ItemType Directory -Force TestResults | Out-Null
 & $godot --headless --path godot -- --smoke-test
 & $godot --headless --path godot -- --management-smoke
 ```
+
+The other automated checks run the same way: `--progression-smoke`,
+`--alpha-smoke`, `--usability-smoke`, `--production-smoke`,
+`--office-life-smoke`, `--convenience-smoke`, `--series-status-smoke`,
+`--atmosphere-smoke`, `--family-home-smoke`, `--quiet-speed-smoke`,
+`--display-sweep-smoke`, `--journey-smoke`, `--music-smoke`,
+`--startup-smoke`, `--title-smoke` (title screen, fades, pause menu and
+safety saves) `--brand-smoke` (the logo palette, slab buttons and fonts) and
+`--tester-b-smoke` (fixes from fresh-player tester B).
 
 The automated Godot walkthrough tests the actual scene controls, timing,
 automatic pauses, recaps, queue editing, offers and expiry, editor review,

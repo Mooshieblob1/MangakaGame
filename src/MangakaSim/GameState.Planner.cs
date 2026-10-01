@@ -95,7 +95,10 @@ public partial class GameState
                 if (stage.ManualAssignee is { } manual)
                 { stage.AssignedTo = eligible.Any(p => p.Id == manual) ? manual : null; continue; }
                 if (stage.Status == StageStatus.InProgress && eligible.Any(p => p.Id == stage.AssignedTo && p.Schedule.IsRegularHour(Clock.Now))) continue;
+                // Assistants take Backgrounds and Tones by default, as in real studios; the lead keeps the rest (Q52, finding B1).
+                var assistantStage = stage.Stage is Stage.Backgrounds or Stage.Tones;
                 stage.AssignedTo = eligible.OrderByDescending(p => p.MainSeriesId == series.Id)
+                    .ThenByDescending(p => assistantStage && p.Id != leadId && p.MainSeriesId is null)
                     .ThenByDescending(p => p.Skill(stage.Stage)).ThenBy(p => p.Id).FirstOrDefault()?.Id;
             }
         }
@@ -107,8 +110,10 @@ public partial class GameState
         var claimed = new HashSet<QueueRef>();
         foreach (var person in People.OrderBy(p => p.Id))
         {
-            if (!IsWorkingHour(person, TickStart, out _) || person.CurrentTask is { } own && IsStartable(own))
-            { if (person.CurrentTask is { } task) claimed.Add(task); continue; }
+            // Only someone on duty holds their stage, so a hire can cover the mangaka's absences (finding B1).
+            var working = IsWorkingHour(person, TickStart, out _);
+            if (!working || person.CurrentTask is { } own && IsStartable(own))
+            { if (working && person.CurrentTask is { } task) claimed.Add(task); continue; }
             var extra = Series.Where(s => s.Status == SeriesStatus.Active && s.BusinessId == person.Employment!.BusinessId && s.LocationId == person.Employment.LocationId)
                 .SelectMany(s => s.Chapters.SelectMany(c => c.Stages.Where(w => !w.IsDone && w.ManualAssignee is null &&
                     (w.Stage != Stage.Name || (c.CreatorPersonId ?? s.LeadPersonId) == person.Id)).Select(w => new QueueRef(c.Id,w.Stage))))

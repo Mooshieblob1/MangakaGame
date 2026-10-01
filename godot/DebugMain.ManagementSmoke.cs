@@ -13,11 +13,11 @@ public partial class DebugMain
         SetProcess(false);
         try
         {
-            Check(ManagementInterface&&_managementReady&&_menu.Visible,"Management entry point and menu");
+            Check(ManagementInterface&&_managementReady&&TitleOpen,"Management entry point and menu");
             _careers=new CareerStore(ProjectSettings.GlobalizePath("res://../TestResults/careers-"+Guid.NewGuid().ToString("N")));
             await CaptureSmokeImage("management-menu");
             NewCareerMenu();Press("Begin career");await SettleUi();
-            Check(!_menu.Visible&&_homeOffice.CompanionVisible,"New career with companion");
+            Check(!_menu.Visible&&!TitleOpen&&_homeOffice.CompanionVisible,"New career with companion");
             CheckMoneyFeedback();
             CheckUiPolishNavigation();
             var baseline=_state.ToJson();var desks=_state.Offices.Sum(l=>l.Placements.Count);

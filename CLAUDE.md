@@ -1,7 +1,13 @@
-# Mangaka Studio: context and working agreement
+# Mangaka Days: context and working agreement
 
 This file gives any Claude session the full context and instructions of the
 "Mangaka Game" project on claude.ai, plus the state of the project as of 2026-09-26.
+
+**Name (decided 2026-09-28):** the game is called **Mangaka Days**. The quoted
+project text below still says "Mangaka Studio", the earlier working title; read
+it as Mangaka Days. Internal names (`MangakaGame`, `MangakaSim`, the save folder
+`app_userdata/MangakaGame`) stay unchanged. Record:
+`docs/superpowers/logo-designer-brief.md`.
 Read all of it before doing anything else in this repository. Then read
 `docs/superpowers/session-handoff.md`, which holds the work in progress.
 
@@ -316,12 +322,39 @@ playtesting.
   clarity fixes. A3 (progressive disclosure, incl. rival job offers), A6, A7
   wait for tester B. Record: `docs/superpowers/tier1-closeout-and-tester-a-completion.md`.
   Next: option 2, the music system (user chose "1, then 2").
-- **Music system (built 2026-09-28, not committed, waiting for tracks):**
+- **Music system (committed `f9e8ac6`; 13 Suno Pro tracks added 2026-09-28):**
   spec `docs/superpowers/specs/2026-09-28-music-system-design.md` (Q35 gentle,
   Q36 quiet stretches), plan `docs/superpowers/plans/2026-09-28-music-system.md`.
   `MusicPlan` and `MusicMoments` (engine-free), `godot/Office/MusicPlayer.cs`,
-  Music slider, `--music-smoke`, `scripts/convert-music.ps1`. The user generates
-  Suno tracks when ready. Record: `docs/superpowers/music-system-completion.md`.
+  `--music-smoke`, `scripts/convert-music.ps1`. Record:
+  `docs/superpowers/music-system-completion.md`.
+- **Start-up disclaimer and volume (2026-09-28):** silent AI-assets disclaimer
+  every launch (Q37, Q39 wording), first-launch volume screen with Master (default
+  0), Music and Sound effects on Godot buses, per-computer
+  `user://audio-settings.json`, "Play sound even while unfocused" (off). Career
+  volume fields kept but unused. `--startup-smoke`, `--first-launch`. Spec
+  `docs/superpowers/specs/2026-09-28-startup-flow-and-volume-design.md`; record
+  `docs/superpowers/startup-flow-and-volume-completion.md`.
+- **Title screen and pause menu (2026-09-28):** full-screen title screen with
+  the placeholder studio art and logo (Q42), fades into and out of careers, a
+  small pause menu with Quit to title (Q40), and a safety save before leaving a
+  career or closing the window. Name decided: Mangaka Days (Q41). Store, title
+  and logo art now come from NovelAI V5 (`docs/superpowers/novelai-prompts.md`).
+  Spec `docs/superpowers/specs/2026-09-28-title-screen-and-pause-menu-design.md`;
+  record `docs/superpowers/title-screen-and-pause-menu-completion.md`.
+- **In-game UI restyle (2026-09-29):** the logo's palette in an "evening
+  studio" dark theme and a "manuscript paper" light theme, logo slab buttons
+  (gold main actions, quiet ordinary buttons, mint for where you are), Lilita
+  One for buttons and headings (Q44 to Q47). Spec
+  `docs/superpowers/specs/2026-09-29-brand-ui-restyle-design.md`; record
+  `docs/superpowers/brand-ui-restyle-completion.md`.
+- **Tester B (2026-10-01):** returned (B1 to B8 in the findings file, triage
+  approved). Fixed B1 idle hire (assistants take Backgrounds and Tones, Q52),
+  B4 pitch cooldown, B5 Continue after an import, B7 furnishing; night skip on
+  days with no work fixed too. Next: the career goals board (spec
+  `docs/superpowers/specs/2026-10-01-career-goals-design.md`, awaiting review),
+  then A3. Records: `docs/superpowers/tester-b-fixes-completion.md`,
+  `docs/superpowers/quiet-day-night-skip-fix.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

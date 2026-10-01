@@ -46,7 +46,7 @@ public partial class DebugMain
         {
             button.SetPressedNoSignal(_speed==speed);
             button.ThemeTypeVariation=_speed==speed?"HeaderActiveButton":"HeaderButton";
-            button.Disabled=overnight&&speed>0;
+            button.Disabled=OfficeEditing||overnight&&speed>0;
             button.TooltipText=overnight?(speed==0?"Pause / resume the overnight transition at 32×":"Daytime speeds return in the morning. Space pauses / resumes the 32× night transition."):
                 speed==QuietSpeed?"32×: routine days skip ahead. Helper-Chan stops you when anything needs you.\nSpace: pause / resume · 1: slower · 2: faster":
                 "Space: pause / resume · 1: slower · 2: faster";
