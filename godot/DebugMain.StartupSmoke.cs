@@ -43,6 +43,7 @@ public partial class DebugMain
                 "Only Master, at 0; Music 50% and Sound effects 60% wait in Settings");
             Check(_volumeSetup.FindChildren("InterfaceSize", "OptionButton", true, false).Any() && !_volumeSetup.FindChildren("DisplayMode", "OptionButton", true, false).Any(),
                 "The first-launch screen offers the interface size, not the window options");
+            await CaptureSmokeImage("first-launch-setup");
             // Final review: keyboard and controller players start on Master and can move through the screen.
             Check(GetViewport().GuiGetFocusOwner() == sliders[0], "The volume screen starts with keyboard focus on Master");
             // Final review: the Sound effects preview is heard even though menus pause the office ambience.

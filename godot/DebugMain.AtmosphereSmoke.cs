@@ -35,6 +35,7 @@ public partial class DebugMain
                 var original=_state.ToJson();
                 for(var roll=0;roll<8&&preview.Recipe==new AppearanceRecipe(0,0,0,0,false,0,0);roll++)Press("Randomise look");
                 Check(preview.Recipe!=new AppearanceRecipe(0,0,0,0,false,0,0)&&_state.ToJson()==original,"Randomise look changes the preview without touching the career");
+                await CaptureSmokeImage($"new-career-quick-{size.X}x{size.Y}");
                 Press("Customise");await SettleUi();
                 Check(_menuContent.FindChildren("CreatorAppearance0","OptionButton",true,false).OfType<OptionButton>().Single().IsVisibleInTree(),"Customise shows the appearance choices");
                 name.Text="  Haruka  ";

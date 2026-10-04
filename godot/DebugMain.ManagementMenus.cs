@@ -49,8 +49,10 @@ public partial class DebugMain
         Words(start,"Name",14);var name=new LineEdit{Name="CreatorName",Text="Aki",PlaceholderText="Aki",MaxLength=40};start.AddChild(name);
         name.TextChanged+=text=>previewName.Text=string.IsNullOrWhiteSpace(text)?"Aki":text.Trim();
         var randomise=ActionButton(start,"Randomise look",()=>{});
+        // Begin career is the full-width main button; Customise and Back sit beneath it as quieter choices.
+        var beginSlot=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};start.AddChild(beginSlot);
         var actions=new HFlowContainer();start.AddChild(actions);
-        var customise=ActionButton(start,"Customise",()=>{});customise.Name="CustomiseCareer";
+        var customise=ActionButton(actions,"Customise",()=>{});customise.Name="CustomiseCareer";
         QuietWords(start,"Customise holds the look and the career rules. Difficulty starts on Standard.",14);
         var custom=new VBoxContainer{Name="CareerCustomisation",SizeFlagsHorizontal=SizeFlags.ExpandFill,Visible=false};_menuContent.AddChild(custom);
         var sections=MenuSections(custom,"Appearance","Career rules");
@@ -86,7 +88,7 @@ public partial class DebugMain
         Words(world,"When other lead creators leave",14);var rights=new OptionButton();rights.AddItem("Studio keeps future rights unless released");rights.AddItem("Creator keeps future rights");world.AddChild(rights);
         var experienced=new CheckBox{Name="ShowEveryScreen",Text="Experienced player: show every screen"};world.AddChild(experienced);
         var difficulty = DifficultyControls(sections[1], true);
-        var begin=ActionButton(actions,"Begin career",()=>EnterCareer(()=>
+        var begin=ActionButton(beginSlot,"Begin career",()=>EnterCareer(()=>
         {
             _state=GameState.NewGame((int)seed.Value,rights.Selected==0?OwnershipMode.StudioRetention:OwnershipMode.CreatorRetention,name.Text);
             _state.Apply(difficulty());

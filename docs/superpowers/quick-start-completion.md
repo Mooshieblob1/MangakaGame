@@ -52,11 +52,19 @@ at once (the goals chapter introduction and two lines of one-shot advice).
   with name, Randomise look and Begin career; Randomise look leaves the career
   untouched; Customise shows the appearance choices), `--progression-smoke`
   and `--display-sweep-smoke` (open Customise before Career rules).
+- Run on 2026-10-04: startup 17, display 16, alpha 47, atmosphere 887,
+  progression 16 and title 74 checks passed; the display sweep checked 616
+  screens with 0 flagged.
+- Rendered captures (AVIF, `TestResults/quick-start-2026-10-04`), reviewed by
+  me: `first-launch-setup` and `new-career-quick` at 1280 x 720, 1920 x 1080
+  and 2560 x 1080. After the first review, Begin career became the
+  full-width main button with Customise and Back beneath it, since it had
+  looked smaller than Randomise look.
+- Source inspection, automated checks and my review of captures only; no
+  human playtest yet.
 
 ## Still to do
 
-- Run the smoke checks above and look at the setup screen and New Career
-  captures (results added below when run).
 - Re-check C1 with a fresh player (round 2 or the stranger playtest).
 - Coordinator note: CLAUDE.md section 5, the roadmap and the session handoff
   need one line each for this record; the thread committing the PC-only work
