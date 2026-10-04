@@ -62,7 +62,7 @@ public partial class GameState
                 ?? throw new InvalidDataException("Save file is empty.");
         }
         catch (JsonException ex) { throw new InvalidDataException($"Save data is malformed: {ex.Message}", ex); }
-        try { state.ValidateSave(); }
+        try { state.ValidateSave(); state.EnsureGoals(); state.EnsureDisclosure(); state.EnsureStudioIsland(); }
         catch (Exception ex) when (ex is OverflowException or ArgumentException or InvalidOperationException or NullReferenceException or JsonException or KeyNotFoundException)
         {
             throw new InvalidDataException("Save file contains malformed state, references, numeric totals or dates.", ex);
@@ -84,6 +84,8 @@ public partial class GameState
     private void ValidateSave()
     {
         RepairSupersededDrafts();
+        ValidateGoals();
+        ValidateDisclosure();
         static void Check([DoesNotReturnIf(false)] bool valid, string field)
         {
             if (!valid) throw new InvalidDataException($"Save file has invalid {field}.");

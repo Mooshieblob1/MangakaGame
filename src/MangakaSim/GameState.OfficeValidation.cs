@@ -20,7 +20,7 @@ public partial class GameState
         foreach(var l in Locations)
         {
             var expected=l.IsFamilyHome?"family-home":BusinessOf(l.BusinessId).EmployerTier>0?$"employer-{l.Seats}":$"property-{l.PropertyOfferId}";
-            Check(l.FloorPlanId==expected&&double.IsFinite(l.BaseAtmosphere)&&l.BaseAtmosphere is >=-100 and <=100&&l.OfficeRevision>=0&&l.FixedBreakSeats>=2&&l.FixedBreakSeats<=1002,"property identity");
+            Check(l.FloorPlanId==expected&&double.IsFinite(l.BaseAtmosphere)&&l.BaseAtmosphere is >=-100 and <=100&&l.OfficeRevision>=0&&l.FixedBreakSeats>=2&&l.FixedBreakSeats<=1002&&(!l.StudioIsland||l.IsFamilyHome),"property identity");
             var o=offices.SingleOrDefault(o=>o.LocationId==l.Id);Check(o is not null,"location reference");
             foreach(var p in o!.Placements)
             {

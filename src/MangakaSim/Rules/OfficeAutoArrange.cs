@@ -54,7 +54,7 @@ public static class OfficeAutoArrange
             var chair=inventory.Values.Where(i=>OfficeCatalog.Get(i.Kind).Chair&&!placed.Any(p=>p.ItemId==i.Id)).OrderByDescending(i=>old.Any(p=>p.ItemId==i.Id&&p.DeskId==desk.Id)).ThenBy(i=>i.Id).FirstOrDefault();
             if(chair is null&&purchaseMissing)chair=New("chair");
             if(chair is null)continue;
-            var slots=(reverse?plan.DeskSlots.Reverse():plan.DeskSlots).Select(c=>new OfficePlacement(desk.Id,c.X,c.Z));
+            var slots=(reverse?plan.DeskSlots.Reverse():plan.DeskSlots).Select(c=>new OfficePlacement(desk.Id,c.X,c.Z,c.Rotation));
             var candidates=deskOrder is null?old.Where(p=>p.ItemId==desk.Id).Concat(slots):slots.Concat(old.Where(p=>p.ItemId==desk.Id));
             var done=false;
             foreach(var p in candidates)if(TryAdd(p with{Locked=false},OfficeLayoutRules.ChairAt(p,chair.Id))){done=true;break;}

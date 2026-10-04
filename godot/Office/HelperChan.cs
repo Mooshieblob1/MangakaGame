@@ -15,6 +15,8 @@ public partial class HelperChan : Node3D
     public Vector3 Destination { get; private set; }
     public bool Moving=>Route.Count>0||Position.DistanceTo(Destination)>.01f;
     public bool AtDesk { get; set; }=true;
+    /// <summary>Yaw while seated at her desk: 0 in the alcove, a quarter turn on the studio island (Q59).</summary>
+    public float DeskFacing { get; set; }
     public float SeatHeight { get; set; }=OfficeArt.DeskSeatHeight;
     public string DeskActivity { get; private set; }="Writing notes";
     public void SetRoute(IEnumerable<Vector3> points,Vector3 destination){Route.Clear();foreach(var point in points)Route.Enqueue(point);Destination=destination;}
@@ -147,7 +149,7 @@ public partial class HelperChan : Node3D
         var seated=!Moving&&SeatHeight>0;Pose(seated);
         var beat=_phase%20;
         DeskActivity=moving?"Following":!AtDesk?"Taking a break":beat<10?"Writing notes":beat<14?"Adjusting hair":"Checking clipboard";
-        if(!moving&&AtDesk)Rotation=Vector3.Zero;
+        if(!moving&&AtDesk)Rotation=new(0,DeskFacing,0);
         _leftArm.Rotation=moving?new(Mathf.Sin(_phase*7)*.3f,0,0):!AtDesk?new(-.6f,0,.3f):beat<10?
             new(-1.2f+Mathf.Sin(_phase*9)*.09f,0,.3f+Mathf.Sin(_phase*7)*.045f):beat<14?
             new(.2f,0,-2.4f+Mathf.Sin(_phase*3)*.08f):new(-.55f,0,.25f);

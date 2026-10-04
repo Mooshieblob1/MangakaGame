@@ -38,7 +38,7 @@ public partial class HelperChan
         var moving=Moving;var seated=!moving&&SeatHeight>0;
         var writing=seated&&AtDesk&&_phase%20<14;
         DeskActivity=moving?"Following":!AtDesk?"Taking a break":writing?"Writing notes":"Checking clipboard";
-        if(!moving&&AtDesk)Rotation=Vector3.Zero;
+        if(!moving&&AtDesk)Rotation=new(0,DeskFacing,0);
         _characterModel!.Tick(delta,Math.Max(0,speed),moving?"Walk":writing?"Write":seated?"Sit":"Idle",SeatHeight);
     }
 }

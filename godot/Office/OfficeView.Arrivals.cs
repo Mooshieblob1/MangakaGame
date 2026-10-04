@@ -13,7 +13,9 @@ public partial class OfficeView
     internal IReadOnlyDictionary<int,OfficeActor> StaffActors=>_actors;
     internal HelperChan? Companion=>_helper;
     internal Vector3 StaffExit=>new(_plan.Width*.25f+3.92f,ViewingFamilyHome?GenkanFloorHeight:0,_plan.Depth*.25f-.85f);
-    private static Vector3 HelperDesk=>new(-1.5f,0,1.24f);
+    // Her seat: the alcove desk, or on the studio island the chair behind her island desk (Q59).
+    internal Vector3 HelperDesk=>_plan.Island&&OfficeLayoutRules.ChairAt(FloorPlanDefinition.IslandHelperDesk,0) is var c
+        ?new((c.X+1.5f)*.25f,0,(c.Z+1.5f)*.25f):new(-1.5f,0,1.24f);
     private bool _helperLeaving;
     private Vector3? _helperTarget;
 

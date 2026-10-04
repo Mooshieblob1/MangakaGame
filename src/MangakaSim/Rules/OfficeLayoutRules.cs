@@ -45,6 +45,7 @@ public static class OfficeLayoutRules
     {
         var result=new HashSet<OfficeCell>();
         for(var x=plan.Width-5;x<plan.Width;x++)for(var z=plan.Depth-6;z<plan.Depth-2;z++)solids.Add(new(x,z));
+        if(plan.Island)for(var x=0;x<5;x++)for(var z=2;z<7;z++)if(plan.HelperReserved(x,z))solids.Add(new(x,z));
         foreach(var cell in solids)for(var x=-1;x<=1;x++)for(var z=-1;z<=1;z++)result.Add(new(cell.X+x,cell.Z+z));
         return result;
     }

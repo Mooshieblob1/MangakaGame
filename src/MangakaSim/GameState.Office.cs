@@ -29,6 +29,7 @@ public partial class GameState
         if(l.Closed)return;
         if(l.IsFamilyHome)
         {
+            l.StudioIsland=true;
             foreach(var prior in Offices.Where(o=>o!=office&&Locations.Single(x=>x.Id==o.LocationId).IsFamilyHome))
                 prior.Placements.RemoveAll(p=>Furniture.Single(i=>i.Id==p.ItemId).Owner==FurnitureOwner.Family);
             if(!Furniture.Any(i=>i.Owner==FurnitureOwner.Family))
@@ -94,6 +95,7 @@ public partial class GameState
         long purchases=0,sales=0;
         foreach(var p in c.Purchases)
         {
+            if(OfficeCatalog.Get(p.Kind).RewardOnly)throw new InvalidCommandException("That item is a goal reward and cannot be bought.");
             if(!EquipmentAvailable(p.Kind))throw new InvalidCommandException("This workstation needs more studio reputation or the digital era. Sandbox unlocks are available in Settings.");
             var f=OfficeCatalog.Get(p.Kind);purchases=checked(purchases+f.Price);
             items.Add(p.TemporaryId,new(){Id=p.TemporaryId,Kind=p.Kind,Owner=FurnitureOwner.Business,BusinessId=l.BusinessId,Paid=f.Price});

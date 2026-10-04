@@ -97,7 +97,7 @@ public partial class DebugMain
             var creator=_homeOffice.StaffActors[_state.ProtagonistPersonId];
             if(creator.PrivacyObscured)
             {
-                if(_homeOffice.Companion is not {Visible:true,AtDesk:true} helper||helper.Destination.X>=0)
+                if(_homeOffice.Companion is not {Visible:true,AtDesk:true} helper||helper.Destination.DistanceTo(_homeOffice.HelperDesk)>.01f)
                     throw new InvalidOperationException("Helper followed the creator on a private WC visit.");
                 if(!creator.Moving&&!sawCreatorInWc)
                 {
