@@ -88,7 +88,8 @@ public class MidCareerPacingTests
     [Fact]
     public void Stop_list_matches_Q27_and_leaves_routine_events_out()
     {
-        Assert.Equal(10, CareerGuidance.FastSpeedStops.Count);
+        Assert.Equal(11, CareerGuidance.FastSpeedStops.Count); // Q27's ten plus a finished goal chapter (spec 2026-10-01)
+        Assert.Contains(EventType.GoalChapterCompleted, CareerGuidance.FastSpeedStops);
         Assert.DoesNotContain(EventType.DailyRecap, CareerGuidance.FastSpeedStops);
         Assert.DoesNotContain(EventType.ChapterCompleted, CareerGuidance.FastSpeedStops);
         Assert.Contains(EventType.SerializationOffered, CareerGuidance.FastSpeedStops);

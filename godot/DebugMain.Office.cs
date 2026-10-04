@@ -64,7 +64,7 @@ public partial class DebugMain
         };
         _officeEditor=new VBoxContainer{Visible=false};side.AddChild(_officeEditor);
         _officeCatalog=new OptionButton();_officeEditor.AddChild(_officeCatalog);
-        foreach(var f in OfficeCatalog.Furniture)_officeCatalog.AddItem($"{f.Name} · ¥{f.Price:N0}");
+        foreach(var f in OfficeCatalog.Furniture.Where(f=>!f.RewardOnly))_officeCatalog.AddItem($"{f.Name} · ¥{f.Price:N0}");
         Button(_officeEditor,"Add / replace selected chair",AddOfficeFurniture);
         Button(_officeEditor,"Auto-arrange owned furniture",()=>AutoOffice(false));
         Button(_officeEditor,"Fill all desks (purchase missing)",()=>AutoOffice(true));
@@ -111,7 +111,12 @@ public partial class DebugMain
             var index=_officeLocation.GetItemIndex(id);if(index<0)index=_officeLocation.GetItemIndex(_state.Protagonist.Employment!.LocationId);_officeLocation.Select(Math.Max(0,index));
         }
         var state=OfficeState;var location=state.Locations.FirstOrDefault(l=>l.Id==OfficeLocation);if(location is null)return;
-        for(var i=0;i<OfficeCatalog.Furniture.Length;i++)_officeCatalog.SetItemDisabled(i,!state.EquipmentAvailable(OfficeCatalog.Furniture[i].Id));
+        for(var i=0;i<_officeCatalog.ItemCount;i++)
+        {
+            var f=OfficeCatalog.Furniture[i];var available=state.EquipmentAvailable(f.Id);
+            _officeCatalog.SetItemDisabled(i,!available);
+            _officeCatalog.SetItemText(i,$"{f.Name} · ¥{f.Price:N0}"+(!available&&GoalCatalog.UnlockedBy(f.Id) is {} chapter?$" · Unlocked by: {chapter} chapter":""));
+        }
         var office=_officeDraft is null?state.OfficeAt(location.Id):new OfficeLayout{LocationId=location.Id,Placements=_officeDraft.Placements,Assignments=_officeDraft.Assignments??state.OfficeAt(location.Id).Assignments};
         var inventory=DraftInventory();
         _officeView.Editing=OfficeEditing;_officeView.Speed=_speed;

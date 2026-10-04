@@ -72,11 +72,11 @@ public partial class DebugMain
             if(titles.ItemCount==0||people.ItemCount==0){details.Text="Create a title and have an available attendee first.";if(book is not null)book.Disabled=true;return;}
             var person=_state.FindPerson(people.GetSelectedId())!;var location=_state.Locations.Single(l=>l.Id==person.Employment!.LocationId);
             var scale=events.Selected;var date=_state.NextConvention(scale);var district=scale==0?location.District:scale==1?"Toshima":"Ariake";
-            var route=TokyoProperties.Travel(location.District,district);var fee=new long[]{0,5000,8000}[scale];var travel=route.Fare*2*(scale==2?2:1);
+            var route=TokyoProperties.Travel(location.District,district);var fee=_state.ConventionBoothFee(scale);var travel=route.Fare*2*(scale==2?2:1);
             var series=_state.FindSeries(titles.GetSelectedId())!;var stock=series.Volumes.Where(v=>v.IsDoujin&&v.BusinessId==_state.ControlledBusinessId).Sum(v=>_state.Stock(v.Id));
             var available=_state.ConventionReservable(series.Id,date);
             var reason=reserve.Value>available?$"Only {available:N0} copies can be reserved for this date.":date>_state.Clock.Now.Date.AddDays(28)?$"Booking opens {date.AddDays(-28):d MMM}.":_state.Bookings.Any(b=>!b.Cancelled&&!b.Settled&&b.BusinessId==_state.ControlledBusinessId&&b.Date==date)?"You already have a booth at this event.":fee+travel>_state.AvailableBusinessCash?$"Not enough available {ProductionFundsCaption.ToLowerInvariant()}.":"";
-            details.Text=$"{date:ddd d MMM yyyy} · {district}\nBooth ¥{fee:N0} + travel ¥{travel:N0} = ¥{fee+travel:N0}\n{stock:N0} copies in stock · {available:N0} can be reserved\nReserve for this booking: {reserve.Value:N0}"+(reason.Length>0?"\n"+reason:"");
+            details.Text=$"{date:ddd d MMM yyyy} · {district}\n{(fee==0&&scale>0?"Booth free (Doujin Days reward)":$"Booth ¥{fee:N0}")} + travel ¥{travel:N0} = ¥{fee+travel:N0}\n{stock:N0} copies in stock · {available:N0} can be reserved\nReserve for this booking: {reserve.Value:N0}"+(reason.Length>0?"\n"+reason:"");
             if(book is not null){book.Disabled=reason.Length>0;book.TooltipText=reason;}
         }
         reserve.ValueChanged+=_=>Quote();titles.ItemSelected+=_=>Quote();people.ItemSelected+=_=>Quote();events.ItemSelected+=_=>Quote();

@@ -35,8 +35,10 @@ public partial class GameState
             if (assistant is not null && assistant.Employment!.LocationId!=location.Id) throw new InvalidCommandException("Choose attendees based at the same workplace.");
             var district=c.Value==0?location.District:c.Value==1?"Toshima":"Ariake";
             var route=TokyoProperties.Travel(location.District,district);
-            var fee=new long[]{0,5000,8000}[c.Value]; var travel=route.Fare*2*(assistant is null?1:2)*(c.Value==2?2:1);
+            var fee=ConventionBoothFee(c.Value); var travel=route.Fare*2*(assistant is null?1:2)*(c.Value==2?2:1);
             var reserved=AllocateConventionStock(title?.Id,date,c.ReservedCopies);
+            // A free table from the Doujin Days chapter (spec 2026-10-01) pays this booking's fee.
+            if(fee==0&&c.Value>0&&Goals is {FreeConventionTables:>0} goals)goals.FreeConventionTables--;
             Spend(ControlledBusinessId,fee,"convention booking"); Spend(ControlledBusinessId,travel,"staff travel");
             Bookings.Add(new(){Id=AllocateId(),BusinessId=ControlledBusinessId,PersonId=person.Id,AssistantId=assistant?.Id,SeriesId=title?.Id,Date=date,District=district,Scale=c.Value,Fee=fee,TravelCost=travel,TravelHours=route.Hours,ReservedStock=reserved}); return;
         }
@@ -53,11 +55,17 @@ public partial class GameState
         Spend(series.BusinessId,1000,"campaign setup"); ChargeSeriesDirect(series,1000);
         series.CampaignUntil=Clock.Now.AddDays(14); series.CampaignHours=0;
     }
+    /// <summary>The booth fee for a convention scale; a free table from the Doujin Days chapter makes a paid booth free (spec 2026-10-01).</summary>
+    public long ConventionBoothFee(int scale) => scale > 0 && Goals is { FreeConventionTables: > 0 } ? 0 : new long[] { 0, 5000, 8000 }[scale];
     private void CancelBooking(ConventionBooking b)
     {
         if (b.Cancelled || b.Settled) return;
         b.Cancelled=true;
-        if (Clock.Now.Date<=b.Date.AddDays(-7)) AccountPost(BusinessOf(b.BusinessId).Account,b.Fee+b.TravelCost,"convention refund",AccountEntryKind.Credit);
+        if (Clock.Now.Date<=b.Date.AddDays(-7))
+        {
+            AccountPost(BusinessOf(b.BusinessId).Account,b.Fee+b.TravelCost,"convention refund",AccountEntryKind.Credit);
+            if(b.Fee==0&&b.Scale>0&&b.BusinessId==ControlledBusinessId&&Goals is not null)Goals.FreeConventionTables++; // the free table comes back
+        }
     }
     private void ChargeSeriesDirect(Series series,long cost)
     {

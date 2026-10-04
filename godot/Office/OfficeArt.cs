@@ -99,6 +99,35 @@ public static class OfficeArt
             Box(root,new(.5f,1.5f,.052f),new(.72f,.52f,.01f),paper);
             for(var i=0;i<3;i++) Box(root,new(.26f+i*.24f,1.5f,.061f),new(.18f,.3f,.005f),new(.3f+i*.15f,.42f,.45f));
         }
+        else if(kind is "trophy-shelf" or "display-cabinet")
+        {
+            var tall=kind=="display-cabinet";var gold=new Color(.86f,.69f,.29f);
+            Box(root,new(.5f,tall?.9f:.6f,.2f),new(1f,tall?1.8f:1.2f,.4f),wood.Darkened(.15f));
+            for(var i=0;i<(tall?4:3);i++)Box(root,new(.5f,.15f+i*.42f,.2f),new(.92f,.03f,.36f),wood);
+            Box(root,new(.32f,.52f,.2f),new(.12f,.16f,.02f),paper);
+            Box(root,new(.68f,.5f,.2f),new(.08f,.1f,.08f),gold);
+            if(tall)for(var i=0;i<3;i++)Box(root,new(.25f+i*.25f,1.38f,.2f),new(.07f,.12f,.07f),gold);
+        }
+        else if(kind=="trophy")
+        {
+            var gold=new Color(.86f,.69f,.29f);
+            Box(root,new(.25f,.06f,.25f),new(.22f,.12f,.22f),dark);
+            Box(root,new(.25f,.2f,.25f),new(.05f,.16f,.05f),gold);
+            Sphere(root,new(.25f,.36f,.25f),new(.2f,.18f,.2f),gold);
+        }
+        else if(kind is "framed-letter" or "ranking-chart" or "award-plaque" or "gold-frame" or "company-sign")
+        {
+            var frame=kind is "gold-frame" or "award-plaque"?new Color(.86f,.69f,.29f):kind=="company-sign"?dark:wood;
+            var w=kind=="company-sign"?1.2f:kind=="ranking-chart"?.7f:.5f;
+            Box(root,new(w/2,1.5f,.025f),new(w,.5f,.04f),frame);
+            Box(root,new(w/2,1.5f,.052f),new(w-.08f,.42f,.01f),kind=="company-sign"?new Color(.94f,.78f,.47f):paper);
+            if(kind=="ranking-chart")for(var i=0;i<4;i++)Box(root,new(.15f+i*.13f,1.36f+i*.05f,.061f),new(.08f,.1f+i*.1f,.005f),new Color(.31f,.75f,.69f));
+        }
+        else if(kind=="plant-set")
+        {
+            foreach(var x in new[]{.2f,.6f})
+            {Box(root,new(x,.14f,.25f),new(.24f,.28f,.24f),new(.57f,.31f,.22f));Sphere(root,new(x,.5f,.25f),new(.3f,.36f,.3f),new(.25f,.43f,.28f));}
+        }
         else
         {
             Box(root,new(.375f,.43f,.25f),new(.75f,.86f,.5f),paper.Darkened(.18f));

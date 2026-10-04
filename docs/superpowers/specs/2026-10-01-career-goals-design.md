@@ -1,7 +1,7 @@
 # Career goals board: design
 
 Date: 2026-10-01. Status: design approved in conversation (Q48 to Q51 and three
-design sections); written spec awaiting the user's review.
+design sections); written spec approved by the user on 2026-10-01.
 
 Background: feedback pasted by the user on 2026-09-29 (source not stated):
 "I'm confused as to what metrics or things I should be going for. There's a
@@ -94,7 +94,7 @@ pitch gets a better chance, once).
 | Goal | Counts when | Goal reward |
 |---|---|---|
 | Publish 10 magazine chapters | 10 chapters published in magazines | ¥30,000 |
-| Reach the top 5 | a series ranks 5th or better in its magazine | ranking chart decoration |
+| Reach the top 10 | a series ranks 10th or better in its magazine (top 5 at first; changed after the playtests, see the completion record) | ranking chart decoration |
 | Release your first collected volume | a magazine series releases a collected volume | ¥50,000 |
 | Hire your first assistant | an assistant joins your staff | supportive chair, free |
 | Reach 10,000 readers | the existing milestone | +1,000 fans for your newest series |

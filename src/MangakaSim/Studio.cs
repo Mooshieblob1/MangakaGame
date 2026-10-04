@@ -5,7 +5,7 @@ namespace MangakaSim;
 public enum OwnershipMode { StudioRetention, CreatorRetention }
 public enum ControlMode { OwnerDirector, EmployedLead }
 public enum CandidateProfile { Junior, Generalist, Specialist, Prodigy }
-public enum AccountEntryKind { Publishing, Expense, Transfer, Salary, Credit, PersonalIncome, SandboxSubsidy, LicenseIncome, AwardPrize }
+public enum AccountEntryKind { Publishing, Expense, Transfer, Salary, Credit, PersonalIncome, SandboxSubsidy, LicenseIncome, AwardPrize, GoalReward }
 
 public sealed class CashAccount
 {

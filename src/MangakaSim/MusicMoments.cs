@@ -17,6 +17,8 @@ public static class MusicMoments
                     moments.Add(MusicMoment.GoodNews); break;
                 case EventType.SeriesCancelled or EventType.PitchRejected when Owned(e) is not null:
                     moments.Add(MusicMoment.Setback); break;
+                case EventType.GoalChapterCompleted:
+                    moments.Add(MusicMoment.GoodNews); break;
                 case EventType.ChapterAtRisk when Owned(e)?.Contract is not null:
                     moments.Add(MusicMoment.Deadline); break;
             }

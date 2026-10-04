@@ -26,7 +26,8 @@ public static class HelperStories
 {
     public static readonly string[] Arc = ["beside", "page", "reader", "same", "ordinary", "still"];
     public static readonly string[] Everyday = ["margin", "shelf", "tea", "migration", "desk_moment"];
-    public static bool Known(string id) => Arc.Contains(id) || Everyday.Contains(id);
+    public static readonly string[] Chapters = ["goal-doujin-days", "goal-rookie", "goal-serialized", "goal-studio-head", "goal-legend"];
+    public static bool Known(string id) => Arc.Contains(id) || Everyday.Contains(id) || Chapters.Contains(id);
     public static StoryScene Describe(GameState state, string id)
     {
         var journal = state.Career.Journal;
@@ -49,6 +50,11 @@ public static class HelperStories
             "shelf" => new(id,"Reference shelf",$"I've organized the references. The favorites were harder to put back. I remember what you said about {wish}. " + (Answer("shelf")==0?"I left the technique books within reach.":Answer("shelf")==1?"I bookmarked the reader letters again.":""),"Talk about the craft","Talk about the readers"),
             "tea" => new(id,"Tea beside the draft","A pause is allowed. I checked. " + support + (Answer("ordinary")==0?" This can be one of the little moments.":Answer("ordinary")==1?" We can think about what comes next.":""),"Stay and chat","Enjoy the quiet","concerned"),
             "migration" => new(id,"Desk migration","The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair. " + (Answer("migration")==0?"And yes, the archive is safe again.":Answer("migration")==1?"I found another good view from the desk.":""),"How is the archive?","How is the new view?","happy"),
+            "goal-doujin-days" => new(id,"Doujin Days, done","Your first book, your first readers, your first convention. I put the first copy on the shelf where everyone can see it.","Let's aim for a magazine","Let's enjoy this for a moment","happy"),
+            "goal-rookie" => new(id,"A professional now","Someone out there read your pages and said yes. Now they're waiting for your next chapter.","I won't keep them waiting","I'm nervous, honestly","happy"),
+            "goal-serialized" => new(id,"Ten chapters and counting","Deadlines, rankings, a collected volume on real shelves. You kept every promise. The plaque is crooked; I'm leaving it.","Next, our own studio","Thank you for keeping track","happy"),
+            "goal-studio-head" => new(id,"A studio of your own","A sign on the door, a team at the desks, a company in your name. I still get the desk beside yours, right?","Always","Who else would I want there?","happy"),
+            "goal-legend" => new(id,"Part of manga history","Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know.","Let's keep making them","Thank you for staying","happy"),
             _ => throw new InvalidCommandException("Unknown conversation.")
         };
     }

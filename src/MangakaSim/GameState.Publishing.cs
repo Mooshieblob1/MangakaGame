@@ -91,7 +91,8 @@ public partial class GameState
             var reputation = BusinessReputation(series.BusinessId);
             sample.PitchResolved = true;
             var recognition = Progression.Awards.Any(a => a.SeriesId == series.Id && a.Prize > 0 && a.ResolvedAt >= Clock.Now.AddDays(-365)) ? .1 : 0;
-            if (Rng.NextDouble() < Math.Min(.95, PitchRules.Chance(magazine.Tier, quality, reputation, affinity, trend) * PitchFactor(series.BusinessId) + recognition))
+            var boost = TakePitchBoost(series);
+            if (Rng.NextDouble() < Math.Min(.95, PitchRules.Chance(magazine.Tier, quality, reputation, affinity, trend) * PitchFactor(series.BusinessId) + recognition + boost))
             {
                 var first = IssueSchedule.AddIssues(magazine, Clock.Now, 4);
                 series.PendingOffer = new(magazine.Id, ReputationRules.Fee(magazine.FeePerPageMin, magazine.FeePerPageMax,
@@ -175,5 +176,12 @@ public partial class GameState
             if (person.CurrentTask?.ChapterId == chapter.Id) person.CurrentTask = null;
         }
         series.Chapters.Remove(chapter);
+    }
+
+    /// <summary>The Rookie chapter's one-off pitch bonus (spec 2026-10-01): used by the player's own next pitch only.</summary>
+    internal double TakePitchBoost(Series series)
+    {
+        if (series.BusinessId != ControlledBusinessId || Goals is not { PitchBoost: true } goals) return 0;
+        goals.PitchBoost = false; return .1;
     }
 }

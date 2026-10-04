@@ -12,7 +12,7 @@ public partial class GameState
     public bool Assist(SandboxAssist assist) => (Progression.Assists & assist) != 0;
     public bool EquipmentAvailable(string kind) => kind switch
     {
-        "desk-studio" => Assist(SandboxAssist.UnlockEquipment) || ControlledBusiness.TrackRecord >= 20,
+        "desk-studio" => Assist(SandboxAssist.UnlockEquipment) || Goals?.Unlocked.Contains("desk-studio") == true || ControlledBusiness.TrackRecord >= 20,
         "desk-digital" => (Assist(SandboxAssist.FutureTechnology) || World.Processed.Contains("industry:mobile")) &&
             (Assist(SandboxAssist.UnlockEquipment) || ControlledBusiness.TrackRecord >= 40),
         _ => true
