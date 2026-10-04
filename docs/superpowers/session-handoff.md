@@ -16,29 +16,19 @@ roadmap or a completion record. Replace its contents when the task changes.
   `streaming-sales-completion.md`, `display-settings-completion.md`.
 - These were split by file, not by hunk, so a file edited by two features sits
   in the later commit and the middle commits may not build on their own.
-- Still uncommitted, waiting for the user's go-ahead to build and test:
-  - **Quick start for the opening (Q65 option 1, tester C's C1).** Shorter
-    setup screen, a simpler New Career form and one Helper-Chan text on day
-    one. Record `quick-start-completion.md`. Its files also carry the last of
-    the display settings work (`godot/DebugMain.Display.cs`,
-    `DebugMain.DisplaySmoke.cs`, `DebugMain.Startup.cs`,
-    `DebugMain.StartupSmoke.cs`, `DebugMain.ManagementMenus.cs`,
-    `DebugMain.Audio.cs`, `display-settings-completion.md`) and older changes
-    to `fresh-player-test-findings.md`, so commit them together. Until then
-    `main` does not build, because `DebugMain.Management.cs` already calls
-    the display code.
-  - **Tier 1 closeout.** T1.1, T1.3, T1.4 and T1.8 ticked with evidence in the
-    roadmap; T1.10 moved to Tier 2 as the stranger playtest; T1.2 and T1.5 wait
-    for the user's sign-off (T1.5 also for the quick start). A6 is explained on
-    the licence offer card (`godot/DebugMain.Progression.cs`, presentation only,
-    not built); A7 closed with no new work because A1 caused it. Record
-    `tier1-closeout-completion.md`.
-- Last full verification on this computer was for streaming sales (768 xUnit,
-  all 23 Godot checks, display sweep 560 / 0 flagged) and display settings
-  (display sweep 616 / 0 flagged). Nothing after that has been built.
-- Next: the user's go-ahead to build and test the quick start and A6, then
-  their sign-off on T1.2 and T1.5 to finish Tier 1. A new tester build
-  (alpha.13) also needs their go-ahead.
+- Also on `main`: the opening quick start (Q65 option 1, tester C's C1;
+  record `quick-start-completion.md`, commits `2bb6d66`, `f54f994`, `dfecf87`)
+  and the Tier 1 closeout (`1bab533`, `4830b78`, `00aa8d3`; record
+  `tier1-closeout-completion.md`). Tier 1 is complete: every item ticked, T1.2
+  and T1.5 signed off by the user (Q66), T1.10 moved to Tier 2 as the stranger
+  playtest. A6 is explained on the licence offer card; A7 closed with no new
+  work because A1 caused it.
+- Last verification (2026-10-04, after the quick start): warning-free build,
+  790 xUnit tests, the affected smoke checks and the display sweep (616
+  screens, 0 flagged). The A6 offer card compiled but has not been looked at:
+  run `--progression-smoke --capture` at the next authorized build.
+- Next: Tier 2. C1 still needs a fresh-player re-check (the stranger
+  playtest). A new tester build (alpha.13) needs the user's go-ahead.
 - NovelAI terms are researched
   (`specs/2026-10-04-novelai-commercial-terms-research.md`); read it before
   any store use of NovelAI art.
