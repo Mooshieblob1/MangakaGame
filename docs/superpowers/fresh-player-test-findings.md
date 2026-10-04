@@ -114,8 +114,8 @@ by more than one tester; deferred to Tier 2 with a reason.
 | A3 | Too much at once from the start; no progressive disclosure | A | Questionnaire 2 and 10, Discord | Fix in Tier 1 as a focused pass (design question) | Approved; fixed 2026-10-03 ([progressive disclosure](progressive-disclosure-completion.md)) |
 | A4 | Staff show "Available for work" while active titles sit unworked; assignment is unclear | A | Questionnaire 2 | Investigate, then fix if a status or assignment is misleading (always fixed) | Approved; fixed (status now names what the person waits for) |
 | A5 | Buttons that cannot work are still enabled and answer with errors (Pause on a paused title, Resume on an active one, contest entry) | A | 16 error lines | Fixed if cheap: disable with the reason shown | Approved; fixed |
-| A6 | Licence offer terms unexplained (lump sum or royalties, fit, reliability) | A | Questionnaire 5 | Explain, or hide licensing until Tier 2 (T1.8) | Approved; waits for tester B |
-| A7 | Setbacks feel random; genre and ranking information hard to follow | A | Questionnaire 6 | Fixed if cheap or seen twice | Approved; waits for tester B |
+| A6 | Licence offer terms unexplained (lump sum or royalties, fit, reliability) | A | Questionnaire 5 | Explain, or hide licensing until Tier 2 (T1.8) | Approved; not reached by B. Explained 2026-10-04 on the offer card ([closeout](tier1-closeout-completion.md)) |
+| A7 | Setbacks feel random; genre and ranking information hard to follow | A | Questionnaire 6 | Fixed if cheap or seen twice | Approved; not seen again. Closed 2026-10-04 without new work: caused by A1, which kept Helper-Chan's warning text from tester A; the Tier 2 stranger playtest watches for it ([closeout](tier1-closeout-completion.md)) |
 | A8 | Timeline cleaner garbles words containing a staff name ("cur[name]t") | A (report) | Timeline | Fixed (cheap, already a deferred minor) | Approved; fixed |
 | A9 | The tester's own career could not be loaded ("invalid publication slots"). A revised contest manuscript left its old draft looking like a waiting magazine chapter; once that title was serialized (23 Aug 1997), every later save was refused. Found by loading the returned career, not reported by the tester | A (career) | Replay of the career's command history | Always fixed (unloadable save) | Fixed; the tester's career now loads and plays on |
 
@@ -180,7 +180,8 @@ Checked against the current code (2026-10-01), not alpha.12.
 
 A3, A6 and A7 after tester B: A3 is now seen twice (B6, and B2 in part); A6
 (licences) was not reached by B; A7 (setbacks feel random) was not reported by
-B, who ignored the rejection rather than finding it unfair.
+B, who ignored the rejection rather than finding it unfair. Both were decided
+in the Tier 1 closeout on 2026-10-04 (rows above).
 
 ### Tester C (alpha.12, informal feedback, reported 2026-10-03)
 
@@ -242,10 +243,7 @@ report; three remarks passed on by the user ("you need a better starter guide").
 
 ## Evidence for other Tier 1 items
 
-Ticked only with linked evidence and the user's judgement (Part 6).
-
-- T1.2 (guidance):
-- T1.3 and T1.4 (money and clarity):
-- T1.5 (time to first sale, target 15 to 20 minutes):
-- T1.6 (saves):
-- T1.7 (crashes and errors):
+Ticked only with linked evidence and the user's judgement (Part 6). All items
+were settled on 2026-10-04 in the
+[Tier 1 closeout](tier1-closeout-completion.md); round 2 (alpha.13) became the
+Tier 2 stranger playtest (Q53).

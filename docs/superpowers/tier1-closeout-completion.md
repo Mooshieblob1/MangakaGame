@@ -16,10 +16,10 @@ evidence is in the [fresh-player findings](fresh-player-test-findings.md).
 | Item | State | Evidence | Still unproven |
 |---|---|---|---|
 | T1.1 Core journey | Ticked | Tester A's own career reached every step without help (first sale 0:17, serialization 0:41, first hire 2:25, warning, rejection and cancellation by 3:22). `--journey-smoke` walks every step with a save and reload at each. The guided playtests (six careers to April 1999) reach each step. The guidance dead end tester A hit (A1) is fixed. | A target-audience player completing it on the current build. |
-| T1.2 Taught in the game | Evidence recorded, waits for the user's sign-off | Guidance reaches every step in the guided playtests ([career guidance](career-guidance-completion.md)). Since A1, a contest or employment route no longer replaces career guidance. Each menu part is announced as it opens ([progressive disclosure](progressive-disclosure-completion.md)). The goals board has How? tips ([career goals](career-goals-completion.md)). Helper-Chan teaches selling as it happens ([streaming sales](streaming-sales-completion.md)). Testers A and B used no help or lookups. | Against it: tester A, on alpha.12 before these fixes, said the game did not help them learn it. Whether the fixes answer that needs a fresh player (Tier 2). |
+| T1.2 Taught in the game | Ticked (signed off by the user, Q66) | Guidance reaches every step in the guided playtests ([career guidance](career-guidance-completion.md)). Since A1, a contest or employment route no longer replaces career guidance. Each menu part is announced as it opens ([progressive disclosure](progressive-disclosure-completion.md)). The goals board has How? tips ([career goals](career-goals-completion.md)). Helper-Chan teaches selling as it happens ([streaming sales](streaming-sales-completion.md)). Testers A and B used no help or lookups. | Against it: tester A, on alpha.12 before these fixes, said the game did not help them learn it. Whether the fixes answer that needs a fresh player (Tier 2). |
 | T1.3 Clear status | Ticked | Staff name what they wait for (A4). Buttons that cannot work are disabled with the reason (A5, B4). Money changes show in the header. Sales stream through shop hours with a Sold count. Licence terms are explained (A6, below). Display sweep 616 checks, 0 flagged ([display settings](display-settings-completion.md)). | Money legibility (B3) was observed rather than fixed; the goals board's money goals answer part of it. |
 | T1.4 Economy sense | Ticked | Six guided careers stay solvent to April 1999, ending with 0.55 to 10.3 million yen personal savings ([streaming sales playtest comparison](streaming-sales-completion.md)). Pitch rejections and cancellations happen and are recoverable ([setbacks and economy](setbacks-economy-completion.md), [playtest findings](full-career-playtest-findings.md)). Tester A survived a cancellation and played on for ten more in-game months. | One career with a hit series (seed 42) is very rich by 1999. Balance over ten years is Tier 2. |
-| T1.5 Pacing | Evidence recorded, waits for the opening trim and the user's judgement | First sale at 0:17 (tester A) and 0:23 (tester B) on alpha.12, against a 15 to 20 minute target. Three in-game years are estimated at 3.3 to 4.8 real hours with 32x ([mid-career pacing](mid-career-pacing-completion.md)). Tester A took about 2.6 real hours per in-game year, 35% of it paused. | The opening is being trimmed for tester C's C1 (Q65, separate work). The judgement of "acceptable" is the user's. |
+| T1.5 Pacing | Ticked after the quick start (signed off by the user, Q66) | First sale at 0:17 (tester A) and 0:23 (tester B) on alpha.12, against a 15 to 20 minute target. Three in-game years are estimated at 3.3 to 4.8 real hours with 32x ([mid-career pacing](mid-career-pacing-completion.md)). Tester A took about 2.6 real hours per in-game year, 35% of it paused. | The opening is being trimmed for tester C's C1 (Q65, separate work). The judgement of "acceptable" is the user's. |
 | T1.6 Saves | Ticked 2026-09-28 | Unchanged. | |
 | T1.7 Stability | Ticked 2026-09-28 | Unchanged. | |
 | T1.8 Extra systems | Ticked | Extra systems stay hidden until their moment or chapter (A3), and rival job offers to Aki wait for Industry (Q57). Licence offers now explain their terms (A6). Clarity fixes for extra systems are in the [tester A record](tier1-closeout-and-tester-a-completion.md). | |
@@ -64,12 +64,14 @@ confirmed. Calls made on 2026-10-04:
 
 ## Verification
 
-Source inspection only. The A6 change has not been compiled or rendered. When
-building is next authorized: `dotnet build MangakaGame.sln -warnaserror`, then
+The A6 change compiled warning-free in the quick start's build (`2bb6d66`:
+`dotnet build MangakaGame.sln -warnaserror`, 790 unit tests pass). It has not
+been rendered. When building is next authorized, run
 `--progression-smoke --capture` and a look at the Licenses page at 1280 x 720
 with large interface size, since the card has two more lines.
 
 ## Next step
 
-Per Q66, tick T1.2 and T1.5 once the quick start (Q65) is committed, which
-completes Tier 1. Then Tier 2, starting with the release items in the roadmap.
+Done: T1.2 and T1.5 were ticked after the quick start (`2bb6d66`), so Tier 1
+is complete (2026-10-04). Next is Tier 2, starting with the release items in
+the roadmap.

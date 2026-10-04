@@ -240,7 +240,7 @@ playtesting.
 
 - **Goal:** Steam Early Access. Stay with the user through to that point.
 - **Milestones are tiered.**
-  - **Tier 1: complete core game (current focus, agreed).** A fully functioning game
+  - **Tier 1: complete core game (complete 2026-10-04).** A fully functioning game
     that does what it sets out to do, with minimal content and minimal player
     friction. Proposed completion criteria: a player who has never seen the game can
     go from a new career through a first doujin and sale, a growing readership, a
@@ -402,8 +402,9 @@ playtesting.
   `docs/superpowers/session-handoff.md`.
 - **Tier 1 closeout (2026-10-04, Q53):** T1.1, T1.3, T1.4 and T1.8 ticked
   with evidence; T1.10 moved to Tier 2 as a stranger playtest; T1.2 and T1.5
-  signed off by the user (Q66), ticked once the quick start (Q65) lands. A6 licence
-  terms explained on the offer card (presentation only, not yet built); A7
+  signed off by the user (Q66) and ticked after the quick start (Q65), so
+  **Tier 1 is complete**. A6 licence terms explained on the offer card
+  (presentation only, compiled, not yet rendered); A7
   closed with no new work (caused by A1). Record:
   `docs/superpowers/tier1-closeout-completion.md`.
 - Keep this section in sync with the roadmap
