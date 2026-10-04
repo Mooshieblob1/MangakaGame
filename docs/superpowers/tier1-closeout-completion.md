@@ -28,6 +28,11 @@ evidence is in the [fresh-player findings](fresh-player-test-findings.md).
 
 Tier 1 is complete once the user signs off T1.2 and T1.5 (and the whole tier).
 
+**Q66 (decided 2026-10-04): sign off T1.2 and T1.5 once the quick start
+(Q65) lands.** The Tier 2 stranger playtest confirms both on real players.
+Rejected: T1.2 now and T1.5 after the user plays the trimmed opening; keeping
+both open until the stranger playtest.
+
 ## A6 and A7 (tester B never reached them)
 
 Both were approved on 2026-09-28 as "waits for tester B". Tester B stopped
@@ -66,5 +71,5 @@ with large interface size, since the card has two more lines.
 
 ## Next step
 
-The user signs off T1.2 and T1.5 once the opening trim (Q65) lands, which
+Per Q66, tick T1.2 and T1.5 once the quick start (Q65) is committed, which
 completes Tier 1. Then Tier 2, starting with the release items in the roadmap.

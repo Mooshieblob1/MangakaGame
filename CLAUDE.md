@@ -402,7 +402,7 @@ playtesting.
   `docs/superpowers/session-handoff.md`.
 - **Tier 1 closeout (2026-10-04, Q53):** T1.1, T1.3, T1.4 and T1.8 ticked
   with evidence; T1.10 moved to Tier 2 as a stranger playtest; T1.2 and T1.5
-  wait for the user's sign-off (T1.5 after the quick start trim). A6 licence
+  signed off by the user (Q66), ticked once the quick start (Q65) lands. A6 licence
   terms explained on the offer card (presentation only, not yet built); A7
   closed with no new work (caused by A1). Record:
   `docs/superpowers/tier1-closeout-completion.md`.
