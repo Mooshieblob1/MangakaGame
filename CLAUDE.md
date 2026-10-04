@@ -355,6 +355,51 @@ playtesting.
   `docs/superpowers/specs/2026-10-01-career-goals-design.md`, awaiting review),
   then A3. Records: `docs/superpowers/tester-b-fixes-completion.md`,
   `docs/superpowers/quiet-day-night-skip-fix.md`.
+- **Career goals board (2026-10-02):** five career chapters (Doujin Days,
+  Rookie, Serialized, Studio Head, Legend) plus mastery goals, with progress
+  bars, one-off rewards (cash, fans, decorations, unlocks, opportunities,
+  Helper-Chan scenes) and How? tips (Q48 to Q51). Spec
+  `docs/superpowers/specs/2026-10-01-career-goals-design.md`; record
+  `docs/superpowers/career-goals-completion.md`.
+- **Progressive disclosure, A3 (2026-10-03):** a new career shows only what
+  Doujin Days needs; Books, Publishing, Contests, Staff, Studios, Industry,
+  business money and 32x open at their own moment or chapter, with a "New" tag
+  and one Helper-Chan line; "Experienced player: show every screen"; rival job
+  offers to Aki wait for Industry (Q53 to Q57). Spec
+  `docs/superpowers/specs/2026-10-02-progressive-disclosure-design.md`; record
+  `docs/superpowers/progressive-disclosure-completion.md`. Next: Tier 1 closeout.
+- **Work feedback, right-click back, shorter music gaps (2026-10-03):** sparkles
+  from workers into the header progress bar and "Pencils done!" bubbles
+  (presentation only, off with reduced motion); a right click without a drag
+  steps back to the 3D office; quiet between music tracks 15 to 30 seconds and
+  track changes in the problem report timeline (Q58). Record:
+  `docs/superpowers/work-feedback-and-right-click-completion.md`.
+- **Studio island and corner (2026-10-03):** Helper-Chan's desk faces the spare
+  desk across an island headed by Aki's desk (Q59), older untouched homes move
+  over on load, and the freed alcove holds manga tools and storage. Record:
+  `docs/superpowers/studio-island-completion.md`.
+- **Streaming sales and the selling tutorial (2026-10-03):** book sales now
+  stream through shop hours, 10:00 to 20:00 (Q60), instead of a Monday lump;
+  a book on sale midweek sells at once, weekly totals unchanged. Helper-Chan
+  teaches selling by showing it happen (Q61): a first-sale text, a pulsing Sold
+  count, a first-copy bubble and a sell-more text. Conventions after a midweek
+  release keep week-two demand (Q62). Spec
+  `docs/superpowers/specs/2026-10-03-streaming-sales-design.md`; record
+  `docs/superpowers/streaming-sales-completion.md`.
+- **Display settings (2026-10-04, tester C findings C2 and C3):** one
+  per-computer interface size (Automatic follows Windows scaling, 80% to 200%,
+  capped to keep a 1280 x 720 layout; Q64), fullscreen or windowed with window
+  sizes, F11 or Alt+Enter, on the first-launch screen, title and in-game
+  Settings; the per-career text scale is retired; the 3D office renders at full
+  window pixels. Spec `docs/superpowers/specs/2026-10-04-display-settings-design.md`;
+  record `docs/superpowers/display-settings-completion.md`. Next: re-check C1
+  (the opening) against the current build.
+- **Committed 2026-10-04:** the work from 29 Sep to 4 Oct is on `main` in
+  feature commits after `274741a`. Still uncommitted and unbuilt: the opening
+  quick start (Q65 option 1, record `docs/superpowers/quick-start-completion.md`,
+  which also carries the last display settings files) and the Tier 1 closeout
+  with A6 and A7 (record `docs/superpowers/tier1-closeout-completion.md`). See
+  `docs/superpowers/session-handoff.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 
