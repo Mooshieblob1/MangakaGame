@@ -111,7 +111,7 @@ by more than one tester; deferred to Tier 2 with a reason.
 |---|---|---|---|---|---|
 | A1 | Choosing "Enter a contest" on the Guidance page replaces the career guidance for good; the contest route never ends or hands back | A | Route "contest" from 31 min; no career steps for 4.5 h | Always fixed (guidance dead end) | Approved 2026-09-28; fixed |
 | A2 | 32x resets open panels and scroll positions every few seconds | A | Questionnaire 4 | Always fixed (breaks a core control) | Approved 2026-09-28; fixed |
-| A3 | Too much at once from the start; no progressive disclosure | A | Questionnaire 2 and 10, Discord | Fix in Tier 1 as a focused pass (design question) | Approved; waits for tester B |
+| A3 | Too much at once from the start; no progressive disclosure | A | Questionnaire 2 and 10, Discord | Fix in Tier 1 as a focused pass (design question) | Approved; fixed 2026-10-03 ([progressive disclosure](progressive-disclosure-completion.md)) |
 | A4 | Staff show "Available for work" while active titles sit unworked; assignment is unclear | A | Questionnaire 2 | Investigate, then fix if a status or assignment is misleading (always fixed) | Approved; fixed (status now names what the person waits for) |
 | A5 | Buttons that cannot work are still enabled and answer with errors (Pause on a paused title, Resume on an active one, contest entry) | A | 16 error lines | Fixed if cheap: disable with the reason shown | Approved; fixed |
 | A6 | Licence offer terms unexplained (lump sum or royalties, fit, reliability) | A | Questionnaire 5 | Explain, or hide licensing until Tier 2 (T1.8) | Approved; waits for tester B |
@@ -174,13 +174,25 @@ Checked against the current code (2026-10-01), not alpha.12.
 | B3 | Money is only legible through print stock and copies sold | B | Questionnaire 5 | Observe; the goals board's money goals and progress bars address part || Approved 2026-10-01 |
 | B4 | Pitch stays enabled during a magazine's cooldown and errors; Helper-Chan's rejection tip names a better magazine but opens Publishing on the rejected one | B | 4 errors; Publishing.cs:132, Alpha.cs:182 | Always fixed (A5 class): disable with the date, preselect the suggested magazine || Approved 2026-10-01; fixed ([record](tester-b-fixes-completion.md)) |
 | B5 | Continue opens the newest save across all careers by real time; importing a career makes it the newest, so Continue can open the wrong career | B | Questionnaire 7; CareerStore.cs:118, 158-171 | Always fixed (save confusion): Continue opens the career played most recently, imports do not count as play || Approved 2026-10-01; fixed ([record](tester-b-fixes-completion.md)) |
-| B6 | Hard to keep track of where the menus are | A (A3), B | Questionnaire 10 | Part of A3 (progressive disclosure), now seen twice || Approved 2026-10-01 |
+| B6 | Hard to keep track of where the menus are | A (A3), B | Questionnaire 10 | Part of A3 (progressive disclosure), now seen twice | Approved 2026-10-01; fixed 2026-10-03 with A3 |
 | B7 | While furnishing, clicking the rail or speed buttons leaves them looking pressed; every notice shows twice (shell and workspace) | B | Questionnaire 12; Management.cs:142-148, 201-204 | Fixed if cheap (it is): lock the rail and header while furnishing, show a notice once || Approved 2026-10-01; fixed ([record](tester-b-fixes-completion.md)) |
 | B8 | Resume on an active series errors | A (A5), B | 3 errors | Already fixed after round 1 || Approved 2026-10-01 |
 
 A3, A6 and A7 after tester B: A3 is now seen twice (B6, and B2 in part); A6
 (licences) was not reached by B; A7 (setbacks feel random) was not reported by
 B, who ignored the rejection rather than finding it unfair.
+
+### Tester C (alpha.12, informal feedback, reported 2026-10-03)
+
+Played alpha.12 (packaged 2026-09-27), before the title screen, start-up
+screens, restyle, goals board and progressive disclosure. No questionnaire or
+report; three remarks passed on by the user ("you need a better starter guide").
+
+| # | Finding | Evidence | Proposed triage | User decision |
+|---|---|---|---|---|
+| C1 | Starting the game feels like reading an installation document | Remark 1 | Re-check against the current opening (disclaimer, first-launch volume, title, New Career, Helper-Chan's first texts) after the display work; much of alpha.12's opening has changed | Q65 option 1 approved 2026-10-04: quick start ([record](quick-start-completion.md)); not yet built or re-tested |
+| C2 | Text still too small on a laptop even at the largest text size | Remark 2; text scale tops out at 150% and lives only in a career's Settings; the window ignores Windows display scaling (no stretch mode, fixed 1600 x 900) | Tier 1 display sub-project | Approved; fixed 2026-10-04 ([display settings](display-settings-completion.md)) |
+| C3 | No resolution or full-screen setting | Remark 3; none exists | Tier 1 display sub-project (also needed for Steam Deck in Tier 2) | Approved; fixed 2026-10-04 ([display settings](display-settings-completion.md)) |
 
 ### T1.1 completion per tester
 
@@ -193,7 +205,7 @@ B, who ignored the rejection rather than finding it unfair.
 
 ### Fixes since round 1
 
-### Tester C
+### Tester D
 
 - Hardware and screen (questionnaire 11):
 - Sessions and total real time:
@@ -226,7 +238,7 @@ B, who ignored the rejection rather than finding it unfair.
 
 | Tester | Every step in timeline | Setback | No help or lookups | Completes T1.1 |
 |---|---|---|---|---|
-| C | | | | |
+| D | | | | |
 
 ## Evidence for other Tier 1 items
 

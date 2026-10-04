@@ -59,15 +59,17 @@ public partial class DebugMain
         var centre = new CenterContainer(); centre.SetAnchorsPreset(LayoutPreset.FullRect); _startupRoot!.AddChild(centre);
         var box = new VBoxContainer { CustomMinimumSize = new Vector2(420, 0) }; centre.AddChild(box);
         _volumeSetup = centre;
-        Words(box, "Set your volume", 28);
-        AudioSliders(box);
+        // Quick start (Q65): Master and the interface size only; music, sound effects and the window wait in Settings.
+        Words(box, "Set your volume and size", 28);
+        AudioSliders(box, masterOnly: true);
+        DisplayControls(box, sizeOnly: true);
         var continueButton = ActionButton(box, "Continue", () =>
         {
             if (_startupEnding) return;
             _startupEnding = true; _audioSettings.SetupDone = true; SaveAudioSettings(); FadeOutStartup();
         });
         continueButton.ThemeTypeVariation = "PrimaryAction";
-        Words(box, "You can change this any time in Settings.", 14);
+        Words(box, "Music, sound effects and fullscreen are in Settings.", 14);
         // Keyboard and controller players start on Master; Tab or the arrow keys move on to Continue.
         box.FindChildren("*", "HSlider", true, false).OfType<HSlider>().FirstOrDefault()?.GrabFocus();
     }

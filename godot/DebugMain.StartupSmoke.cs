@@ -38,13 +38,16 @@ public partial class DebugMain
             ApplyAudioSettings();
             Check(AudioServer.IsBusMute(0), "Master starts at 0, so nothing is heard");
             var sliders = _volumeSetup!.FindChildren("*", "HSlider", true, false).OfType<HSlider>().ToArray();
-            Check(sliders.Length == 3 && sliders[0].Value == 0 && Math.Abs(sliders[1].Value - .5) < 1e-9 && Math.Abs(sliders[2].Value - .6) < 1e-9,
-                "Master 0, Music 50%, Sound effects 60%");
+            // Quick start (Q65): only Master here; Music and Sound effects keep their defaults and live in Settings.
+            Check(sliders.Length == 1 && sliders[0].Value == 0 && Math.Abs(_audioSettings.Music - .5) < 1e-9 && Math.Abs(_audioSettings.Effects - .6) < 1e-9,
+                "Only Master, at 0; Music 50% and Sound effects 60% wait in Settings");
+            Check(_volumeSetup.FindChildren("InterfaceSize", "OptionButton", true, false).Any() && !_volumeSetup.FindChildren("DisplayMode", "OptionButton", true, false).Any(),
+                "The first-launch screen offers the interface size, not the window options");
             // Final review: keyboard and controller players start on Master and can move through the screen.
             Check(GetViewport().GuiGetFocusOwner() == sliders[0], "The volume screen starts with keyboard focus on Master");
             // Final review: the Sound effects preview is heard even though menus pause the office ambience.
             _audio.Preview(); _audio.Update(.02, false, false, AmbienceBalance, 1);
-            Check(_audio.EffectPlaying, "The Sound effects preview keeps playing on the volume screen");
+            Check(_audio.EffectPlaying, "The Sound effects preview keeps playing while the start-up screens are open");
             sliders[0].Value = .8; ApplyAudioSettings();
             Check(!AudioServer.IsBusMute(0) && AudioServer.GetBusVolumeDb(0) > -3, "Raising Master makes sound audible");
             // Press the volume screen's own Continue: the title screen may also show one when the player has saves.
@@ -59,7 +62,7 @@ public partial class DebugMain
             _audioSettings.PlayWhileUnfocused = true; Check(AudioFocused, "The checkbox keeps sound playing while unfocused");
             _audioSettingsPath = null;
             GD.Print($"STARTUP SMOKE PASSED: {_smokeChecks} checks.");
-            var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => tree.Quit(); QueueFree();
+            var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => QuitTree(tree); QueueFree();
         }
         catch (Exception ex) { GD.PushError($"STARTUP SMOKE FAILED: {ex.Message}\n{ex.StackTrace}"); GetTree().Quit(1); }
     }

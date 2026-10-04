@@ -29,7 +29,15 @@ public partial class DebugMain
                 var name=_menuContent.FindChildren("CreatorName","LineEdit",true,false).OfType<LineEdit>().Single();
                 var preview=_menuContent.FindChildren("CreatorPreview","SubViewportContainer",true,false).OfType<CreatorPreview>().Single();
                 Check(name.Text=="Aki"&&preview.IsVisibleInTree(),"Creator starts with Aki and a visible 3D preview");
-                var original=_state.ToJson();name.Text="  Haruka  ";
+                // Quick start (Q65): name, Randomise look and Begin career lead; the look and the rules wait under Customise.
+                Check(ButtonNamed("Begin career").IsVisibleInTree()&&ButtonNamed("Randomise look").IsVisibleInTree()&&!ButtonNamed("Career rules").IsVisibleInTree()&&
+                    !_menuContent.FindChildren("CreatorAppearance0","OptionButton",true,false).OfType<OptionButton>().Single().IsVisibleInTree(),"New Career leads with the name, Randomise look and Begin career");
+                var original=_state.ToJson();
+                for(var roll=0;roll<8&&preview.Recipe==new AppearanceRecipe(0,0,0,0,false,0,0);roll++)Press("Randomise look");
+                Check(preview.Recipe!=new AppearanceRecipe(0,0,0,0,false,0,0)&&_state.ToJson()==original,"Randomise look changes the preview without touching the career");
+                Press("Customise");await SettleUi();
+                Check(_menuContent.FindChildren("CreatorAppearance0","OptionButton",true,false).OfType<OptionButton>().Single().IsVisibleInTree(),"Customise shows the appearance choices");
+                name.Text="  Haruka  ";
                 var picks=new[]{2,1,4,2,2,1};
                 for(var i=0;i<picks.Length;i++)
                 {

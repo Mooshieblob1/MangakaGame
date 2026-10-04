@@ -53,15 +53,15 @@ public partial class DebugMain
         AudioServer.SetBusVolumeDb(index, Mathf.LinearToDb((float)Math.Max(1e-5, level)));
     }
 
-    /// <summary>The Master, Music and Sound effects sliders, shared by Settings and the first-launch screen.</summary>
-    private void AudioSliders(Control parent)
+    /// <summary>The Master, Music and Sound effects sliders for Settings. The first-launch screen shows Master only (quick start, Q65).</summary>
+    private void AudioSliders(Control parent, bool masterOnly = false)
     {
         foreach (var (label, read, write) in new (string, Func<double>, Action<double>)[]
         {
             ("Master volume", () => _audioSettings.Master, v => _audioSettings.Master = v),
             ("Music · within Master", () => _audioSettings.Music, v => _audioSettings.Music = v),
             ("Sound effects · within Master", () => _audioSettings.Effects, v => { _audioSettings.Effects = v; _audio.Preview(); }),
-        })
+        }.Take(masterOnly ? 1 : 3))
         {
             Words(parent, label);
             var slider = new HSlider { MinValue = 0, MaxValue = 1, Step = .05, Value = read() }; parent.AddChild(slider);

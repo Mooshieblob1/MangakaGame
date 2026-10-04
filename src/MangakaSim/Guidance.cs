@@ -11,6 +11,8 @@ public sealed class GuidancePreferences
     public HashSet<string> Completed { get; set; } = new();
     /// <summary>Helper-Chan's message thread. Presentation data only; older saves start empty.</summary>
     public List<GuidanceMessage> Thread { get; set; } = new();
+    /// <summary>Parts opened but not yet visited, shown with a "New" tag. Presentation data only; older saves start empty.</summary>
+    public HashSet<string> NewParts { get; set; } = new();
 }
 
 public sealed class GuidanceMessage
@@ -37,11 +39,13 @@ public static class CareerGuidance
 {
     public const int ThreadLimit = 200;
     public const int TextLimit = 140;
+    /// <summary>Helper-Chan's only text on a new career's first day (quick start, Q65).</summary>
+    public const string FirstText = "Let's make your first doujin!";
     public static readonly string[] Routes = ["career", "contest", "employment"];
     // Routes saved before Tier 1 fix 1 (alpha.11 and earlier); Observe moves them onto "career".
     public static readonly string[] LegacyRoutes = ["opening", "doujin"];
     // Contests and employment are detours (fresh-player finding A1): only these career steps give way to them.
-    private static readonly HashSet<string> CalmCareerSteps = ["pitch", "pitch-wait", "next-series", "continue-series", "serial-rhythm", "career-settled"];
+    private static readonly HashSet<string> CalmCareerSteps = ["pitch", "pitch-wait", "next-series", "continue-series", "serial-rhythm", "career-settled", "sell-more"];
 
     public static GuidanceStep Evaluate(GameState state, GuidancePreferences preferences)
     {
@@ -52,7 +56,7 @@ public static class CareerGuidance
             state.Career.Sales.Any(x => protagonistTitles.Any(s => s.Id == x.Series) && x.Physical + x.Digital + x.Overseas > 0);
         bool established = protagonistTitles.Any(s => s.Chapters.Any(c => c.PublishedAt is not null)) || sale || preferences.Completed.Contains("first-sale");
         if (preferences.Route is "contest" or "employment" && established && state.Control == ControlMode.OwnerDirector &&
-            Career(state, preferences, owned) is { } career && !CalmCareerSteps.Contains(career.Id))
+            Career(state, preferences, owned) is { } career && !CalmCareerSteps.Contains(career.Id) && !career.Id.StartsWith(GoalStep + "-next:", StringComparison.Ordinal))
             return career;
         if (preferences.Route == "employment")
             return state.Control == ControlMode.OwnerDirector
@@ -70,19 +74,31 @@ public static class CareerGuidance
         var project = owned.FirstOrDefault(s => s.Id == preferences.Project) ??
             owned.LastOrDefault(s => s.StandaloneDoujin) ?? owned.LastOrDefault(s => s.Publishing == PublishingStatus.Unpublished &&
                 !state.Progression.Manuscripts.Any(m => m.SeriesId == s.Id && !m.Released));
+        // A new career opens with one short text and Show me (quick start, Q65); the one-shot advice waits for the New doujin page.
         if (project is null)
-            return new("create", "Make a small doujin", "Let's start with a 16-page one-shot: one story, one book, then stop.\nOngoing series continue later in short numbered issues.", "create");
+            return protagonistTitles.Length == 0
+                ? new("create", "Make a small doujin", FirstText, "create")
+                : new("create", "Make a small doujin", "Let's start with a 16-page one-shot: one story, one book, then stop.\nOngoing series continue later in short numbered issues.", "create");
         var book = project.Volumes.LastOrDefault(v => v.IsDoujin && v.BusinessId == state.ControlledBusinessId);
         if (book is null)
             return new("produce", "Finish the pages", "The planner assigns the work automatically.\nWatch the production queue and use the speed controls when you are ready.", "production", project.Id);
-        if(state.DoujinOnlineListed(book.Id))return new("sell-online","Find your online readers","Your download is on sale!\nPurchases settle on Mondays, based on quality and genre interest. No printed stock is needed.","printing",project.Id);
+        if(state.DoujinOnlineListed(book.Id))return new("sell-online","Find your online readers","Your download is on sale now!\nDownloads sell through the day, so watch Sold in the top bar. No printed stock is needed.","sold",project.Id);
         var pending = state.PrintRuns.FirstOrDefault(r => r.VolumeId == book.Id && !r.Delivered);
         if (pending is not null)
             return new("delivery", "Copies are on their way", $"Delivery is due {pending.DueAt:d MMM, HH:mm}.\nKeep working in the meantime. No second order is needed.", "printing", project.Id);
         if (state.Stock(book.Id) == 0)
             return new("print", "Print a small batch", "Choose printing, or an online release with no upfront cost.\nThe copy shop takes 1 to 100 copies; downloads need no stock.", "printing", project.Id);
-        return new("sell", "Find your first readers", "Stock is ready!\nLocal sales settle on Mondays, and conventions offer another route. Profit is not guaranteed.", "printing", project.Id);
+        return Sell(project);
     }
+
+    // Game history, not only the thread, so older saves and trimmed threads do not repeat the selling tutorial. Sales samples
+    // are kept per week under its Monday, so a first-sale week that began under 14 days ago is 7 to 14 days after that sale.
+    private static bool RecentFirstSale(GameState state, Series seller) =>
+        state.Career.Sales.Where(x => x.Series == seller.Id && x.Physical + x.Digital + x.Overseas > 0).Select(x => (DateTime?)x.At).Min() is { } first &&
+        first > state.Clock.Now.AddDays(-14);
+
+    private static GuidanceStep Sell(Series project) =>
+        new("sell", "Find your first readers", "Your books are in local shops now, and they sell by themselves!\nShops are open 10:00 to 20:00, so watch Sold in the top bar.", "sold", project.Id);
 
     /// <summary>The continuous career path after the first sale: pitch, serialization, first deadline and first hire.</summary>
     private static GuidanceStep Career(GameState state, GuidancePreferences preferences, Series[] owned)
@@ -124,6 +140,8 @@ public static class CareerGuidance
                     "Hiring is safe once funds cover about three months of wages and costs, counting confirmed page fees.\n" +
                     $"With an assistant, that is about {RunwayText(runway)} right now.", "production", series.Id);
             }
+            // Guidance carries on past the first hire with the board's next goal (Q51).
+            if (NextGoal(state) is { } goal) return new($"{GoalStep}-next:{goal.Id}", goal.Title, goal.Tip, goal.Target, series.Id);
             return new("career-settled", "Your studio is running", "You have a serialization and a team. I'll message you when something needs you.\n" +
                 "Contests and studio employment are side routes you can start from Help.", "help", series.Id);
         }
@@ -136,6 +154,18 @@ public static class CareerGuidance
             return new("series-cancelled", "The series has ended", $"{name} cancelled {ended.Title}. It happens to many series, so please don't give up!\n" +
                 "Your published volumes keep selling, and the readers you gained stay with you.\n" +
                 $"{name} will look at this series again after {until:d MMM yyyy}. Pitch it to another magazine, or start a new series.", "publishing", ended.Id);
+        }
+        // The selling tutorial (spec 2026-10-03): after the first sale, show the two ways to sell more, for three days at most.
+        var seller = owned.LastOrDefault(s => s.Volumes.Any(v => v.IsDoujin && v.CopiesSold > 0));
+        if (seller is not null && !owned.Any(s => s.Chapters.Any(c => c.PublishedAt is not null)) &&
+            !seller.Volumes.Any(v => state.DoujinOnlineListed(v.Id) || state.ConventionReserved(v.Id) > 0) &&
+            !preferences.Thread.Any(m => m.Step == "sell-more" && m.Time <= state.Clock.Now.AddDays(-3)) && RecentFirstSale(state, seller))
+        {
+            // A first copy can sell on the very tick the stock arrives, so say "sell" once before the follow-up keeps the thread in order.
+            if (!preferences.Thread.Any(m => m.Step is "sell" or "sell-online") && seller.Volumes.LastOrDefault(v => v.IsDoujin && v.CopiesSold > 0) is { } sold && state.Stock(sold.Id) > 0)
+                return Sell(seller);
+            return new("sell-more", "Sell more copies", $"{seller.Title} has its first readers! Want more?\n" +
+                "List it online for free, or bring copies to a convention. Pick one below.", "sell-more", seller.Id);
         }
         var project = active.FirstOrDefault(s => s.Id == preferences.Project && s.Publishing == PublishingStatus.Unpublished && !InContest(state, s)) ??
             active.LastOrDefault(s => !s.StandaloneDoujin && s.Publishing == PublishingStatus.Unpublished && !InContest(state, s)) ??
@@ -226,7 +256,8 @@ public static class CareerGuidance
         var trend = series.IsIconic ? 1 : state.GenrePopularity(genre);
         var recognition = state.Progression.Awards.Any(a => a.SeriesId == series.Id && a.Prize > 0 && a.ResolvedAt >= state.Clock.Now.AddDays(-365)) ? .1 : 0;
         return state.PublisherCatalog.Magazines.Select(m => new PitchOutlook(m,
-                Math.Min(.95, PitchRules.Chance(m.Tier, quality, reputation, series.IsIconic ? 1 : m.Affinity(genre), trend) * state.PitchFactor(series.BusinessId) + recognition),
+                Math.Min(.95, PitchRules.Chance(m.Tier, quality, reputation, series.IsIconic ? 1 : m.Affinity(genre), trend) * state.PitchFactor(series.BusinessId) + recognition +
+                    (series.BusinessId == state.ControlledBusinessId && state.Goals?.PitchBoost == true ? .1 : 0)),
                 series.PitchCooldowns.TryGetValue(m.Id, out var until) && until > state.Clock.Now ? until : null))
             .OrderByDescending(o => o.Open).ThenByDescending(o => o.Chance).ThenBy(o => o.Magazine.Id).ToArray();
     }
@@ -329,6 +360,8 @@ public static class CareerGuidance
     public static void Observe(GameState state, GuidancePreferences preferences)
     {
         // Presentation-only and idempotent; history remains authoritative and no popup backlog is created.
+        ObserveGoals(state, preferences);
+        ObserveParts(state, preferences);
         if (LegacyRoutes.Contains(preferences.Route) || !Routes.Contains(preferences.Route)) preferences.Route = "career";
         // The contest detour ends once its manuscript is entered; the result arrives as its own notice.
         if (preferences.Route == "contest" && state.Progression.Awards.LastOrDefault(a => a.ResolvedAt is null &&
@@ -348,9 +381,53 @@ public static class CareerGuidance
         if (titles.Any(s => s.Volumes.Any(v => v.CopiesSold > 0)) || state.Career.Sales.Any(x => titles.Any(s => s.Id == x.Series) && x.Physical + x.Digital + x.Overseas > 0))
             preferences.Completed.Add("first-sale");
         var step = Evaluate(state, preferences);
-        var last = preferences.Thread.LastOrDefault(m => m.Step is not ("notice" or ArrearsStep or QuietSpeedStep));
+        var last = preferences.Thread.LastOrDefault(m => m.Step is not ("notice" or ArrearsStep or QuietSpeedStep or GoalStep));
         if (last is null || last.Step != step.Id)
             Append(preferences, new() { Step = step.Id, Time = state.Clock.Now, Texts = step.Texts.ToList() });
+    }
+
+    /// <summary>Thread step for goal texts. They light the phone but never stop 32x (spec 2026-10-01).</summary>
+    public const string GoalStep = "goal";
+    public static string GoalDoneText(GoalDefinition goal) => $"Goal done: {goal.Title}! Your reward: {goal.Reward.Describe()}.";
+    public static string ChapterOpenText(GoalChapter chapter) => $"New goals: {chapter.Name}! They're on the Goals page, with my tip for each.";
+    public static int StoppingMessages(GuidancePreferences preferences) => preferences.Thread.Count(m => !m.Step.StartsWith(GoalStep, StringComparison.Ordinal));
+    /// <summary>The newest message that can stop 32x. Compared by reference, so a new one is seen even when the full thread drops an old one (final review).</summary>
+    public static GuidanceMessage? LastStopping(GuidancePreferences preferences) => preferences.Thread.LastOrDefault(m => !m.Step.StartsWith(GoalStep, StringComparison.Ordinal));
+    /// <summary>The newest career-path message, skipping notices and goal texts ("Show me" routes from it).</summary>
+    public static GuidanceMessage? LastPathMessage(GuidancePreferences preferences) => preferences.Thread.LastOrDefault(m => m.Step != "notice" && !m.Step.StartsWith(GoalStep, StringComparison.Ordinal));
+    public static int UnreadStopping(GuidancePreferences preferences) => preferences.Thread.Count(m => !m.Read && !m.Step.StartsWith(GoalStep, StringComparison.Ordinal));
+
+    /// <summary>The first unfinished goal of the current chapter, in catalogue order so her tip does not jump about.</summary>
+    public static GoalDefinition? NextGoal(GameState state) =>
+        state.Goals is { } goals && goals.Chapter < GoalCatalog.Chapters.Length ? GoalCatalog.In(goals.Chapter).FirstOrDefault(g => !state.GoalDone(g.Id)) : null;
+
+    /// <summary>Congratulates each finished goal once and introduces each chapter once. Goals counted from an older save pass silently.</summary>
+    public static void ObserveGoals(GameState state, GuidancePreferences preferences)
+    {
+        if (state.Goals is not { } goals) return;
+        foreach (var record in goals.Completed)
+        {
+            if (!preferences.Completed.Add("goal:" + record.Id) || record.Backfilled) continue;
+            Append(preferences, new() { Step = GoalStep, Time = record.At, Texts = [GoalDoneText(GoalCatalog.Get(record.Id))] });
+        }
+        // The first chapter is introduced once there is a first doujin, so a new career opens with one text (quick start, Q65).
+        if (goals.Chapter == 0 && !state.Series.Any(s => WasCreator(state, s))) return;
+        if (goals.Chapter < GoalCatalog.Chapters.Length && preferences.Completed.Add("goal-chapter:" + goals.Chapter))
+            Append(preferences, new() { Step = GoalStep, Time = state.Clock.Now, Texts = [ChapterOpenText(GoalCatalog.Chapters[goals.Chapter])] });
+    }
+
+    /// <summary>Announces each opened part once with one line and a "New" tag (spec 2026-10-02). Parts from an older save, or
+    /// opened while show every screen is on, pass silently. Uses the goal step, so these texts never stop 32x.</summary>
+    public static void ObserveParts(GameState state, GuidancePreferences preferences)
+    {
+        if (state.Disclosure is not { } disclosure) return;
+        foreach (var record in disclosure.Opened)
+        {
+            if (!preferences.Completed.Add("part:" + record.Id) || record.Backfilled || disclosure.ShowAll) continue;
+            if (DisclosureCatalog.Get(record.Id).Announcement is not { } text) continue;
+            preferences.NewParts.Add(record.Id);
+            Append(preferences, new() { Step = GoalStep, Time = record.At, Texts = [text] });
+        }
     }
 
     public const string QuietSpeedStep = "quiet-speed";
@@ -361,7 +438,7 @@ public static class CareerGuidance
     {
         EventType.IndustryDecision, EventType.SerializationOffered, EventType.PitchRejected, EventType.EditorRedoRequested,
         EventType.CancellationWarning, EventType.SeriesCancelled, EventType.DeadlineMissed, EventType.IssueMissed,
-        EventType.ChapterAtRisk, EventType.WageArrears,
+        EventType.ChapterAtRisk, EventType.WageArrears, EventType.GoalChapterCompleted,
     };
 
     /// <summary>

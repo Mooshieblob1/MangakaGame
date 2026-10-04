@@ -31,7 +31,7 @@ public partial class DebugMain
         LoadAudioSettings();
         _audio=new OfficeAudio();AddChild(_audio);
         _music=new MusicPlayer();AddChild(_music);_music.UseFolder(System.Environment.TickCount);
-        _music.Failed=id=>LogTimeline("error music "+id+" could not be loaded");
+        _music.Failed=id=>LogTimeline("error music "+id+" could not be loaded");_music.Changed=LogTimeline;
         // Helper-Chan texts the player. Both controls join the floating layer in BuildFloatingOffice.
         _phone=new PhoneFrame{Name="HelperPhone",Visible=false,MouseFilter=MouseFilterEnum.Stop};
         _phoneIcon=new PhoneIcon{Name="HelperPhoneIcon",Visible=false};_phoneIcon.Pressed+=()=>OpenPhone(false);
@@ -91,7 +91,15 @@ public partial class DebugMain
         if(messages.Count==0)Text(thread,"No messages yet.",13);
         if(ArrearsCoverable)Reply(box,$"Cover from savings (¥{_state.WageArrears:N0})",CoverArrears).Name="GuidanceCoverArrears";
         var replies=new HBoxContainer();replies.AddThemeConstantOverride("separation",(int)(6*scale));box.AddChild(replies);
-        _showGuidance=Reply(replies,"Show me",ShowGuidance);_showGuidance.Name="GuidanceShowMe";
+        var current=CareerGuidance.Evaluate(_state,_presentation.Guidance);
+        if(current.Id=="sell-more")
+        {
+            // After the first sale she offers the two ways to sell more, instead of one Show me (spec 2026-10-03).
+            Reply(replies,"Sell online",()=>{ClosePhone();HighlightGuidance(RouteGuidance("online",current.Project).Focus);}).Name="GuidanceSellOnline";
+            Reply(replies,"Conventions",()=>{ClosePhone();HighlightGuidance(RouteGuidance("conventions",current.Project).Focus);}).Name="GuidanceConventions";
+            _showGuidance=Reply(replies,"Show me",ShowGuidance);_showGuidance.Visible=false;
+        }
+        else{_showGuidance=Reply(replies,"Show me",ShowGuidance);_showGuidance.Name="GuidanceShowMe";}
         Reply(replies,"Later",ClosePhone);
     }
     private bool ArrearsCoverable=>_state.WageArrears>0&&_state.PersonalMoney>=_state.WageArrears&&_state.Control==ControlMode.OwnerDirector;
@@ -165,21 +173,30 @@ public partial class DebugMain
         if(_inMenu||_helperPopup.Visible||OfficeEditing){Notify("Finish or close the current dialog or furniture draft first.");return;}
         var step=CareerGuidance.Evaluate(_state,_presentation.Guidance);
         ClosePhone();
-        if(_state.WageArrears>0&&_presentation.Guidance.Thread.LastOrDefault(m=>m.Step!="notice")?.Step==CareerGuidance.ArrearsStep)
+        if(_state.WageArrears>0&&CareerGuidance.LastPathMessage(_presentation.Guidance)?.Step==CareerGuidance.ArrearsStep)
             step=step with{Target="arrears",Project=0};
         if(step.Project>0)SelectSeriesForWorkbench(step.Project);
+        var (focus,hint)=RouteGuidance(step.Target,step.Project);
+        HighlightGuidance(focus);
+        CareerGuidance.Say(_presentation.Guidance,_state.Clock.Now,hint);CareerGuidance.MarkRead(_presentation.Guidance);
+        RefreshGuidance();
+        Notify("Helper-Chan: "+hint);
+    }
+    // Opens the screen for a guidance target and says what to do there; shared by "Show me" and the goals board's How? (spec 2026-10-01).
+    private (Control? Focus,string Hint) RouteGuidance(string target,int project)
+    {
         Control? focus=null;string hint;
-        switch(step.Target)
+        switch(target)
         {
             case "create":Navigate("New doujin");focus=GetNodeOrNull<LineEdit>("%DoujinTitle");
-                hint="Here's the New doujin page! Give it a title, pick a genre, then press Create.";break;
+                hint="Here's the New doujin page! A 16-page one-shot is a good first book: one story, then stop.\nGive it a title, pick a genre, then press Create.";break;
             case "production":OpenWorkspace("Production");focus=_seriesOption;
                 hint="This is Production. Pages move through each stage by themselves while time runs.";break;
-            case "printing":OpenPrinting(step.Project);focus=_alphaCopies?.GetLineEdit();
+            case "printing":OpenPrinting(project);focus=_alphaCopies?.GetLineEdit();
                 hint="Here's printing. Ten copy-shop copies is a safe first order.";break;
-            case "series":Navigate("Series details",step.Project);focus=VisibleButton("Continue as ongoing series");
+            case "series":Navigate("Series details",project);focus=VisibleButton("Continue as ongoing series");
                 hint="Press \"Continue as ongoing series\" here. Magazines only take ongoing series.";break;
-            case "publishing":OpenWorkspace("Publishing");if(_state.FindSeries(step.Project) is {} pitching)PreselectSuggestedMagazine(pitching);focus=_pitchButton;
+            case "publishing":OpenWorkspace("Publishing");if(_state.FindSeries(project) is {} pitching)PreselectSuggestedMagazine(pitching);focus=_pitchButton;
                 hint="Choose the magazine I named, then press Pitch. My estimate for each one is shown here.";break;
             case "employment":OpenWorkspace("Career moves");focus=FindChildren("*","Button",true,false).OfType<Button>().FirstOrDefault(b=>b.Name=="GuidanceEmployment");
                 hint="Studio jobs are listed here. Pick one that suits you.";break;
@@ -190,26 +207,32 @@ public partial class DebugMain
                 hint="Compare candidates here. The runway line shows what each wage does to your funds.";break;
             case "furniture":OpenDeskFix();
                 hint="Add a desk and chair from the catalogue, then press Apply. Fill all desks can buy the missing chairs.";break;
-            case "conventions":Navigate("Conventions",step.Project);focus=VisibleButton("Confirm convention booking");
+            case "conventions":Navigate("Conventions",project);focus=VisibleButton("Confirm convention booking");
                 hint="Choose the event I named, check the copies to bring, then press Confirm convention booking.";break;
             case "finances":Navigate("Finances");
                 focus=FindChildren("*","Button",true,false).OfType<Button>().FirstOrDefault(b=>b.ToggleMode&&b.Text.EndsWith("Part-time work & personal contributions"));
                 if(focus is Button{ButtonPressed:false} section)section.ButtonPressed=true;
                 hint="Part-time work is in this section. You can stop the job any time if chapters slip.";break;
             case "awards":Navigate("Awards");hint="Contests and awards are listed here.";break;
+            case "sold":ShowOffice();focus=_currentCopies;
+                hint="Sold counts up here as the shops sell your copies, from 10:00 to 20:00.";break;
+            case "online":if(_state.FindSeries(project)?.Volumes.LastOrDefault(v=>v.IsDoujin) is {} listing)OpenOnline(project,listing.Id);else Navigate("Books");
+                hint="List the book online here. It costs nothing up front.";break;
+            case "books":Navigate("Books");hint="Your books, print runs and online listings are here.";break;
+            case "studios":Navigate("Studios");hint="Studios for rent are listed here, with their desks and monthly rent.";break;
+            case "licenses":Navigate("Licenses");hint="Licence offers for your series appear here. Compare the terms before you accept.";break;
+            case "business":Navigate("Finances");hint="Funding, loans and incorporation are in Finances.";break;
             default:Navigate("Guidance");hint="Here are all my suggestions. Pick a direction whenever you like.";break;
         }
-        focus??=_sideContent.GetChildren().OfType<Button>().FirstOrDefault();
-        if(focus is not null)
-        {
-            focus.GrabFocus();focus.Modulate=new Color(.75f,1,.8f);
-            for(Node? parent=focus.GetParent();parent is not null;parent=parent.GetParent())
-                if(parent is ScrollContainer scroll)scroll.CallDeferred(ScrollContainer.MethodName.EnsureControlVisible,focus);
-            var target=focus;GetTree().CreateTimer(2).Timeout+=()=>{if(IsInstanceValid(target))target.Modulate=Colors.White;};
-        }
-        CareerGuidance.Say(_presentation.Guidance,_state.Clock.Now,hint);CareerGuidance.MarkRead(_presentation.Guidance);
-        RefreshGuidance();
-        Notify("Helper-Chan: "+hint);
+        return (focus??_sideContent.GetChildren().OfType<Button>().FirstOrDefault(),hint);
+    }
+    private void HighlightGuidance(Control? focus)
+    {
+        if(focus is null)return;
+        focus.GrabFocus();focus.Modulate=new Color(.75f,1,.8f);
+        for(Node? parent=focus.GetParent();parent is not null;parent=parent.GetParent())
+            if(parent is ScrollContainer scroll)scroll.CallDeferred(ScrollContainer.MethodName.EnsureControlVisible,focus);
+        var target=focus;GetTree().CreateTimer(2).Timeout+=()=>{if(IsInstanceValid(target))target.Modulate=Colors.White;};
     }
     private Button? VisibleButton(string text)=>FindChildren("*","Button",true,false).OfType<Button>()
         .FirstOrDefault(b=>b.Text==text&&b.IsVisibleInTree()&&!b.IsQueuedForDeletion());
@@ -218,7 +241,7 @@ public partial class DebugMain
         Words(_sideContent,"Choose what you would like to work toward. Every career action remains available.");
         Words(_sideContent,"A contest or employment is a side trip: Helper-Chan still texts you about offers, deadlines and setbacks, and a contest hands back to the career path once your manuscript is entered.",14);
         foreach(var (route,label) in new[]{("career","Follow the career path"),("contest","Enter a contest"),("employment","Seek studio employment")})
-        {var id=route;ActionButton(_sideContent,label,()=>{_presentation.Guidance.Route=id;SetGuidanceVisible(true);});}
+        {var id=route;ActionButton(_sideContent,label,()=>{_presentation.Guidance.Route=id;if(id=="contest")RevealPage("Awards");else if(id=="employment")RevealPage("Career moves");SetGuidanceVisible(true);});}
         Words(_sideContent,"Project to follow");var projects=new OptionButton();projects.AddItem("Choose automatically",0);
         foreach(var s in _state.Series.Where(s=>s.BusinessId==_state.ControlledBusinessId&&(_state.Control==ControlMode.OwnerDirector||s.LeadPersonId==_state.ProtagonistPersonId)))projects.AddItem(s.Title,s.Id);
         projects.Select(Math.Max(0,projects.GetItemIndex(_presentation.Guidance.Project)));_sideContent.AddChild(projects);
@@ -246,6 +269,7 @@ public partial class DebugMain
     }
     private void AlphaSettings(Control parent,bool career=true)
     {
+        DisplayControls(parent);
         var dark=new CheckBox{Text="Dark mode",ButtonPressed=_darkMode};parent.AddChild(dark);dark.Toggled+=SetDarkMode;
         Words(parent,"Controls: WASD or middle drag to pan · wheel to zoom · right drag to rotate. Space pauses/resumes; 1 slows down; 2 speeds up. Shortcuts stay off while typing or in dialogs.",14);
         if(career){var guidance=new CheckBox{Text="Helper-Chan's phone pops up for new messages",ButtonPressed=_presentation.Guidance.Visible};parent.AddChild(guidance);guidance.Toggled+=SetGuidanceVisible;}
@@ -303,7 +327,7 @@ public partial class DebugMain
         ActionButton(_sideContent,"View production",()=>Navigate("Series details",series.Id));
         ActionButton(_sideContent,"Send to convention",()=>Navigate("Conventions",series.Id));
         ActionButton(_sideContent,"Automatic printing and operations",()=>{SelectSeriesForWorkbench(series.Id);OpenWorkspace("Distribution settings");});
-        ActionButton(_sideContent,"Digital & overseas agreements",()=>{SelectSeriesForWorkbench(series.Id);OpenWorkspace("Industry contacts");});
+        ActionButton(_sideContent,"Digital & overseas agreements",()=>{SelectSeriesForWorkbench(series.Id);OpenWorkspace("Industry contacts");}).Visible=PartShown("industry");
         ActionPageColumns("PRINT A PHYSICAL EDITION",status,stock,quote,feedback,distribution,channels);
     }
     private void ReportProblem()

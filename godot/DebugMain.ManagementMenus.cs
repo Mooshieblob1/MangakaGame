@@ -33,20 +33,28 @@ public partial class DebugMain
         Words(_menuContent,"Private alpha · "+ProblemReport.Build,13);
         FocusLater(resume);
     }
+    // Quick start (Q65, tester C's C1): the name, Randomise look and Begin career lead; the look and the career rules
+    // fold under Customise with the same defaults as before (Aki's look, Standard difficulty, world seed 0).
     private void NewCareerMenu()
     {
         OpenMenuPanel();Empty(_menuContent);Words(_menuContent,"A new career",30);
         Words(_menuContent,"1 April 1996 · A rent-free room at your parents' home",16);
-        var sections=MenuSections("Your mangaka","Career rules");
-        var character=new HFlowContainer();sections[0].AddChild(character);
+        var character=new HFlowContainer();_menuContent.AddChild(character);
         var portrait=StudioCard(character,"YOUR STARTING PRODIGY");portrait.GetParent<Control>().CustomMinimumSize=new(320,0);
         var preview=new CreatorPreview{Name="CreatorPreview"};portrait.AddChild(preview);
         var previewName=Words(portrait,"Aki",20);previewName.HorizontalAlignment=HorizontalAlignment.Center;
         var turn=new HFlowContainer();portrait.AddChild(turn);
         ActionButton(turn,"Turn left",()=>preview.Turn(-45));ActionButton(turn,"Front",preview.FaceFront);ActionButton(turn,"Turn right",()=>preview.Turn(45));
-        var choices=StudioCard(character,"MAKE THEM YOUR OWN");choices.GetParent<Control>().CustomMinimumSize=new(320,0);
-        Words(choices,"Name",14);var name=new LineEdit{Name="CreatorName",Text="Aki",PlaceholderText="Aki",MaxLength=40};choices.AddChild(name);
+        var start=StudioCard(character,"MAKE THEM YOUR OWN");start.GetParent<Control>().CustomMinimumSize=new(320,0);
+        Words(start,"Name",14);var name=new LineEdit{Name="CreatorName",Text="Aki",PlaceholderText="Aki",MaxLength=40};start.AddChild(name);
         name.TextChanged+=text=>previewName.Text=string.IsNullOrWhiteSpace(text)?"Aki":text.Trim();
+        var randomise=ActionButton(start,"Randomise look",()=>{});
+        var actions=new HFlowContainer();start.AddChild(actions);
+        var customise=ActionButton(start,"Customise",()=>{});customise.Name="CustomiseCareer";
+        QuietWords(start,"Customise holds the look and the career rules. Difficulty starts on Standard.",14);
+        var custom=new VBoxContainer{Name="CareerCustomisation",SizeFlagsHorizontal=SizeFlags.ExpandFill,Visible=false};_menuContent.AddChild(custom);
+        var sections=MenuSections(custom,"Appearance","Career rules");
+        var choices=StudioCard(sections[0],"APPEARANCE");
         var options=new OptionButton[6];
         var appearanceFields=new GridContainer{Columns=2,SizeFlagsHorizontal=SizeFlags.ExpandFill};choices.AddChild(appearanceFields);
         var labels=new[]{"Skin tone","Hair colour","Outfit colour","Hair style","Clothing","Build"};
@@ -61,22 +69,36 @@ public partial class DebugMain
         AppearanceRecipe SelectedLook()=>new(options[0].Selected,options[1].Selected,options[2].Selected,options[3].Selected,glasses.ButtonPressed,options[5].Selected,options[4].Selected);
         foreach(var option in options)option.ItemSelected+=_=>preview.Recipe=SelectedLook();
         glasses.Toggled+=_=>preview.Recipe=SelectedLook();preview.Recipe=SelectedLook();
+        // Presentation only: a menu dice roll, never the career's own random numbers, so careers stay deterministic.
+        var dice=new RandomNumberGenerator();dice.Randomize();
+        randomise.Pressed+=()=>
+        {
+            foreach(var option in options)option.Select(dice.RandiRange(0,option.ItemCount-1));
+            glasses.SetPressedNoSignal(dice.Randf()<.3f);preview.Recipe=SelectedLook();
+        };
+        customise.Pressed+=()=>
+        {
+            custom.Visible=!custom.Visible;customise.Text=custom.Visible?"Hide customisation":"Customise";
+            if(custom.Visible)Callable.From(()=>{if(IsInstanceValid(custom))_menuContent.GetParent<ScrollContainer>().EnsureControlVisible(custom);}).CallDeferred();
+        };
         var world=StudioCard(sections[1],"YOUR WORLD");
         Words(world,"World seed",14);var seed=new SpinBox{MinValue=0,MaxValue=int.MaxValue,Value=0};world.AddChild(seed);
         Words(world,"When other lead creators leave",14);var rights=new OptionButton();rights.AddItem("Studio keeps future rights unless released");rights.AddItem("Creator keeps future rights");world.AddChild(rights);
+        var experienced=new CheckBox{Name="ShowEveryScreen",Text="Experienced player: show every screen"};world.AddChild(experienced);
         var difficulty = DifficultyControls(sections[1], true);
-        var actions=new HFlowContainer();_menuContent.AddChild(actions);
         var begin=ActionButton(actions,"Begin career",()=>EnterCareer(()=>
         {
             _state=GameState.NewGame((int)seed.Value,rights.Selected==0?OwnershipMode.StudioRetention:OwnershipMode.CreatorRetention,name.Text);
             _state.Apply(difficulty());
             _state.Apply(new SetAppearanceCommand(SelectedLook()));
-            _presentation=new(){Page="Office"};_careerId=Guid.NewGuid().ToString("N");
+            if(experienced.ButtonPressed)_state.Apply(new ShowEveryScreenCommand(true));
+            _presentation=new(){Page="Office",UiScale=1};_careerId=Guid.NewGuid().ToString("N");
             LogTimeline($"new-career {CareerCode} {_state.Progression.Difficulty} sandbox={_state.Progression.EverSandbox}");
             ResetManagementSession();SaveCareer("The first page");ShowOffice();
         }));begin.ThemeTypeVariation="PrimaryAction";
         name.TextChanged+=text=>{begin.Disabled=text.Trim().Any(char.IsControl);name.TooltipText=begin.Disabled?"Use a name without control characters.":"Up to 40 characters. Leave blank to use Aki.";};
         ActionButton(actions,"Back",ShowMenu);
+        FocusLater(begin);
     }
     private void SettingsMenu()
     {
@@ -88,10 +110,13 @@ public partial class DebugMain
         var help=StudioCard(sections[1],"HELPER-CHAN","Important gameplay notices stay enabled independently of tutorials and stories.");
         var tips=new CheckBox{Text="Helper-Chan's first-use tips",ButtonPressed=_presentation.Tips};help.AddChild(tips);tips.Toggled+=v=>_presentation.Tips=v;
         var stories=new CheckBox{Text="Optional conversation prompts",ButtonPressed=_presentation.Stories};help.AddChild(stories);stories.Toggled+=v=>_presentation.Stories=v;
+        if(!TitleOpen)
+        {
+            var every=new CheckBox{Name="ShowEveryScreen",Text="Experienced player: show every screen",ButtonPressed=_state.Disclosure?.ShowAll==true};help.AddChild(every);
+            every.Toggled+=v=>{_state.Apply(new ShowEveryScreenCommand(v));RefreshManagement();};
+        }
         var difficulty = DifficultyControls(sections[2], false);
         ActionButton(sections[2],"Apply difficulty and Sandbox options",()=>{_state.Apply(difficulty());_dirty=true;Notify("Career settings saved. " + (AchievementDelivery.Eligible(_state)?"Achievements remain eligible.":"Steam achievements are disabled for this save."));});
-        Words(display,"Text scale",14);var scale=new HSlider{MinValue=.8,MaxValue=1.5,Step=.1,Value=_presentation.UiScale};display.AddChild(scale);
-        scale.ValueChanged+=value=>{_presentation.UiScale=value;ApplyTextScale();};
         var compact=new CheckBox{Text="Compact interface spacing",ButtonPressed=_presentation.CompactUi};display.AddChild(compact);
         compact.Toggled+=value=>{_presentation.CompactUi=value;ApplyUiTheme();};
         var reduced=new CheckBox{Text="Reduced interface motion",ButtonPressed=_presentation.ReducedUiMotion};display.AddChild(reduced);
@@ -103,9 +128,10 @@ public partial class DebugMain
         {var key=type;var check=new CheckBox{Text=Humanize(type.ToString()),ButtonPressed=_state.Settings.AutoPause.GetValueOrDefault(type)};pauses.AddChild(check);check.Toggled+=v=>_state.Settings.AutoPause[key]=v;}
         ActionButton(_menuContent,"Back",ShowMenu);
     }
-    private VBoxContainer[] MenuSections(params string[] names)
+    private VBoxContainer[] MenuSections(params string[] names)=>MenuSections(_menuContent,names);
+    private VBoxContainer[] MenuSections(Control parent,params string[] names)
     {
-        var tabs=new HFlowContainer();_menuContent.AddChild(tabs);
+        var tabs=new HFlowContainer();parent.AddChild(tabs);
         var pages=names.Select(_=>new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill}).ToArray();
         var buttons=new List<Button>();
         for(var i=0;i<names.Length;i++)
@@ -117,7 +143,7 @@ public partial class DebugMain
             });
             button.ToggleMode=true;button.SetPressedNoSignal(i==0);button.ThemeTypeVariation=i==0?"PrimaryAction":"Button";buttons.Add(button);
         }
-        for(var i=0;i<pages.Length;i++){_menuContent.AddChild(pages[i]);pages[i].Visible=i==0;}
+        for(var i=0;i<pages.Length;i++){parent.AddChild(pages[i]);pages[i].Visible=i==0;}
         return pages;
     }
     private static string Humanize(string value)=>System.Text.RegularExpressions.Regex.Replace(value,"(?<=[a-z])([A-Z])"," $1");
@@ -175,7 +201,7 @@ public partial class DebugMain
     }
     private void ApplyCareer(CareerSaveInfo save,(GameState State,CareerPresentation View) loaded)
     {
-        _state=loaded.State;_presentation=loaded.View;_careerId=save.Career;LogTimeline($"load {CareerCode}");ResetManagementSession();
+        _state=loaded.State;_presentation=loaded.View;_presentation.UiScale=1;_careerId=save.Career;LogTimeline($"load {CareerCode}");ResetManagementSession();
         if(_presentation.Camera.Length>0)try{_homeOffice.RestorePreferences(JsonSerializer.Deserialize<OfficeViewPreferences>(_presentation.Camera)!);}catch(JsonException){Notify("The office view was reset.");}
         _officeView.Effect=_homeOffice.Effect;_officeEffect.Select(2-_homeOffice.Effect);
         if(_presentation.Artwork.Values.Any(hash=>!System.IO.File.Exists(_careers.AssetPath(_careerId,hash))))Notify("Some custom artwork is missing. Bundled artwork is shown until it is restored or reset.");
@@ -192,7 +218,7 @@ public partial class DebugMain
         _progressSeriesId=_presentation.Page is "Series details" or "Sell online" or "Print doujin" or "Showcase"?_presentation.Detail:_presentation.SelectedSeries;
         Pause();_scanIndex=_state.Events.Count;_popupEvents.Clear();_recapDialog.Hide();_pendingRecap=null;_helperPopup.Hide();_storyOpen=false;
         _viewLocation=_presentation.ViewedOffice;_selectedPersonId=_state.ControlledStaff.Any(p=>p.Id==_presentation.SelectedPerson)?_presentation.SelectedPerson:_state.ProtagonistPersonId;_scopeLocation=_presentation.Scope;_detailId=_presentation.Detail;_back.Clear();
-        _page=new[]{"Office","Inbox","Books","Series","Series details","Staff","Person","Finances","Studios","Industry","Showcase","Help","Awards","Licenses","Legacy","Guidance","New doujin","New series","Conventions","Print doujin","Sell online"}.Contains(_presentation.Page)||WorkspaceTabs.ContainsKey(_presentation.Page)?_presentation.Page:"Inbox";
+        _page=new[]{"Office","Goals","Inbox","Books","Series","Series details","Staff","Person","Finances","Studios","Industry","Showcase","Help","Awards","Licenses","Legacy","Guidance","New doujin","New series","Conventions","Print doujin","Sell online"}.Contains(_presentation.Page)||WorkspaceTabs.ContainsKey(_presentation.Page)?_presentation.Page:"Inbox";
         _officeSidebar=_presentation.OfficeSidebar&&_page is "Inbox" or "Series";
         _inboxFilter=new[]{"Needs attention","Results & milestones","Routine","All"}.Contains(_presentation.InboxFilter)?_presentation.InboxFilter:"Needs attention";_inboxPage=0;
         if(!_state.Locations.Any(l=>l.Id==_scopeLocation&&l.BusinessId==_state.ControlledBusinessId))_scopeLocation=0;

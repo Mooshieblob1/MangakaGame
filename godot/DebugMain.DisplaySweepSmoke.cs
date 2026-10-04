@@ -11,7 +11,7 @@ namespace MangakaGame;
 
 public partial class DebugMain
 {
-    // T1.9 display sweep (Q29, Q30): every core screen at 5 sizes, 2 text scales and 2 themes, checked for
+    // T1.9 display sweep (Q29, Q30): every core screen at 5 sizes, 100% and 150% interface size (plus 200%) and 2 themes, checked for
     // controls off the window, overlapping siblings and cut-off button text, with a review set of captures.
     private async void RunDisplaySweepSmoke()
     {
@@ -25,6 +25,7 @@ public partial class DebugMain
 
             _presentation=new(){Page="Office"};
             _state=SweepCareer(out var serial,out var doujin,out var fixture);
+            var sweepState=_state;
             GD.Print("DISPLAY SWEEP fixture: "+fixture);
             ResetManagementSession();ShowOffice();_helperPopup.Hide();_popupEvents.Clear();
             var prefs=_presentation.Guidance;
@@ -36,6 +37,7 @@ public partial class DebugMain
 
             void Reset()
             {
+                if(_state!=sweepState){_state=sweepState;ResetManagementSession();}
                 CloseTitle();_menu.Hide();_inMenu=false;ClosePhone();_recapDialog.Hide();_helperPopup.Hide();_speedFlash?.Hide();ShowOffice();
             }
             var screens=new List<(string Name,Action Open)>
@@ -43,8 +45,10 @@ public partial class DebugMain
                 ("title",OpenTitle),
                 ("title-settings",()=>{OpenTitle();SettingsMenu();}),
                 ("new-career",()=>{OpenTitle();NewCareerMenu();}),
-                ("new-career-rules",()=>{OpenTitle();NewCareerMenu();Press("Career rules");}),
+                ("new-career-rules",()=>{OpenTitle();NewCareerMenu();Press("Customise");Press("Career rules");}),
                 ("office",()=>{}),
+                ("goals",()=>Navigate("Goals")),
+                ("day-one",()=>{_state=GameState.NewGame(0);ResetManagementSession();ShowOffice();ClosePhone();}), // the phone has its own screen; here it would be caught mid-slide
                 ("phone",()=>{OpenPhone(false);_phoneTween?.Kill();_phoneSlide=0;ResizeFloatingOffice();}),
                 ("pause-menu",ShowMenu),
                 ("production",()=>OpenWorkspace("Production")),
@@ -69,12 +73,14 @@ public partial class DebugMain
             };
             var sizes=new(Vector2I Size,string Name)[]{(new(1280,720),"1280x720"),(new(1280,800),"1280x800"),(new(1920,1080),"1920x1080"),(new(2560,1080),"2560x1080"),(new(3440,1440),"3440x1440")};
             var flagged=new List<string>();var combos=0;
+            // Interface size (display settings, spec 2026-10-04): each layout size at 100% and at 150% (a window 1.5 times
+            // larger with the same layout room), plus 200% on a 2560 x 1440 window (a 1280 x 720 layout).
+            var passes=sizes.SelectMany(s=>new[]{(s.Size,s.Name,1d),(s.Size,s.Name,1.5)}).Append((new Vector2I(1280,720),"1280x720",2d)).ToArray();
             foreach(var dark in new[]{true,false})
-            foreach(var scale in new[]{1d,1.5})
-            foreach(var (size,sizeName) in sizes)
+            foreach(var (size,sizeName,scale) in passes)
             {
                 SetDarkMode(dark);await Resize(size,scale);
-                var combo=$"{sizeName}-{(scale>1?"150":"100")}-{(dark?"dark":"light")}";
+                var combo=$"{sizeName}-{scale*100:0}-{(dark?"dark":"light")}";
                 foreach(var (name,open) in screens)
                 {
                     Reset();await SettleUi();open();await SettleUi();await SettleUi();
@@ -99,7 +105,7 @@ public partial class DebugMain
             }
             Reset();await Resize(new(1920,1080),1);
 
-            GD.Print($"DISPLAY SWEEP SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
+            GD.Print($"DISPLAY SWEEP SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>QuitTree(tree);QueueFree();
         }
         catch(Exception ex)
         {
@@ -107,11 +113,12 @@ public partial class DebugMain
         }
     }
 
+    // The window is the layout size times the interface size, so the interface keeps exactly that much room.
     private async Task Resize(Vector2I size,double scale)
     {
-        _presentation.UiScale=scale;ApplyTextScale();GetWindow().Size=size;await SettleUi();
-        for(var f=0;f<60&&GetViewport().GetVisibleRect().Size!=(Vector2)size;f++)await SettleUi();
-        Check(GetViewport().GetVisibleRect().Size==(Vector2)size,$"Window reached {size} (got {GetViewport().GetVisibleRect().Size}, scale {scale})");
+        _display.InterfaceSize=scale;GetWindow().Size=new((int)Math.Round(size.X*scale),(int)Math.Round(size.Y*scale));ApplyInterfaceSize();await SettleUi();
+        for(var f=0;f<60&&(GetViewport().GetVisibleRect().Size-(Vector2)size).Length()>1;f++)await SettleUi();
+        Check((GetViewport().GetVisibleRect().Size-(Vector2)size).Length()<=1,$"Window reached {size} (got {GetViewport().GetVisibleRect().Size}, scale {scale})");
     }
 
     private List<string> Inspect()
@@ -131,6 +138,7 @@ public partial class DebugMain
         var state=GameState.NewGame(0);var notes=new List<string>();
         bool Try(ICommand command){try{state.Apply(command);return true;}catch(InvalidCommandException ex){notes.Add(ex.Message);return false;}}
         Try(new CreateDoujinCommand("First pages","adventure"));
+        Try(new ShowEveryScreenCommand(true)); // every screen is checked; the day-one view is its own screen
         doujin=state.Series[0];
         for(var d=0;d<180&&doujin.Volumes.Count==0;d++)state.Advance(24);
         Try(new StudioActionCommand(StudioAction.Print,doujin.Volumes.Single().Id,Amount:30,Value:(int)PrintTier.CopyShop));

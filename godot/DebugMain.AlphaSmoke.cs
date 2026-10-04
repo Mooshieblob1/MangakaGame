@@ -22,7 +22,8 @@ public partial class DebugMain
             Directory.CreateDirectory(SmokeOutput);_careers=new CareerStore(Path.Combine(SmokeOutput,"alpha-careers-"+Guid.NewGuid().ToString("N")));
             var buzzes=_audio.BuzzCount;NewCareerMenu();Press("Begin career");await SettleUi();_helperPopup.Hide();
             RefreshGuidance();await SettleUi();
-            Check(_phone.Visible&&!_phone.Modern&&PhoneSays("16-page one-shot")&&_audio.BuzzCount>buzzes,"Fresh career: PHS buzzes with the first text");
+            Check(_phone.Visible&&!_phone.Modern&&PhoneSays(CareerGuidance.FirstText)&&_audio.BuzzCount>buzzes,"Fresh career: PHS buzzes with the first text");
+            Check(_presentation.Guidance.Thread.SelectMany(m=>m.Texts).Count()==1,"Quick start: a new career opens with one text (Q65)");
             Check(_presentation.Guidance.Thread.SelectMany(m=>m.Texts).All(t=>t.Length<=CareerGuidance.TextLimit),"Texts fit the 140 character limit");
             await CaptureSmokeImage("alpha-phone-phs");
             var before=_state.ToJson();Press("Show me");await SettleUi();
@@ -44,8 +45,13 @@ public partial class DebugMain
             Check(v.CopiesSold>0&&_state.Series[0].Chapters.Count==1,"Ordinary local sale without extra chapters");
             _scanIndex=_state.Events.Count;_popupEvents.Clear();_helperPopup.Hide();_report.Hide();_dirty=true;await SettleUi();
             RefreshGuidance();await SettleUi();
-            Check(CareerGuidance.Evaluate(_state,_presentation.Guidance).Id=="continue-series"&&_phone.Visible&&PhoneSays("Readers bought")&&_audio.BuzzCount>buzzes,"First sale texts the continue-series step");
+            var selling=CareerGuidance.Evaluate(_state,_presentation.Guidance).Id;
+            Check(selling is "sell" or "sell-more"&&_phone.Visible&&(PhoneSays("sell by themselves")||PhoneSays("first readers"))&&_audio.BuzzCount>buzzes,$"First sale texts the selling step ({selling})");
             Press("Later");await SettleUi();Check(!_phone.Visible&&_phoneIcon.Visible&&_phoneIcon.Unread==0,"Later puts the phone away as an icon");
+            // Listing the book online ends the selling tutorial; Helper-Chan then moves on to continuing the series.
+            buzzes=_audio.BuzzCount;_state.Apply(new PublishDoujinOnlineCommand(v.Id));_dirty=true;RefreshGuidance();await SettleUi();
+            Check(CareerGuidance.Evaluate(_state,_presentation.Guidance).Id=="continue-series"&&_phone.Visible&&PhoneSays("Readers bought")&&_audio.BuzzCount>buzzes,"Listing online moves her on to the continue-series step");
+            Press("Later");await SettleUi();Check(!_phone.Visible&&_phoneIcon.Visible&&_phoneIcon.Unread==0,"Later puts the phone away again");
             CareerGuidance.Say(_presentation.Guidance,_state.Clock.Now,"Smoke check message.");ClosePhone();
             Check(_phoneIcon.Unread==1,"Icon counts unread messages");
             _phoneIcon.EmitSignal(BaseButton.SignalName.Pressed);await SettleUi();Check(_phone.Visible&&_phoneIcon.Unread==0,"Icon reopens the thread");
@@ -63,8 +69,7 @@ public partial class DebugMain
             Check(_presentation.Guidance.Visible&&_phone.Visible,"Guidance resumes from Help and shows unread texts");
             foreach(var (size,name) in new(Vector2I,string)[]{(new(1920,1080),"1080"),(new(2560,1080),"2560x1080"),(new(3440,1440),"3440x1440"),(new(1280,720),"720-150")})
             {
-                if(name=="720-150"){_presentation.UiScale=1.5;ApplyTextScale();}
-                GetWindow().Size=size;RefreshGuidance();await SettleUi();await SettleUi();
+                SmokeLayout(size,name=="720-150"?1.5:1);RefreshGuidance();await SettleUi();await SettleUi();
                 foreach(var modern in new[]{false,true})
                 {
                     _phoneTween?.Kill();_phoneSlide=0;_phoneKey="";BuildPhone(modern,(float)_presentation.UiScale);ResizeFloatingOffice();await SettleUi();
@@ -73,7 +78,7 @@ public partial class DebugMain
                     Check(_phone.Modern==modern&&bounds.Position.X>=0&&bounds.Position.Y>=_floatingTop.GetGlobalRect().End.Y&&bounds.End.X<=view.X+1&&bounds.End.Y<=view.Y+1&&reply.End.Y<=bounds.End.Y+1,$"Phone fits {name} ({(modern?"smartphone":"PHS")})");
                 }
             }
-            _presentation.UiScale=1;ApplyTextScale();_phoneKey="";RefreshGuidance();
+            SetInterfaceSize(1);_phoneKey="";RefreshGuidance();
             ShowMenu();Press("Report a problem");await SettleUi();
             var choices=_menuContent.GetChildren().OfType<CheckBox>().ToArray();Check(choices.Length==3&&!choices[0].ButtonPressed&&!choices[1].ButtonPressed&&choices[2].ButtonPressed,"Report attachments: screen and career off, timeline on");
             _menuContent.GetChildren().OfType<TextEdit>().Single().Text="Alpha smoke: local export only.";
@@ -104,7 +109,7 @@ public partial class DebugMain
             Check(_deskWarning.Visible==(_state.WorkplaceWithFreeDesk is null),"Desk warning matches free desks");
             foreach(var (size,name,scale) in new(Vector2I,string,double)[]{(new(1280,720),"720-150",1.5),(new(1920,1080),"1080",1)})
             {
-                _presentation.UiScale=scale;ApplyTextScale();GetWindow().Size=size;RefreshRunway();await SettleUi();await SettleUi();
+                SmokeLayout(size,scale);RefreshRunway();await SettleUi();await SettleUi();
                 // Open the page with the phone already out, as a player following a text would.
                 if(!_phoneOpen)OpenPhone(false);_phoneTween?.Kill();_phoneSlide=0;OpenWorkspace("Recruitment");RefreshRunway();await SettleUi();await SettleUi();
                 ScrollContainer? runwayScroll=null;
@@ -138,7 +143,7 @@ public partial class DebugMain
             _state.Recruitment=null;_state.LastRecruitmentAt=_state.Clock.Now.AddDays(-3);RefreshStaff();
             Check(_recruitButton.Disabled&&_recruitButton.Text.Contains($"next search from {_state.Clock.Now.AddDays(11):d MMM yyyy}"),"Recruitment cooldown shows the next search date");
             GD.Print($"ALPHA SMOKE PASSED: {_smokeChecks} checks.");
-            var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
+            var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>QuitTree(tree);QueueFree();
         }
         catch(Exception ex){GD.PrintErr("ALPHA SMOKE FAILED: "+ex);GetTree().Quit(1);}
     }
