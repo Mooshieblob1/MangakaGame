@@ -54,19 +54,39 @@ public partial class OfficeView : SubViewportContainer
     public bool ShowNavigationHint { get=>_showNavigationHint; set{_showNavigationHint=value;if(_hint is not null)_hint.Visible=value;} }
     private bool _showNavigationHint=true;
     public double LabelTextScale { get; set; }=1;
+    // The interface size (display settings, spec 2026-10-04) scales this control's logical size down; the 3D image
+    // renders at the window's real pixels, and points convert between the two through this scale.
+    private float _renderScale=1;
+    public float RenderScale { get=>_renderScale; set{if(Mathf.IsEqualApprox(_renderScale,value))return;_renderScale=Math.Max(.5f,value);Callable.From(FitViewport).CallDeferred();} }
+    private void FitViewport()
+    {
+        if(_viewport is null||!IsInsideTree())return;
+        var size=new Vector2I(Math.Max(2,(int)Math.Round(Size.X*_renderScale)),Math.Max(2,(int)Math.Round(Size.Y*_renderScale)));
+        if(_viewport.Size!=size)_viewport.Size=size;
+    }
+    internal SubViewport RenderViewport=>_viewport;
+    private Vector2 ToViewport(Vector2 local)=>local*((Vector2)_viewport.Size/Size.Max(Vector2.One));
+    private Vector2 ToLocal(Vector2 viewportPoint)=>viewportPoint/((Vector2)_viewport.Size/Size.Max(Vector2.One));
     public Rect2 PresentationArea { get; set; }
 
     public override void _Ready()
     {
-        Stretch=true;SizeFlagsHorizontal=SizeFlags.ExpandFill;SizeFlagsVertical=SizeFlags.ExpandFill;
+        // Not stretched: the 3D image is sized by RenderScale and shown through a picture that fills this control, so it
+        // stays sharp at large interface sizes (display settings, spec 2026-10-04). Our own native draw is hidden.
+        Stretch=false;SizeFlagsHorizontal=SizeFlags.ExpandFill;SizeFlagsVertical=SizeFlags.ExpandFill;
         CustomMinimumSize=new(640,400);FocusMode=FocusModeEnum.All;MouseDefaultCursorShape=CursorShape.Arrow;
-        _viewport=new SubViewport{OwnWorld3D=true,TransparentBg=false,Size=new(1000,650),Msaa3D=Viewport.Msaa.Msaa2X};AddChild(_viewport);
+        // Held under a plain node so this container neither measures nor draws it; the picture below shows it.
+        var holder=new Node{Name="ViewportHolder"};AddChild(holder);
+        _viewport=new SubViewport{OwnWorld3D=true,TransparentBg=false,Size=new(1000,650),Msaa3D=Viewport.Msaa.Msaa2X,RenderTargetUpdateMode=SubViewport.UpdateMode.Always};holder.AddChild(_viewport);
+        var picture=new TextureRect{Name="OfficePicture",Texture=_viewport.GetTexture(),ExpandMode=TextureRect.ExpandModeEnum.IgnoreSize,
+            StretchMode=TextureRect.StretchModeEnum.Scale,MouseFilter=MouseFilterEnum.Ignore};
+        AddChild(picture);picture.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);Callable.From(FitViewport).CallDeferred();
         _world=new Node3D();_viewport.AddChild(_world);
         _room=new Node3D();_world.AddChild(_room);_actorsRoot=new Node3D();_world.AddChild(_actorsRoot);
         _camera=new Camera3D{Projection=Camera3D.ProjectionType.Orthogonal,KeepAspect=Camera3D.KeepAspectEnum.Height,Current=true,Far=300};_world.AddChild(_camera);
         BuildDaylight();BuildToiletPrivacy();
         _hint=new Label{Text="Wheel: zoom · right drag: rotate · middle drag / WASD: pan",Visible=_showNavigationHint,Position=new(14,14),Size=new(400,52),AutowrapMode=TextServer.AutowrapMode.WordSmart,MouseFilter=MouseFilterEnum.Ignore};AddChild(_hint);
-        Resized+=()=>{_hint.Size=new(Math.Max(100,Size.X-28),52);UpdateCamera();};
+        Resized+=()=>{_hint.Size=new(Math.Max(100,Size.X-28),52);Callable.From(FitViewport).CallDeferred();UpdateCamera();};
         _hint.AddThemeColorOverride("font_color",new Color("f5f0e5"));_hint.AddThemeColorOverride("font_shadow_color",Colors.Black);_hint.AddThemeConstantOverride("shadow_offset_x",1);_hint.AddThemeConstantOverride("shadow_offset_y",1);
         VisibilityChanged+=()=>{if(_viewport is not null)_viewport.RenderTargetUpdateMode=IsVisibleInTree()?SubViewport.UpdateMode.Always:SubViewport.UpdateMode.Disabled;};
     }
@@ -118,9 +138,20 @@ public partial class OfficeView : SubViewportContainer
             Wall(new(-1.5f,1.25f,0),new(3,2.5f,.12f),0);
             Wall(new(-3,1.25f,depth/2),new(.12f,2.5f,depth),1);
             Wall(new(-1.875f,1.25f,depth),new(2.25f,2.5f,.12f),2);
-            var desk=OfficeArt.Furniture("desk-better",1,frontWriting:true);desk.Position=new(-2.15f,0,1.55f);_room.AddChild(desk);
-            var chair=OfficeArt.Furniture("chair");chair.Position=new(-1.125f,0,1.615f);chair.RotationDegrees=new(0,180,0);_room.AddChild(chair);
-            _helper=new HelperChan{Position=HelperDesk};_room.AddChild(_helper);
+            if(_plan.Island)
+            {
+                // Studio island (Q59): her desk joins the room facing the spare desk, in cells the layout rules keep clear.
+                var place=FloorPlanDefinition.IslandHelperDesk;var seat=OfficeLayoutRules.ChairAt(place,0);
+                var desk=OfficeArt.Furniture("desk",1);desk.Position=PlacementOrigin(place,OfficeCatalog.Get("desk-better"));desk.RotationDegrees=new(0,-90*place.Rotation,0);_room.AddChild(desk);
+                var chair=OfficeArt.Furniture("chair");chair.Position=PlacementOrigin(seat,OfficeCatalog.Get("chair"));chair.RotationDegrees=new(0,-90*seat.Rotation,0);_room.AddChild(chair);
+                BuildStudioCorner();
+            }
+            else
+            {
+                var desk=OfficeArt.Furniture("desk-better",1,frontWriting:true);desk.Position=new(-2.15f,0,1.55f);_room.AddChild(desk);
+                var chair=OfficeArt.Furniture("chair");chair.Position=new(-1.125f,0,1.615f);chair.RotationDegrees=new(0,180,0);_room.AddChild(chair);
+            }
+            _helper=new HelperChan{Position=HelperDesk,DeskFacing=_plan.Island?Mathf.Pi/2:0};_room.AddChild(_helper);
             OfficeArt.WorldLabel(_helper,"Helper-Chan",new(0,1.78f,0),20).Name="NameTag";
         }
         else Wall(new(0,1.25f,d/2),new(.12f,2.5f,d),1);
@@ -370,7 +401,20 @@ public partial class OfficeView : SubViewportContainer
         shift-=direction*(shift.Y/direction.Y);
         _pan+=shift;UpdateCamera();
     }
-    internal Vector2 ProjectPoint(Vector3 point)=>_camera.UnprojectPosition(point);
+    internal Vector2 ProjectPoint(Vector3 point)=>ToLocal(_camera.UnprojectPosition(point));
+    /// <summary>Seated at their own desk and working, not walking, on a break-room visit or on a toilet trip (work sparkles, 2026-10-03).</summary>
+    public bool AtDeskWorking(int personId)=>_actors.TryGetValue(personId,out var a)&&a.Visible&&!a.Moving&&a.Activity=="Work"&&
+        _staffToiletId!=personId&&!_visualBreaks.ContainsKey(personId)&&Mathf.IsEqualApprox(a.SeatHeight,OfficeArt.DeskSeatHeight);
+    /// <summary>A shown person's head in canvas coordinates, or null when they are not on screen here (work sparkles).</summary>
+    public Vector2? PersonScreenPoint(int personId)
+    {
+        if(!_actors.TryGetValue(personId,out var actor)||!actor.Visible||!actor.IsInsideTree())return null;
+        var head=actor.GlobalPosition+new Vector3(0,1,0);
+        if(_camera.IsPositionBehind(head))return null;
+        var point=ToLocal(_camera.UnprojectPosition(head));
+        if(!new Rect2(Vector2.Zero,Size).HasPoint(point))return null;
+        return GetGlobalTransformWithCanvas()*point;
+    }
     private void UpdateCamera()
     {
         if(_plan is null)return;
@@ -387,7 +431,7 @@ public partial class OfficeView : SubViewportContainer
     }
     private OfficeCell? MouseCell(Vector2 position)
     {
-        var origin=_camera.ProjectRayOrigin(position);var direction=_camera.ProjectRayNormal(position);
+        position=ToViewport(position);var origin=_camera.ProjectRayOrigin(position);var direction=_camera.ProjectRayNormal(position);
         if(Math.Abs(direction.Y)<.001)return null;var point=origin+direction*(-origin.Y/direction.Y);
         return new((int)Math.Floor(point.X*4),(int)Math.Floor(point.Z*4));
     }
@@ -405,10 +449,10 @@ public partial class OfficeView : SubViewportContainer
                 if(!b.Pressed)return;GrabFocus();
                 if(!Editing)
                 {
-                    if(_helper is not null&&GodotObject.IsInstanceValid(_helper)&&_camera.UnprojectPosition(_helper.GlobalPosition+new Vector3(0,1,0)).DistanceTo(b.Position)<38)
+                    if(_helper is not null&&GodotObject.IsInstanceValid(_helper)&&ProjectPoint(_helper.GlobalPosition+new Vector3(0,1,0)).DistanceTo(b.Position)<38/_renderScale)
                     {HelperClicked?.Invoke();AcceptEvent();return;}
-                    var hit=_actors.Values.Where(a=>a.Visible).OrderBy(a=>_camera.UnprojectPosition(a.GlobalPosition+new Vector3(0,1,0)).DistanceTo(b.Position)).FirstOrDefault();
-                    if(hit is not null&&_camera.UnprojectPosition(hit.GlobalPosition+new Vector3(0,1,0)).DistanceTo(b.Position)<28){SelectedPerson=hit.PersonId;PersonClicked?.Invoke(hit.PersonId);AcceptEvent();return;}
+                    var hit=_actors.Values.Where(a=>a.Visible).OrderBy(a=>ProjectPoint(a.GlobalPosition+new Vector3(0,1,0)).DistanceTo(b.Position)).FirstOrDefault();
+                    if(hit is not null&&ProjectPoint(hit.GlobalPosition+new Vector3(0,1,0)).DistanceTo(b.Position)<28/_renderScale){SelectedPerson=hit.PersonId;PersonClicked?.Invoke(hit.PersonId);AcceptEvent();return;}
                 }
                 if(MouseCell(b.Position) is{} cell)
                 {
@@ -420,7 +464,8 @@ public partial class OfficeView : SubViewportContainer
         }
         if(ev is InputEventMouseMotion m)
         {
-            if(_rotating){_angle-=m.Relative.X*.009f;UpdateCamera();AcceptEvent();}
+            // Characters keep their physical size at any interface size, so clicks and turns are measured in screen pixels.
+            if(_rotating){_angle-=m.Relative.X*.009f*_renderScale;UpdateCamera();AcceptEvent();}
             if(_panning){PanScreenPixels(m.Relative);AcceptEvent();}
             if(_draggingFurniture&&Editing&&MouseCell(m.Position)is{} cell)GroundDragged?.Invoke(cell);
         }

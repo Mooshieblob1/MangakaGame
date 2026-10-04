@@ -57,11 +57,11 @@ public partial class DebugMain
             var windowSize=GetWindow().Size;
             foreach(var (size,name,scale) in new(Vector2I,string,double)[]{(new(1920,1080),"1080",1),(new(1280,720),"720-150",1.5)})
             {
-                _presentation.UiScale=scale;ApplyTextScale();GetWindow().Size=size;await SettleUi();
+                SmokeLayout(size,scale);await SettleUi();
                 if(!_phoneOpen)OpenPhone(false);_phoneTween?.Kill();_phoneSlide=0;await SettleUi();await SettleUi();
                 await CaptureSmokeImage($"series-status-debut-wait-{name}");
             }
-            _presentation.UiScale=1;ApplyTextScale();GetWindow().Size=windowSize;await SettleUi();
+            SmokeLayout(windowSize,1);await SettleUi();
             _state=GameState.FromJson(accepted);series=_state.Series.Single();
             var signed=_state.ToJson();_state=GameState.FromJson(snapshot);series=_state.Series.Single();
             _state.Apply(new DeclineOfferCommand(series.Id));Navigate("Series");Check(PublishingStatusText(series).Contains("Offer declined"),"Declined offer retains a clear outcome");
@@ -76,7 +76,7 @@ public partial class DebugMain
             Input.ParseInputEvent(new InputEventKey{Keycode=Key.Escape,Pressed=true});await SettleUi();
             Check(!note.HasFocus()&&note.Text=="Keep this note"&&_menu.Visible,"Escape also releases multiline entry without closing menu");
             Input.ParseInputEvent(new InputEventKey{Keycode=Key.Escape,Pressed=true});await SettleUi();Check(!_menu.Visible,"Second Escape retains normal menu closing");
-            GD.Print($"SERIES STATUS SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
+            GD.Print($"SERIES STATUS SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>QuitTree(tree);QueueFree();
         }
         catch(Exception ex){GD.PrintErr("SERIES STATUS SMOKE FAILED: "+ex);GetTree().Quit(1);}
     }

@@ -66,7 +66,12 @@ public partial class DebugMain
     {
         // The curtain stops the mouse; keys and controller buttons wait for the fade too (final review).
         if(Fading&&ev is InputEventKey or InputEventJoypadButton){GetViewport().SetInputAsHandled();return;}
-        if(ev is not InputEventKey key||!key.Pressed||key.Echo||key.CtrlPressed||key.AltPressed||key.MetaPressed)return;
+        if(ev is InputEventMouseButton{ButtonIndex:MouseButton.Right} rightClick){HandleRightClick(rightClick);return;}
+        if(ev is not InputEventKey key||!key.Pressed||key.Echo)return;
+        // F11 or Alt+Enter switches fullscreen anywhere (display settings, spec 2026-10-04).
+        if(key.Keycode==Key.F11&&!key.CtrlPressed&&!key.AltPressed||key.AltPressed&&key.Keycode is Key.Enter or Key.KpEnter)
+        {ToggleFullscreen();GetViewport().SetInputAsHandled();return;}
+        if(key.CtrlPressed||key.AltPressed||key.MetaPressed)return;
         // Consume the first Escape before GUI handling so it only leaves text entry.
         // A second Escape can then close the current panel or menu normally.
         if(key.Keycode==Key.Escape&&GetViewport().GuiGetFocusOwner() is LineEdit or TextEdit)
@@ -109,7 +114,7 @@ public partial class DebugMain
     private void BuildBooks()
     {
         PageActions(("+ Create a one-shot",()=>Navigate("New doujin")),("+ Start an ongoing series",()=>Navigate("New series")));
-        QuietWords(_sideContent,"Physical copies need printing and delivery. Downloads need no stock or upfront payment. Sales settle on Mondays.");
+        QuietWords(_sideContent,"Physical copies need printing and delivery. Downloads need no stock or upfront payment. Copies sell through the day, 10:00 to 20:00.");
         if(!ManagedSeries.Any())Words(Card("Your first release","Finish a one-shot or one short issue to unlock printing and online sales."),"A collected book is optional; it takes five finished chapters.");
         foreach(var series in ManagedSeries)
         {

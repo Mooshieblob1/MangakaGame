@@ -112,16 +112,19 @@ public partial class DebugMain
     private static Label Figure(Label label){label.RemoveThemeFontOverride("font");return label;}
     private void ApplyTextScale()
     {
+        // The per-career text scale is retired: the per-computer interface size scales everything (spec 2026-10-04).
+        _presentation.UiScale=1;
         Theme.DefaultFontSize=(int)(16*_presentation.UiScale);
-        if(_homeOffice is not null)_homeOffice.LabelTextScale=_presentation.UiScale;
-        if(_officeView is not null)_officeView.LabelTextScale=_presentation.UiScale;
+        // Name tags render inside the full-resolution office image, so they follow the interface size.
+        if(_homeOffice is not null)_homeOffice.LabelTextScale=InterfaceScale;
+        if(_officeView is not null)_officeView.LabelTextScale=InterfaceScale;
         foreach(var label in FindChildren("*","Label",true,false).OfType<Label>())if(label.HasMeta("base_font_size"))label.AddThemeFontSizeOverride("font_size",(int)((int)label.GetMeta("base_font_size")*_presentation.UiScale));
         ResizeGui();
     }
     private static void Empty(Control node){foreach(var child in node.GetChildren()){node.RemoveChild(child);child.QueueFree();}}
     private void BuildManagementShell(Control debugRoot)
     {
-        debugRoot.Hide();LoadUiPreferences();Theme=EditorialTheme();
+        debugRoot.Hide();LoadUiPreferences();LoadDisplaySettings();Theme=EditorialTheme();
         _careers=new CareerStore(ProjectSettings.GlobalizePath("user://careers"));
         StartTimeline();
         _backdrop=new ColorRect{Color=Wash,MouseFilter=MouseFilterEnum.Ignore};_backdrop.SetAnchorsPreset(LayoutPreset.FullRect);AddChild(_backdrop);
@@ -144,7 +147,7 @@ public partial class DebugMain
         _overnightSpeedBadge=Words(header,"▶▶ 32× NIGHT",14);_overnightSpeedBadge.SizeFlagsVertical=SizeFlags.ShrinkCenter;_overnightSpeedBadge.Hide();
         _overnightSpeedBadge.ThemeTypeVariation="SectionLabel";
         _navigation["Office"]=ActionButton(_rail,"⌂  Office",ShowOffice);
-        foreach(var (page,icon) in new[]{("Inbox","✉"),("Series","▤"),("Books","▥"),("Staff","♙"),("Finances","¥"),("Studios","▦"),("Industry","◇"),("Help","?")}){var name=page;_navigation[name]=ActionButton(_rail,icon+"  "+name,()=>Navigate(name));}
+        foreach(var (page,icon) in new[]{("Goals","★"),("Inbox","✉"),("Series","▤"),("Books","▥"),("Staff","♙"),("Finances","¥"),("Studios","▦"),("Industry","◇"),("Help","?")}){var name=page;_navigation[name]=ActionButton(_rail,icon+"  "+name,()=>Navigate(name));}
         foreach(var button in _navigation.Values){button.ToggleMode=true;button.ThemeTypeVariation="NavigationButton";button.Alignment=HorizontalAlignment.Left;}
         _viewOfficeHeading=Words(_rail,"VIEWING STUDIO",12);
         // The current name determines the selector's minimum width at the chosen
@@ -192,8 +195,9 @@ public partial class DebugMain
         _helperPopup.VisibilityChanged+=()=>{shade.Visible=_menu.Visible||_helperPopup.Visible;_dirty=true;};
         BuildAlpha();BuildSpeedFeedback();PrepareWorkspaceForms();
         BuildFloatingOffice(margin,railPanel,body,shade);
+        BuildWorkFeedback();
         _side.VisibilityChanged+=RefreshNavigation;_report.VisibilityChanged+=RefreshNavigation;
-        GetViewport().SizeChanged+=ResizeGui;_managementReady=true;ResizeGui();
+        GetViewport().SizeChanged+=ResizeGui;_managementReady=true;ApplyInterfaceSize();
         GetTree().AutoAcceptQuit=false; // the close button keeps a safety save first (HandleCloseRequest)
         _viewLocation=_state.Protagonist.Employment!.LocationId;RefreshManagement();OpenTitle();
         // A real launch starts black behind the start-up screens; the title screen fades up when they end.
@@ -224,6 +228,7 @@ public partial class DebugMain
     private void Navigate(string page,int detail=0)
     {
         if(OfficeEditing){Notify("Apply or discard your furniture changes before navigating.");return;}
+        RevealPage(page);
         LogTimeline("screen "+page);
         _back.Push((_page,_detailId,_scopeLocation,WorkspaceScroll(),_officeSidebar,_progressSeriesId,SelectedPerson.Id));
         _officeSidebar=false;_report.Hide();
@@ -268,6 +273,9 @@ public partial class DebugMain
         RefreshGuidance();
         RefreshCurrentProgress();
         RefreshOfficeDashboard();
+        RefreshDashboardGoals();
+        if(_navigation.TryGetValue("Goals",out var goalsButton))goalsButton.Text=GoalsRailText();
+        RefreshDisclosure();
         RefreshCandidateComparison();
         if(_side.Visible&&_page=="Print doujin")_refreshPrintPanel?.Invoke();
         if(_side.Visible&&_page=="Conventions")_refreshConvention?.Invoke();
@@ -311,7 +319,7 @@ public partial class DebugMain
     private static string? TutorialText(string page)=>page switch
     {
         "Series"=>"Start a manga here. Open its card to see work, deadlines, publishing and its showcase.",
-        "Books"=>"Choose a finished book to print. Delivery starts local distribution, with sales checks on Mondays.",
+        "Books"=>"Choose a finished book to print. Delivery puts copies in local shops, where they sell through the day.",
         "Staff"=>"People are grouped around their series. Select someone for skills, wellbeing and work controls.",
         "Finances"=>"Available money already protects wages and reserved commitments. Personal savings are separate.",
         "Studios"=>"Look around a location without changing your management filters. Furniture changes need Apply or Discard.",

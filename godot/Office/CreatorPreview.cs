@@ -18,9 +18,15 @@ public partial class CreatorPreview : SubViewportContainer
     }
     public override void _Ready()
     {
-        Stretch=true;CustomMinimumSize=new(280,280);SizeFlagsHorizontal=SizeFlags.ExpandFill;
+        // Like the office: not stretched, rendered at the window's real pixels and shown through a picture, so the preview
+        // stays sharp at large interface sizes (display settings, spec 2026-10-04).
+        Stretch=false;CustomMinimumSize=new(280,280);SizeFlagsHorizontal=SizeFlags.ExpandFill;
         MouseDefaultCursorShape=CursorShape.Drag;TooltipText="Drag left or right to turn your mangaka.";
-        _viewport=new SubViewport{OwnWorld3D=true,Size=new(320,280),Msaa3D=Viewport.Msaa.Msaa2X};AddChild(_viewport);
+        var holder=new Node{Name="ViewportHolder"};AddChild(holder);
+        _viewport=new SubViewport{OwnWorld3D=true,Size=new(320,280),Msaa3D=Viewport.Msaa.Msaa2X};holder.AddChild(_viewport);
+        var picture=new TextureRect{Texture=_viewport.GetTexture(),ExpandMode=TextureRect.ExpandModeEnum.IgnoreSize,StretchMode=TextureRect.StretchModeEnum.Scale,MouseFilter=MouseFilterEnum.Ignore};
+        AddChild(picture);picture.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+        Resized+=()=>Callable.From(FitViewport).CallDeferred();Callable.From(FitViewport).CallDeferred();
         var world=new Node3D();_viewport.AddChild(world);
         world.AddChild(new WorldEnvironment{Environment=new Godot.Environment
         {
@@ -34,6 +40,12 @@ public partial class CreatorPreview : SubViewportContainer
         var camera=new Camera3D{Projection=Camera3D.ProjectionType.Orthogonal,Size=1.65f,Current=true,Position=new(1.4f,1.25f,-3.5f)};
         world.AddChild(camera);camera.LookAt(new(0,.60f,0));
         VisibilityChanged+=SyncVisibility;SyncVisibility();
+    }
+    private void FitViewport()
+    {
+        if(!IsInsideTree())return;var scale=GetWindow().ContentScaleFactor;
+        var size=new Vector2I(System.Math.Max(2,(int)System.Math.Round(Size.X*scale)),System.Math.Max(2,(int)System.Math.Round(Size.Y*scale)));
+        if(_viewport.Size!=size)_viewport.Size=size;
     }
     private void Rebuild()
     {

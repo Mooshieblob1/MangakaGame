@@ -22,7 +22,7 @@ public partial class DebugMain
         _timeline=new SessionTimeline(folder,()=>DateTime.Now);
         _errorLogger=new TimelineErrorLogger();OS.AddLogger(_errorLogger);
         var size=GetWindow().Size;
-        _timeline.Start($"window {size.X}x{size.Y} text {(int)Math.Round(_presentation.UiScale*100)} theme {(_darkMode?"dark":"light")}");
+        _timeline.Start($"window {size.X}x{size.Y} interface {(int)Math.Round(InterfaceScale*100)} theme {(_darkMode?"dark":"light")}");
         // The first theme is built before the timeline exists, so a missing heading font is noted here (final review).
         if(HeadingFont is null)LogTimeline("error heading font missing: "+_fontPath);
     }
@@ -58,7 +58,7 @@ public partial class DebugMain
         {
             if(_managementReady&&!HandleCloseRequest())return;
             DrainUnexpectedErrors();_timeline?.End();
-            if(_managementReady)GetTree().Quit();
+            if(_managementReady)QuitGame();
         }
         if(what==NotificationPredelete&&_errorLogger is not null){OS.RemoveLogger(_errorLogger);_errorLogger=null;}
     }

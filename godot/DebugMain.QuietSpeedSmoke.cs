@@ -62,11 +62,11 @@ public partial class DebugMain
             var windowSize=GetWindow().Size;
             foreach(var (size,name,scale) in new(Vector2I,string,double)[]{(new(1920,1080),"1080",1),(new(1280,720),"720-150",1.5)})
             {
-                _presentation.UiScale=scale;ApplyTextScale();GetWindow().Size=size;await SettleUi();for(var f=0;f<60&&GetViewport().GetVisibleRect().Size!=(Vector2)size;f++)await SettleUi();Check(GetViewport().GetVisibleRect().Size==(Vector2)size,$"Window reached {size}");
+                SmokeLayout(size,scale);await SettleUi();for(var f=0;f<60&&GetViewport().GetVisibleRect().Size!=(Vector2)size;f++)await SettleUi();Check(GetViewport().GetVisibleRect().Size==(Vector2)size,$"Window reached {size}");
                 OpenPhone(false);_phoneTween?.Kill();_phoneSlide=0;await SettleUi();await SettleUi();
                 await CaptureSmokeImage($"quiet-speed-phone-{name}");
             }
-            _presentation.UiScale=1;ApplyTextScale();GetWindow().Size=windowSize;await SettleUi();
+            SmokeLayout(windowSize,1);await SettleUi();
 
             // Choosing 32x yourself also counts as the introduction.
             prefs.Completed.Remove(CareerGuidance.QuietSpeedStep);SetSpeed(4);ChooseSpeed(QuietSpeed);
@@ -87,11 +87,11 @@ public partial class DebugMain
             _speedTween?.Kill();_speedFlash?.Hide();
             foreach(var (size,name,scale) in new(Vector2I,string,double)[]{(new(1920,1080),"1080",1),(new(1280,720),"720-150",1.5)})
             {
-                _presentation.UiScale=scale;ApplyTextScale();GetWindow().Size=size;ClosePhone();await SettleUi();await SettleUi();for(var f=0;f<60&&GetViewport().GetVisibleRect().Size!=(Vector2)size;f++)await SettleUi();Check(GetViewport().GetVisibleRect().Size==(Vector2)size,$"Window reached {size}");
+                SmokeLayout(size,scale);ClosePhone();await SettleUi();await SettleUi();for(var f=0;f<60&&GetViewport().GetVisibleRect().Size!=(Vector2)size;f++)await SettleUi();Check(GetViewport().GetVisibleRect().Size==(Vector2)size,$"Window reached {size}");
                 Check(_speedButtons[32].ButtonPressed&&_speedButtons[32].IsVisibleInTree(),$"32x header button is visible and active at {name}");
                 await CaptureSmokeImage($"quiet-speed-header-{name}");
             }
-            _presentation.UiScale=1;ApplyTextScale();GetWindow().Size=windowSize;await SettleUi();
+            SmokeLayout(windowSize,1);await SettleUi();
 
             // One whole routine working day at 32x, measured in real seconds.
             var day=Run(QuietSpeed,()=>_overnightTarget is not null);
@@ -129,7 +129,7 @@ public partial class DebugMain
                 Check(_state.Clock.Now==new DateTime(1996,4,2,8,0,0)&&_speed==speed,$"After a quiet day's night the morning continues at {speed}x (now {_state.Clock.Now}, speed {_speed})");
             }
 
-            GD.Print($"QUIET SPEED SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
+            GD.Print($"QUIET SPEED SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>QuitTree(tree);QueueFree();
         }
         catch(Exception ex)
         {

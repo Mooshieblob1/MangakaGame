@@ -20,6 +20,8 @@ public partial class DebugMain
             Check(!_menu.Visible&&!TitleOpen&&_homeOffice.CompanionVisible,"New career with companion");
             CheckMoneyFeedback();
             CheckUiPolishNavigation();
+            // Going to a hidden part opens it by design (progressive disclosure); open these first so the check covers the rest.
+            _state.Apply(new OpenPartCommand("staff"));_state.Apply(new OpenPartCommand("studios"));
             var baseline=_state.ToJson();var desks=_state.Offices.Sum(l=>l.Placements.Count);
             Navigate("Staff");Navigate("Finances");Navigate("Studios");Navigate("Help");GoBack();
             Check(_page=="Studios"&&_state.ToJson()==baseline,"Read-only navigation and Back");
@@ -85,11 +87,10 @@ public partial class DebugMain
             var guiSave=SaveCareer("GUI preferences");LoadCareer(guiSave);await SettleUi();
             Check(_presentation.CompactUi&&_presentation.ReducedUiMotion&&_officeSidebar,"GUI preferences and sidebar survive career load");
             _presentation.CompactUi=false;_presentation.ReducedUiMotion=false;ApplyUiTheme();
-            GetWindow().Size=new(1280,720);
-            _presentation.UiScale=1.5;ApplyTextScale();Navigate("Inbox");await CaptureSmokeImage("management-large-text");
+            SmokeLayout(new(1280,720),1.5);Navigate("Inbox");await CaptureSmokeImage("management-large-text");
             Check(_sideScroll.Size.Y>=140,"Large text retains a usable scrolling page at 720p");
             _popupEvents.Clear();ShowStory(_state.Career.PendingScene!);await CaptureSmokeImage("management-large-dialogue");Press("Read later");
-            _presentation.UiScale=1;ApplyTextScale();GetWindow().Size=new(1600,900);
+            SmokeLayout(new(1600,900),1);
             foreach(var offerId in Enumerable.Range(1,16))
             {
                 _state=GameState.NewGame(33);_state.ControlledBusiness.Account.OpeningBalance+=100000000;_state.Money+=100000000;

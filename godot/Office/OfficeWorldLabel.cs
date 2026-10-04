@@ -42,11 +42,11 @@ public partial class OfficeWorldLabel : Node3D
         if(!viewport.GetVisibleRect().HasPoint(point)){_caption.Hide();return;}
         var size=Math.Max(16,(int)Math.Round(FontSize*(_office?.LabelTextScale??1)));
         if(size!=_appliedFontSize)
-        {_caption.AddThemeFontSizeOverride("font_size",size);_appliedFontSize=size;}
+        {_caption.AddThemeFontSizeOverride("font_size",size);_caption.AddThemeConstantOverride("outline_size",Math.Max(4,size/5));_appliedFontSize=size;}
         if(_caption.Text!=Text)_caption.Text=Text;
         _caption.Size=_caption.GetCombinedMinimumSize().Ceil();
         // Rasterize at the displayed size and avoid subpixel placement shimmer.
-        _caption.Position=(point+ScreenOffset-_caption.Size/2).Round();
+        _caption.Position=(point+ScreenOffset*(float)(_office?.LabelTextScale??1)-_caption.Size/2).Round();
         _caption.Show();
     }
 }

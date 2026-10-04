@@ -108,6 +108,11 @@ public partial class DebugMain : Control
         if (OS.GetCmdlineUserArgs().Contains("--title-smoke")) CallDeferred(nameof(RunTitleSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--brand-smoke")) CallDeferred(nameof(RunBrandSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--tester-b-smoke")) CallDeferred(nameof(RunTesterBSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--goals-smoke")) CallDeferred(nameof(RunGoalsSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--disclosure-smoke")) CallDeferred(nameof(RunDisclosureSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--work-feedback-smoke")) CallDeferred(nameof(RunWorkFeedbackSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--selling-smoke")) CallDeferred(nameof(RunSellingSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--display-smoke")) CallDeferred(nameof(RunDisplaySmoke));
     }
 
     // Only the title screen plays the title music; the pause menu keeps the career rotation (spec 2026-09-28).
@@ -121,6 +126,7 @@ public partial class DebugMain : Control
         ApplyAudioSettings();
         if(_managementReady)_audio.Update(delta,!_inMenu&&AudioFocused,_speed>0&&!OfficeEditing,AmbienceBalance,1);
         UpdateMusic(delta);
+        UpdateWorkFeedback(delta);
         if (_overnightTarget is not null) TickOvernight(delta);
         else if (_speed > 0)
         {
@@ -166,13 +172,14 @@ public partial class DebugMain : Control
         // At 32x routine days roll on; only events that need the player stop the game (Q27).
         var fast = _speed >= QuietSpeed && _overnightTarget is null && _managementReady;
         var prefs = _presentation.Guidance;
-        var threadBefore = prefs.Thread.Count;
+        var lastStopping = CareerGuidance.LastStopping(prefs);
         GameEvent? recap = null;
         var shouldPause = false;
         var stop = false;
         foreach (var ev in fresh)
         {
             AppendLog(ev);
+            if (_managementReady && ev.Type == EventType.GoalCompleted) Notify("Helper-Chan: " + ev.Message);
             // A missed payday becomes Helper-Chan's text; the pop-up remains only when her guidance is hidden.
             var texted = ev.Type == EventType.WageArrears && CareerGuidance.ReportArrears(_state, prefs, ev) && prefs.Visible;
             if (_managementReady && !texted) QueueImportantEvent(ev,_state.Events.IndexOf(ev));
@@ -183,10 +190,13 @@ public partial class DebugMain : Control
                 (_state.Settings.AutoPause.TryGetValue(ev.Type, out var pause) && pause))
                 shouldPause = true;
         }
+        if (_managementReady && prefs.Visible) { CareerGuidance.ObserveGoals(_state, prefs); CareerGuidance.ObserveParts(_state, prefs); }
         if (fast && prefs.Visible)
         {
             CareerGuidance.Observe(_state, prefs);
-            if (prefs.Thread.Count > threadBefore && CareerGuidance.Unread(prefs) > 0) { shouldPause = true; stop = true; }
+            // Goal texts never stop 32x; her other new texts still do (spec 2026-10-01).
+            // Compared by reference: a full thread drops old messages, so a count would miss a new one (final review).
+            if (!ReferenceEquals(CareerGuidance.LastStopping(prefs), lastStopping) && CareerGuidance.UnreadStopping(prefs) > 0) { shouldPause = true; stop = true; }
         }
         // Helper-Chan introduces 32x once, after a working day with nothing that needed the player (Q28).
         if (!fast && recap != null && _managementReady && prefs.Visible && _overnightTarget is null &&
@@ -239,7 +249,7 @@ public partial class DebugMain : Control
             foreach (var c in recap.ChaptersCompleted) lines.Add($"Chapter done: {DescribeChapter(c.SeriesId, c.ChapterNumber)}");
             foreach (var c in recap.DeadlinesMissed) lines.Add($"Deadline missed: {DescribeChapter(c.SeriesId, c.ChapterNumber)}");
             foreach (var c in recap.ChaptersAtRisk) lines.Add($"At risk: {DescribeChapter(c.SeriesId, c.ChapterNumber)}");
-            lines.Add($"Income: ¥{recap.YenEarned:N0}");
+            lines.Add($"Income since the last recap: ¥{recap.YenEarned:N0}");
             foreach (var c in recap.ChaptersPublished) lines.Add($"Published: {DescribeChapter(c.SeriesId, c.ChapterNumber)}");
             foreach (var id in recap.IssuesMissed) lines.Add($"Issue missed: {_state.FindSeries(id)?.Title}");
         }
