@@ -143,7 +143,7 @@ public partial class DebugMain
         StickerButton(_titleMenuBox!, "Load Career", LoadCareerMenu, false);
         StickerButton(_titleMenuBox!, "Settings", SettingsMenu, false);
         StickerButton(_titleMenuBox!, "Report a problem", ReportProblem, false);
-        StickerButton(_titleMenuBox!, "Quit", () => { _timeline?.End(); GetTree().Quit(); }, false);
+        StickerButton(_titleMenuBox!, "Quit", () => { _timeline?.End(); QuitGame(); }, false);
         main.ThemeTypeVariation = "PrimaryAction"; _titleMainButton = main;
         FocusLater(main);
         Callable.From(LayoutTitle).CallDeferred(); // the logo fits around the finished menu

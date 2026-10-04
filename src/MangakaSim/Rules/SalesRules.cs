@@ -2,6 +2,26 @@ namespace MangakaSim.Rules;
 
 public static class SalesRules
 {
+    // Streaming sales (spec 2026-10-03, Q60): shops sell from 10:00 to 20:00 every day.
+    public const int ShopOpens = 10, ShopCloses = 20, ShopHoursPerWeek = 70, MinimumFirstWeekHours = 30;
+    /// <summary>True on the tick that ends a shop hour (the clock reads 11:00 to 20:00).</summary>
+    public static bool IsShopHour(DateTime now) => now.Minute == 0 && now.Second == 0 && now.Hour > ShopOpens && now.Hour <= ShopCloses;
+    /// <summary>Whole units due after <paramref name="done"/> of <paramref name="hours"/> shop hours.</summary>
+    public static long DueBy(long total, int done, int hours) =>
+        hours <= 0 || done >= hours ? total : (long)(new System.Numerics.BigInteger(total) * Math.Max(0, done) / hours);
+    public static int ShopHoursUntil(DateTime from, DateTime until)
+    {
+        var count = 0;
+        for (var t = from.Date.AddHours(from.Hour + 1); t <= until; t = t.AddHours(1)) if (IsShopHour(t)) count++;
+        return count;
+    }
+    public static DateTime NextShopHour(DateTime from)
+    {
+        var t = from.Date.AddHours(from.Hour + 1);
+        while (!IsShopHour(t)) t = t.AddHours(1);
+        return t;
+    }
+
     public static long Copies(double value)
     {
         if (!double.IsFinite(value) || value < 0 || value >= 9223372036854775808.0) throw new OverflowException("Copy count out of range.");

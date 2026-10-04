@@ -1,3 +1,4 @@
+using MangakaSim.Rules;
 using Xunit;
 
 namespace MangakaSim.Tests;
@@ -17,9 +18,12 @@ public class DoujinDistributionTests
         Assert.Equal(json,s.ToJson());
         s.Apply(new StudioActionCommand(StudioAction.Print,v.Id,Amount:10));
         var pending=s.DescribeDoujin(v.Id);Assert.Contains("awaiting delivery",pending.Status);
-        Assert.Equal(DayOfWeek.Monday,pending.NextCheck!.Value.DayOfWeek);
+        // Streaming sales (2026-10-03): the next check is the first shop hour at or after the delivery.
+        var due=s.PrintRuns.Single().DueAt;var firstShopHour=due;while(!SalesRules.IsShopHour(firstShopHour))firstShopHour=firstShopHour.AddHours(1);
+        Assert.True(SalesRules.IsShopHour(pending.NextCheck!.Value));Assert.Equal(firstShopHour,pending.NextCheck.Value);
         s.Advance(24);Assert.Equal("On sale locally",s.DescribeDoujin(v.Id).Status);
-        var next=s.DescribeDoujin(v.Id).NextCheck!.Value;s.Advance((int)(next-s.Clock.Now).TotalHours);
+        var next=s.DescribeDoujin(v.Id).NextCheck!.Value;Assert.True(SalesRules.IsShopHour(next));Assert.True(next>s.Clock.Now);s.Advance((int)(next-s.Clock.Now).TotalHours);
+        s.Advance(24*7); // shops now sell by the hour: a small first week still sells copies by its end
         Assert.True(v.CopiesSold>0);Assert.Equal(v.CopiesSold,s.DescribeDoujin(v.Id).Sold);
         json=s.ToJson();s.DescribeDoujin(v.Id);Assert.Equal(json,s.ToJson());
     }
@@ -28,8 +32,12 @@ public class DoujinDistributionTests
         var s=Book();var v=s.Series[0].Volumes[0];
         while(s.Clock.DayOfWeek!=DayOfWeek.Sunday||s.Clock.Hour!=0)s.Advance(1);
         s.Apply(new StudioActionCommand(StudioAction.Print,v.Id,Amount:10));
-        Assert.Equal(s.PrintRuns.Single().DueAt,s.DescribeDoujin(v.Id).NextCheck);
-        s.Advance(24);Assert.True(v.CopiesSold>0);
+        var delivery=s.PrintRuns.Single().DueAt;Assert.Equal(DayOfWeek.Monday,delivery.DayOfWeek);
+        Assert.Equal(delivery.AddHours(SalesRules.ShopOpens+1),s.DescribeDoujin(v.Id).NextCheck); // 11:00, the first shop hour at or after the delivery
+        // Streaming sales (2026-10-03): delivery on the Monday tick plans that whole week (70 shop hours) at once.
+        s.Advance(24);Assert.Equal(DayOfWeek.Monday,s.Clock.DayOfWeek);var plan=Assert.Single(v.SalesPlans!);
+        Assert.Equal((SaleKind.Shop,s.Clock.Now,SalesRules.ShopHoursPerWeek,1),(plan.Kind,plan.Week,plan.Hours,v.WeeksOnSale));
+        s.Advance(24*6+20);Assert.True(v.CopiesSold>0);Assert.Equal(10,v.CopiesSold+s.Stock(v.Id));Assert.Equal(1,v.WeeksOnSale);
     }
     [Fact] public void Sold_out_and_closed_books_do_not_claim_active_local_distribution()
     {

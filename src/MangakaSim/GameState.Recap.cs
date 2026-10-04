@@ -5,6 +5,12 @@ public partial class GameState
     /// <summary>Index into Events where the events for the next recap begin.</summary>
     public int RecapWindowStart { get; set; }
 
+    /// <summary>The activity date of the last recap and the publishing income already shown for it. Shops sell until 20:00,
+    /// after the recap fires, and merged ledger lines keep their first time of day, so the next recap adds what was left out.
+    /// Older saves start at the default date, which counts only the recap's own day.</summary>
+    public DateTime RecapIncomeDate { get; set; }
+    public long RecapIncomeYen { get; set; }
+
     internal void DayEndStep()
     {
         if (RecapFiredToday) return;
@@ -29,7 +35,7 @@ public partial class GameState
         var window = Events.Skip(RecapWindowStart).Where(e => e.ActivityDate == TickStart.Date && (e.SeriesId is null || FindSeries(e.SeriesId.Value)?.BusinessId == ControlledBusinessId)).ToList();
         var payload = new DailyRecapPayload
         {
-            YenEarned = Ledger.Where(e => e.Time.Date == TickStart.Date && e.Amount > 0 && e.Kind == AccountEntryKind.Publishing).Sum(e => e.Amount),
+            YenEarned = RecapIncome(TickStart.Date),
             ChaptersPublished = window.Where(e => e.Type == EventType.ChapterPublished)
                 .Select(e => new ChapterRef(e.SeriesId!.Value, e.ChapterNumber!.Value)).ToList(),
             IssuesMissed = window.Where(e => e.Type == EventType.IssueMissed).Select(e => e.SeriesId!.Value).ToList(),
@@ -56,8 +62,19 @@ public partial class GameState
         var ev = Emit(EventType.DailyRecap, message, context: new(ActivityDate: TickStart.Date));
         ev.Recap = payload;
         RecapFiredToday = true;
+        (RecapIncomeDate, RecapIncomeYen) = (TickStart.Date, PublishingIncome(d => d == TickStart.Date));
         RecapWindowStart = Clock.Now.Date > TickStart.Date ? StartOfActivityDate(Clock.Now.Date) : Events.Count;
         return ev;
+    }
+
+    private long PublishingIncome(Func<DateTime, bool> days) =>
+        Ledger.Where(e => e.Amount > 0 && e.Kind == AccountEntryKind.Publishing && days(e.Time.Date)).Sum(e => e.Amount);
+
+    /// <summary>Income since the previous recap: what that recap's day earned after it fired, plus every later day up to this one.</summary>
+    private long RecapIncome(DateTime day)
+    {
+        if (RecapIncomeDate == default || RecapIncomeDate > day) return PublishingIncome(d => d == day);
+        return Math.Max(0, PublishingIncome(d => d == RecapIncomeDate) - RecapIncomeYen) + PublishingIncome(d => d > RecapIncomeDate && d <= day);
     }
 
     private int StartOfActivityDate(DateTime date)

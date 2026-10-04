@@ -22,7 +22,9 @@ public class StudioOperationsTests
         Assert.Null(v.ReleasedAt); Assert.Equal(0,s.Stock(v.Id));
         s.Advance(24*14); Assert.Equal(0,v.CopiesSold); Assert.Equal(0,v.WeeksOnSale);
         s.Apply(new StudioActionCommand(StudioAction.Print,v.Id,Amount:50));
-        Assert.Equal(0,s.Stock(v.Id)); s.Advance(24); Assert.Equal(50,s.Stock(v.Id)); Assert.NotNull(v.ReleasedAt);
+        Assert.Equal(0,s.Stock(v.Id)); s.Advance(24); Assert.NotNull(v.ReleasedAt);
+        // Streaming sales (2026-10-03): delivery opens the window and plans its first week at once, so shops may already have sold some.
+        Assert.Equal(50,s.Stock(v.Id)+v.CopiesSold); Assert.Equal(1,v.WeeksOnSale); Assert.Contains(v.SalesPlans!,p=>p.Kind==SaleKind.Shop&&p.Total>0);
         RoundTrip(s);
     }
     [Theory] [InlineData(PrintTier.CopyShop,52000)] [InlineData(PrintTier.LocalPrinter,32000)] [InlineData(PrintTier.BulkPrinter,29000)]

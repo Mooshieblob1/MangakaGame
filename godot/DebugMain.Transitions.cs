@@ -93,4 +93,9 @@ public partial class DebugMain
         var kept = _safetySaves;
         Transition(() => { OpenTitle(); if (kept) Notify("Progress kept."); });
     }
+
+    // Every way out of the game (title Quit, window close, the smoke checks) collects managed garbage first: left to
+    // engine shutdown, Godot's C# bindings can hit a fatal "leaked unsafe reference" assert after the game has ended.
+    private void QuitGame(int code = 0) => QuitTree(GetTree(), code);
+    private static void QuitTree(SceneTree tree, int code = 0) { GC.Collect(); GC.WaitForPendingFinalizers(); tree.Quit(code); }
 }

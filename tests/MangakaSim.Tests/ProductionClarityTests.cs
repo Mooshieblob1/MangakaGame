@@ -89,11 +89,18 @@ public class ProductionClarityTests
         state.Advance(state.Clock.HoursUntil(booking.Date.AddHours(-24)));
         state.Apply(new StudioActionCommand(StudioAction.Print,selected.Volumes[0].Id,Amount:100));
         state.Advance(state.Clock.HoursUntil(booking.Date.AddHours(11)));
-        var otherStock=state.Stock(other.Volumes[0].Id);var copies=selected.Volumes[0].CopiesSold;var fans=selected.Fanbase;var hours=state.Protagonist.ProductiveHours;
+        var book=selected.Volumes[0];var copies=book.CopiesSold;var fans=selected.Fanbase;var hours=state.Protagonist.ProductiveHours;var stock=state.Stock(book.Id);
+        // Streaming sales (2026-10-03): shops keep selling both titles during the event, recorded in the weekly samples.
+        var week=booking.Date.AddDays(-(((int)booking.Date.DayOfWeek+6)%7));
+        long Weekly(Volume v)=>state.Career.Sales.SingleOrDefault(x=>x.Volume==v.Id&&x.At==week)?.Physical??0;
+        var weekly=Weekly(book);var otherStock=state.Stock(other.Volumes[0].Id);var otherSold=other.Volumes[0].CopiesSold;
         state.Advance(5+booking.TravelHours);
-        Assert.True(booking.Settled);Assert.True(booking.CopiesSold>0,$"Staffed {booking.StaffedHours}; stock {state.Stock(selected.Volumes[0].Id)}; demand {selected.Volumes[0].WeeklyDemand}");
-        Assert.Equal(copies+booking.CopiesSold,selected.Volumes[0].CopiesSold);
-        Assert.Equal(otherStock,state.Stock(other.Volumes[0].Id));Assert.True(selected.Fanbase>fans);
+        Assert.True(booking.Settled);Assert.True(booking.CopiesSold>0,$"Staffed {booking.StaffedHours}; stock {state.Stock(book.Id)}; demand {book.WeeklyDemand}");
+        var shops=Weekly(book)-weekly;Assert.True(shops>=0);
+        Assert.Equal(booking.CopiesSold,state.Career.Sales.Single(x=>x.Volume==book.Id&&x.At==state.Clock.Now).Physical);
+        Assert.Equal(copies+booking.CopiesSold+shops,book.CopiesSold);Assert.Equal(stock-booking.CopiesSold-shops,state.Stock(book.Id));
+        Assert.DoesNotContain(state.Career.Sales,x=>x.Volume==other.Volumes[0].Id&&x.At==state.Clock.Now);
+        Assert.Equal(otherStock+otherSold,state.Stock(other.Volumes[0].Id)+other.Volumes[0].CopiesSold);Assert.True(selected.Fanbase>fans);
         Assert.Equal(hours,state.Protagonist.ProductiveHours);
         Assert.Equal(state.ToJson(),GameState.FromJson(state.ToJson()).ToJson());
         Assert.Equal(state.ToJson(),state.ReplayTimeline().ToJson());

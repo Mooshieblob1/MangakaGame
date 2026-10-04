@@ -198,14 +198,25 @@ public class MarketBoundaryTests
         state.Apply(new SetOvertimeAllowedCommand(person.Id, true));
         state.Advance(4);
         Assert.Equal(DayOfWeek.Monday, state.Clock.DayOfWeek);
+        // Streaming sales (2026-10-03): nothing sells at midnight; each day's recap counts that day's shop-hour income.
+        long Earned(GameState s, DateTime day) => s.Ledger.Where(e => e.Time.Date == day && e.Amount > 0 && e.Kind == AccountEntryKind.Publishing).Sum(e => e.Amount);
         var recap = state.Events.Last(e => e.Type == EventType.DailyRecap);
         Assert.Equal(sunday.Date, recap.ActivityDate);
-        Assert.Equal(0, recap.Recap!.YenEarned);
-        var earned = state.Ledger.Where(e => e.Time == state.Clock.Now && e.Amount > 0).Sum(e => e.Amount);
-        Assert.True(earned > 0);
+        Assert.True(Earned(state, sunday.Date) > 0);
+        // Decision (Task 6): a recap counts income since the previous recap, so Sunday's recap also carries earlier evening sales.
+        long Shown(GameState s) => s.Events.Where(e => e.Type == EventType.DailyRecap).Sum(e => e.Recap!.YenEarned);
+        long EarnedUpTo(GameState s, DateTime day) => s.Ledger.Where(e => e.Time.Date <= day && e.Amount > 0 && e.Kind == AccountEntryKind.Publishing).Sum(e => e.Amount);
+        Assert.True(recap.Recap!.YenEarned >= Earned(state, sunday.Date));
+        Assert.Equal(EarnedUpTo(state, sunday.Date), Shown(state));
+        Assert.DoesNotContain(state.Ledger, e => e.Time == state.Clock.Now && e.Amount > 0);
         state = GameState.FromJson(state.ToJson());
         state.Apply(new SetScheduleCommand(person.Id, 8, 18, new() { DayOfWeek.Sunday }));
-        state.Advance(24);
-        Assert.Equal(earned, state.Events.Last(e => e.Type == EventType.DailyRecap).Recap!.YenEarned);
+        var recaps = state.Events.Count(e => e.Type == EventType.DailyRecap);
+        for (var h = 0; h < 24 && state.Events.Count(e => e.Type == EventType.DailyRecap) == recaps; h++) state.Advance(1);
+        var monday = state.Events.Last(e => e.Type == EventType.DailyRecap);
+        Assert.Equal(sunday.Date.AddDays(1), monday.ActivityDate);
+        Assert.True(Earned(state, monday.ActivityDate) > 0);
+        Assert.Equal(EarnedUpTo(state, monday.ActivityDate), Shown(state)); // nothing left out and nothing counted twice
+        Assert.True(monday.Recap!.YenEarned >= Earned(state, monday.ActivityDate));
     }
 }

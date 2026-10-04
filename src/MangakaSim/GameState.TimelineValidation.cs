@@ -58,7 +58,7 @@ public partial class GameState
                 a.VolumeIds.Count==1&&FindSeries(a.SeriesId)!.Volumes.Any(v=>v.Id==a.VolumeIds[0]&&v.IsDoujin&&v.BusinessId==a.BusinessId&&v.ReleasedAt is not null),"direct download terms");
         }
         Check(w.Receipts!.All(r=>r is not null&&w.Channels.Any(a=>a.Id==r.AgreementId&&a.Status==NegotiationStatus.Accepted&&a.VolumeIds.Contains(r.VolumeId))&&
-            Time(r.Week)&&r.Week<=Clock.Now&&r.Week.DayOfWeek==DayOfWeek.Monday&&r.Units>=0&&r.NetYen>=0),"channel receipts");
+            r.Week>=Monday(GameClock.Start)&&r.Week.TimeOfDay==TimeSpan.Zero&&r.Week<=Clock.Now&&r.Week.DayOfWeek==DayOfWeek.Monday&&r.Units>=0&&r.NetYen>=0),"channel receipts");
         Check(w.Receipts.Select(r=>(r.AgreementId,r.VolumeId,r.Week)).Distinct().Count()==w.Receipts.Count,"duplicate channel receipt");
         Check(w.Relations!.All(k=>k.Value is >=0 and <=50)&&w.LastApproach!.All(k=>People.Any(p=>p.Id==k.Key)&&Time(k.Value)&&k.Value<=Clock.Now),"relations/cooldowns");
         Check(w.Rivals.Count==TimelineCatalog.Default.Rivals.Count(d=>d.Start<=Clock.Now),"missing historical rivals");

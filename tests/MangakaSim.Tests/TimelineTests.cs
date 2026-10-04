@@ -190,7 +190,15 @@ public class TimelineTests
         var s=PublishingTests.Started();Capital(s);PublishingTests.Until(s,()=>s.Series[0].Volumes.Count>0);
         Jump(s,new(2006,5,1));s.Apply(new GetOnlineCommand());var title=s.Series[0];var v=title.Volumes[0];title.Fanbase=10000;
         var money=s.Money;s.Apply(new TimelineCommand(TimelineAction.RequestDigital,title.Id));Assert.Equal(money-30000,s.Money);Assert.NotNull(v.ReleasedAt);
-        s.SalesStep();Assert.NotEmpty(s.World.Receipts);Assert.True(s.World.Receipts.Sum(r=>r.Units)>0);Assert.Equal(0,v.CopiesSold);Assert.Equal(0,s.Stock(v.Id));
+        // Streaming sales (2026-10-03): the release plans the week's units and its one receipt; shop hours fill it.
+        s.SalesStep();var receipt=Assert.Single(s.World.Receipts);Assert.Equal(0,receipt.Units);
+        var plan=Assert.Single(v.SalesPlans!,p=>p.Kind==SaleKind.Channel);Assert.True(plan.Total>0);
+        for(var h=1;h<24*7;h++)
+        {
+            s.Advance(1);
+            if(h==11){Assert.Equal(1,plan.HoursDone);var hour=s.ToJson();s.SalesStep();Assert.Equal(hour,s.ToJson());}
+        }
+        Assert.Equal(receipt,Assert.Single(s.World.Receipts,r=>r.VolumeId==v.Id));Assert.Equal(plan.Total,receipt.Units);Assert.Equal(0,v.CopiesSold);Assert.Equal(0,s.Stock(v.Id));
         var before=s.ToJson();s.SalesStep();Assert.Equal(before,s.ToJson());RoundTrip(s);
     }
     [Theory] [InlineData(0,true)] [InlineData(.999,false)]

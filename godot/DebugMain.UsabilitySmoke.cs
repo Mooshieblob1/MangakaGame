@@ -48,7 +48,9 @@ public partial class DebugMain
             SetSpeed(4);_Input(new InputEventKey{Keycode=Key.Space,Pressed=true});Check(_speed==0,"Space pauses through input handler");
             _Input(new InputEventKey{Keycode=Key.Space,Pressed=true});Check(_speed==4,"Space restores prior speed");
             foreach(var expected in new[]{2,1,0,0}){HandleTimeShortcut(Key.Key1);Check(_speed==expected,"1 decreases speed with pause boundary");}
-            foreach(var expected in new[]{1,2,4,8,32,32}){HandleTimeShortcut(Key.Key2);Check(_speed==expected,"2 increases speed to the 32x maximum");}
+            // 32x opens with the first sale (progressive disclosure): until then 8x is the top speed.
+            foreach(var expected in new[]{1,2,4,8,8}){HandleTimeShortcut(Key.Key2);Check(_speed==expected,"2 increases speed to 8x before 32x has opened");}
+            _state.Apply(new OpenPartCommand("quiet-speed"));HandleTimeShortcut(Key.Key2);Check(_speed==32,"2 reaches the 32x maximum once it has opened");
             _Input(new InputEventKey{Keycode=Key.Space,Pressed=true,Echo=true});Check(_speed==32,"Key repeat does not toggle pause repeatedly");
             HandleTimeShortcut(Key.Key1);Check(_speed==8,"1 steps back from 32x to 8x");
             ShowMenu();Check(!HandleTimeShortcut(Key.Space)&&!GameKeysAvailable(true),"Menu blocks time and movement shortcuts");
@@ -93,7 +95,7 @@ public partial class DebugMain
             _menu.Hide();_inMenu=false;Navigate("Finances");await CaptureSmokeImage("usability-dark-finances");
             GetWindow().Size=new(1280,720);Navigate("Books");await SettleUi();await CaptureSmokeImage("usability-dark-books-720");
             Check(_shell.GetGlobalRect().End.X<=GetViewportRect().Size.X+1,"Books navigation fits 720p");
-            GD.Print($"USABILITY SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
+            GD.Print($"USABILITY SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>QuitTree(tree);QueueFree();
         }
         catch(Exception ex){GD.PrintErr("USABILITY SMOKE FAILED: "+ex);GetTree().Quit(1);}
     }

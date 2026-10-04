@@ -28,11 +28,18 @@ public partial class GameState
         World.Channels.Add(new(){Id=AllocateId(),SeriesId=series.Id,BusinessId=book.BusinessId,Channel=ReleaseChannel.DomesticDigital,
             DirectDoujin=true,CreatedAt=Clock.Now,ResolvesAt=Clock.Now,Status=NegotiationStatus.Accepted,Cost=0,VolumeIds=[book.Id],Reason="Direct download shop · no upfront fee"});
         if(book.ReleasedAt is null)ReleaseVolume(series,book);
-        TimelineNews($"{series.Title} · {EditionName(book)} is on sale online. ¥{DoujinDownloadPrice(book):N0} per download; ¥{DoujinDownloadNet(book):N0} to the business after the shop's 30% fee. No upfront charge. Sales settle on Mondays.");
+        else{ // already selling: the listing's downloads start this week, not next Monday (streaming sales, spec 2026-10-03)
+            var hours=Math.Max(SalesRules.MinimumFirstWeekHours,SalesRules.ShopHoursUntil(Clock.Now,Monday(Clock.Now).AddDays(7)));
+            PlanChannelDemand(series,book,0,hours);
+        }
+        TimelineNews($"{series.Title} · {EditionName(book)} is on sale online. ¥{DoujinDownloadPrice(book):N0} per download; ¥{DoujinDownloadNet(book):N0} to the business after the shop's 30% fee. No upfront charge. Downloads sell through the day.");
     }
     private long DirectDownloadUnits(Series series,Volume book,ChannelAgreement listing)
     {
-        var age=Math.Max(1,1+(int)((Clock.Now-listing.CreatedAt).TotalDays/7));
+        // Download weeks count from the listing's first planned week: the listing plans week 1 at once (streaming sales,
+        // spec 2026-10-03), so the next Monday is week 2. Older saves first planned on the Monday after listing: same ages.
+        var first=World.Receipts.Where(r=>r.AgreementId==listing.Id&&r.VolumeId==book.Id).Select(r=>r.Week).DefaultIfEmpty(Monday(Clock.Now)).Min();
+        var age=Math.Max(1,1+(int)((Monday(Clock.Now)-first).TotalDays/7));
         var demand=SalesRules.DoujinCopies(series.Fanbase,book.AverageQuality,series.IsIconic?1:GenrePopularity(series.Genre),0,age);
         // Small early online audience; later historical adoption expands reach.
         var share=Math.Max(.15,DigitalPreference);

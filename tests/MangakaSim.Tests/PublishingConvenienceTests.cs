@@ -35,12 +35,17 @@ public class PublishingConvenienceTests
     {
         var s=Book();var title=s.Series[0];var book=title.Volumes[0];var cash=s.Money;
         Assert.False(s.ControlledBusiness.HasInternet);s.Apply(new PublishDoujinOnlineCommand(book.Id));
-        Assert.Equal(cash,s.Money);Assert.Empty(s.PrintRuns);Assert.Empty(s.World.Receipts);Assert.True(s.DoujinOnlineListed(book.Id));
+        // Streaming sales (2026-10-03): listing plans the first download week at once; its receipt fills through shop hours.
+        var listed=Assert.Single(s.World.Receipts);Assert.Equal((0L,0L),(listed.Units,listed.NetYen));
+        Assert.Equal(cash,s.Money);Assert.Empty(s.PrintRuns);Assert.True(s.DoujinOnlineListed(book.Id));
         Assert.True(GameState.DoujinDownloadPrice(book)<book.Price);Assert.Equal(0,s.World.Channels.Single().Cost);
-        s.Advance(7*24);var receipt=Assert.Single(s.World.Receipts);Assert.True(receipt.Units>0);Assert.Equal(receipt.Units*GameState.DoujinDownloadNet(book),receipt.NetYen);
-        Assert.Equal(receipt.Units,s.SeriesCopiesSold(title.Id));Assert.Equal(receipt.Units,s.DoujinDownloadsSold(book.Id));
+        var planned=Assert.Single(book.SalesPlans!,p=>p.Kind==SaleKind.Download).Total;
+        s.Advance(7*24);Assert.Equal(planned,listed.Units);Assert.True(listed.Units>0);
+        Assert.All(s.World.Receipts,r=>Assert.Equal(r.Units*GameState.DoujinDownloadNet(book),r.NetYen));
+        var units=s.World.Receipts.Sum(r=>r.Units);var net=s.World.Receipts.Sum(r=>r.NetYen);
+        Assert.Equal(units,s.SeriesCopiesSold(title.Id));Assert.Equal(units,s.DoujinDownloadsSold(book.Id));
         Assert.Equal(0,book.CopiesSold);Assert.Equal(0,s.Stock(book.Id));Assert.True(title.Fanbase>0);
-        Assert.Equal(receipt.NetYen,s.ControlledBusiness.Account.Entries.Where(e=>e.Reason=="domestic digital receipts").Sum(e=>e.Amount));
+        Assert.Equal(net,s.ControlledBusiness.Account.Entries.Where(e=>e.Reason=="domestic digital receipts").Sum(e=>e.Amount));
         var before=s.ToJson();Assert.Throws<InvalidCommandException>(()=>s.Apply(new PublishDoujinOnlineCommand(book.Id)));Assert.Equal(before,s.ToJson());Replay(s);
     }
     [Fact]public void Backlist_downloads_continue_after_local_window_and_each_new_issue_needs_listing()
@@ -52,8 +57,9 @@ public class PublishingConvenienceTests
     }
     [Fact]public void Zero_demand_has_no_payment()
     {
-        var s=Book();var book=s.Series[0].Volumes[0];s.Apply(new PublishDoujinOnlineCommand(book.Id));
-        book.AverageQuality=0;s.Advance(24*7);
+        // Streaming sales (2026-10-03): listing plans the first week at once, so the demand must be zero before listing.
+        var s=Book();var book=s.Series[0].Volumes[0];book.AverageQuality=0;s.Apply(new PublishDoujinOnlineCommand(book.Id));
+        s.Advance(24*7);Assert.NotEmpty(s.World.Receipts);
         Assert.All(s.World.Receipts,r=>{Assert.Equal(0,r.Units);Assert.Equal(0,r.NetYen);});
         Assert.DoesNotContain(s.ControlledBusiness.Account.Entries,e=>e.Reason=="domestic digital receipts");
     }
@@ -70,16 +76,19 @@ public class PublishingConvenienceTests
     {
         var s=Book();var title=s.Series[0];var book=title.Volumes[0];
         while(s.Clock.DayOfWeek!=DayOfWeek.Sunday)s.Advance(24);
-        s.Apply(new StudioActionCommand(StudioAction.Print,book.Id,Amount:50,Value:(int)PrintTier.LocalPrinter));
+        s.Apply(new StudioActionCommand(StudioAction.Print,book.Id,Amount:200,Value:(int)PrintTier.LocalPrinter));
         var before=s.ToJson();
         Assert.Throws<InvalidCommandException>(()=>s.Apply(new StudioActionCommand(StudioAction.BookConvention,s.ProtagonistPersonId,Amount:title.Id,ReservedCopies:50)));
         Assert.Equal(before,s.ToJson()); // Wednesday event is before Thursday delivery.
         s.Advance(7*24); // Sunday again, after Thursday's delivery.
-        s.Apply(new StudioActionCommand(StudioAction.BookConvention,s.ProtagonistPersonId,Amount:title.Id,ReservedCopies:40));
-        // Wednesday local and the following Sunday regional are different events.
+        // Streaming sales (2026-10-03): shops sold some delivered copies since Thursday, so claim all but 10 of what is left.
+        var claim=s.Stock(book.Id)-10;Assert.True(claim>=30,$"Stock {s.Stock(book.Id)}");
+        s.Apply(new StudioActionCommand(StudioAction.BookConvention,s.ProtagonistPersonId,Amount:title.Id,ReservedCopies:claim));
+        // Wednesday local and the following Sunday regional are different events; only 10 copies stay unclaimed.
+        Assert.NotEqual(s.NextConvention(0),s.NextConvention(1));Assert.Equal(10,s.ConventionReservable(title.Id,s.NextConvention(1)));
         before=s.ToJson();Assert.Throws<InvalidCommandException>(()=>s.Apply(new StudioActionCommand(StudioAction.BookConvention,s.ProtagonistPersonId,Amount:title.Id,Value:1,ReservedCopies:20)));
         Assert.Equal(before,s.ToJson());
-        Assert.Equal(40,s.ConventionReserved(book.Id));
+        Assert.Equal(claim,s.ConventionReserved(book.Id));
     }
     [Fact]public void Reserved_print_orders_survive_local_sales_and_online_sales_then_release_after_event()
     {
@@ -92,7 +101,9 @@ public class PublishingConvenienceTests
         s.Advance(s.Clock.HoursUntil(booking.Date.AddHours(10)));
         Assert.Equal(100,s.Stock(book.Id));Assert.Equal(0,book.CopiesSold);Assert.True(s.DoujinDownloadsSold(book.Id)>0);
         s.Advance(s.Clock.HoursUntil(booking.Date.AddHours(16+booking.TravelHours)));
-        Assert.True(booking.Settled);Assert.True(booking.CopiesSold>0);Assert.Equal(100-booking.CopiesSold,s.Stock(book.Id));Assert.Equal(0,s.ConventionReserved(book.Id));Replay(s);
+        // Streaming sales (2026-10-03): settlement runs before the shop hour of the same tick, so released leftovers may sell at once (at most that hour's share).
+        Assert.True(booking.Settled);Assert.True(booking.CopiesSold>0);Assert.InRange(book.CopiesSold-booking.CopiesSold,0,1);
+        Assert.Equal(100-book.CopiesSold,s.Stock(book.Id));Assert.Equal(0,s.ConventionReserved(book.Id));Replay(s);
     }
     [Fact]public void Reservation_updates_cancellation_and_overbooking_are_atomic()
     {

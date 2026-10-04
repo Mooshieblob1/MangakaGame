@@ -139,7 +139,7 @@ public partial class DebugMain
             Check(!log.Contains("First pages")&&!log.Contains("Ink and Thunder")&&!log.Contains(SmokeOutput),"Timeline holds no titles or paths");
             File.WriteAllText(Path.Combine(SmokeOutput,"journey-timeline.log"),log);
 
-            GD.Print($"JOURNEY SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
+            GD.Print($"JOURNEY SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>QuitTree(tree);QueueFree();
 
             Series Doujin()=>_state.Series.First(s=>s.Id==doujinId);
             Series Serial()=>_state.Series.First(s=>s.Id==serialId);

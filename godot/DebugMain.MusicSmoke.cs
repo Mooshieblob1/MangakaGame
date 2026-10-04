@@ -22,7 +22,7 @@ public partial class DebugMain
             Check(unloadable.Count == 0, $"Every music file in Assets/Music loads ({real.Count} found{(unloadable.Count > 0 ? "; failed: " + string.Join(", ", unloadable) : "")})");
             GD.Print($"MUSIC TRACKS: {string.Join(", ", real.Keys.OrderBy(k => k))}");
 
-            var failures = new List<string>(); _music.Failed = failures.Add;
+            var failures = new List<string>(); _music.Failed = failures.Add; var changes = new List<string>(); _music.Changed = changes.Add;
             var day = new MusicContext(false, new DateTime(1996, 4, 1, 10, 0, 0), false, false);
 
             _music.UseTracks(new Dictionary<string, Func<AudioStream?>>(), 1);
@@ -42,6 +42,7 @@ public partial class DebugMain
             }, 2, .2, .3);
             _music.Update(MusicPlan.FirstTrackDelay + 1, day, 0, true);
             Check(_music.Current?.StartsWith("day-") == true && _music.Audible, "A day track starts after the short opening delay");
+            Check(changes.LastOrDefault() == "music " + _music.Current, $"Track changes reach the problem report timeline ({changes.LastOrDefault()})");
             Check(_music.ActiveVolumeDb < -60, "Volume 0 keeps it silent");
             for (var i = 0; i < 30; i++) _music.Update(.1, day, .5, true);
             Check(_music.ActiveVolumeDb > -20, "Raising the volume from 0 makes the track audible");
@@ -71,7 +72,7 @@ public partial class DebugMain
             CloseTitle();
 
             GD.Print($"MUSIC SMOKE PASSED: {_smokeChecks} checks.");
-            var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => tree.Quit(); QueueFree();
+            var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => QuitTree(tree); QueueFree();
         }
         catch (Exception ex) { GD.PushError($"MUSIC SMOKE FAILED: {ex.Message}\n{ex.StackTrace}"); GetTree().Quit(1); }
     }

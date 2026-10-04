@@ -31,7 +31,7 @@ public partial class DebugMain
         }
         publish=ActionButton(_sideContent,"Publish online · ¥0 upfront",()=>{_state.Apply(new PublishDoujinOnlineCommand(choice.GetSelectedId()));_dirty=true;RefreshOnline();RefreshManagement();});
         publish.ThemeTypeVariation="PrimaryAction";
-        Words(_sideContent,"Purchases settle on Mondays. Quality and current genre popularity determine demand; older editions retain a small backlist audience. No purchase means no income. This route does not require a studio internet upgrade.",14);
+        Words(_sideContent,"Downloads sell through the day as buyers find them. Quality and current genre popularity determine demand; older editions retain a small backlist audience. No purchase means no income. This route does not require a studio internet upgrade.",14);
         ActionButton(_sideContent,"Print physical copies",()=>OpenPrinting(series.Id,choice.GetSelectedId()));
         choice.ItemSelected+=_=>RefreshOnline();_refreshOnlinePanel=RefreshOnline;RefreshOnline();
         ActionPageColumns("PUBLISH A DOWNLOAD",quote,sales);

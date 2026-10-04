@@ -91,8 +91,8 @@ Accepting starts a contract with a fixed fee per page and a first issue date.
 The Publishing tab shows rankings, editor status, quality, fans, cancellation
 warnings, books, transactions, and genre trends. **Get online** expands doujin
 sales. A one-shot finishes after one story. Each chapter of a new ongoing doujin creates a printable numbered issue; five chapters also create an optional collected book. Order copies through **Show me** or in
-**Studio management**; the first delivery starts its sales window. Commercial books collect published chapters and release six weeks later. Sales happen on
-Mondays. Pausing a serialized series does not pause its magazine deadlines;
+**Studio management**; the first delivery starts its sales window. Commercial books collect published chapters and release six weeks later. Copies sell through shop hours,
+10:00 to 20:00. Pausing a serialized series does not pause its magazine deadlines;
 completed stock publishes first, then issues are missed. **Withdraw** returns
 the series to doujin. **End series** closes it while released books keep selling.
 
@@ -199,7 +199,10 @@ The other automated checks run the same way: `--progression-smoke`,
 `--display-sweep-smoke`, `--journey-smoke`, `--music-smoke`,
 `--startup-smoke`, `--title-smoke` (title screen, fades, pause menu and
 safety saves) `--brand-smoke` (the logo palette, slab buttons and fonts) and
-`--tester-b-smoke` (fixes from fresh-player tester B).
+`--tester-b-smoke` (fixes from fresh-player tester B) `--goals-smoke`
+(the career goals board), `--disclosure-smoke` (progressive disclosure),
+`--work-feedback-smoke` (work sparkles, "done" bubbles and right-click back) and
+`--selling-smoke` (streaming sales and the selling tutorial).
 
 The automated Godot walkthrough tests the actual scene controls, timing,
 automatic pauses, recaps, queue editing, offers and expiry, editor review,
@@ -259,7 +262,7 @@ workbench selection, and its dropdown can switch the series being followed.
 Middle drag and WASD pan along the screen axes. Space pauses/resumes; 1 slows
 time and 2 speeds it up. Books shows finished and unfinished doujin, with direct
 printing controls and live delivery, stock and sales status. Local distribution
-starts automatically on delivery and settles on Mondays. Dark mode defaults on
+starts automatically on delivery, and copies sell through shop hours, 10:00 to 20:00. Dark mode defaults on
 and can be switched in Menu → Settings; the preference persists across careers.
 
 

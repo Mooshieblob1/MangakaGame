@@ -70,7 +70,7 @@ public partial class DebugMain
             door.Animate(1,1);door.Animate(1,1);Check(door.Openness==0&&leaf.Mesh.GetAabb().Size==dimensions,"Door closes without stretching or changing leaf dimensions");door.QueueFree();
             _homeOffice.Speed=1;await CaptureSmokeImage("office-life-returned");
             CheckAmbientDoorTraffic();
-            GD.Print($"OFFICE LIFE SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
+            GD.Print($"OFFICE LIFE SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>QuitTree(tree);QueueFree();
         }
         catch(Exception ex){GD.PrintErr("OFFICE LIFE SMOKE FAILED: "+ex);GetTree().Quit(1);}
     }

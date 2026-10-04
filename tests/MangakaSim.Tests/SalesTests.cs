@@ -36,6 +36,12 @@ public class SalesTests
     public void Weekly_batch_is_idempotent_and_convention_precedes_current_month_sales()
     {
         var state = Doujin();
+        // Streaming sales (2026-10-03): a repeated step in the same shop hour releases nothing more.
+        state.Advance(state.Clock.HoursUntil(SalesRules.NextShopHour(state.Clock.Now)));
+        Assert.Contains(state.Series[0].Volumes[0].SalesPlans!, p => p.HoursDone > 0);
+        var hour = state.ToJson();
+        state.SalesStep();
+        Assert.Equal(hour, state.ToJson());
         var firstMonday = new DateTime(1996, 5, 6);
         state.Advance(state.Clock.HoursUntil(firstMonday.AddHours(-1)));
         var previous = state.DoujinCopiesThisMonth;
@@ -61,7 +67,9 @@ public class SalesTests
         state.Apply(new EndSeriesCommand(series.Id));
         state.Advance(state.Clock.HoursUntil(volume.ReleaseDate));
         Assert.Equal(volume.ReleaseDate, volume.ReleasedAt);
-        Assert.Equal(0, volume.WeeksOnSale);
+        // Streaming sales (2026-10-03): the release plans its first week at once.
+        Assert.Equal(1, volume.WeeksOnSale);
+        Assert.Single(volume.SalesPlans!, p => p.Kind == SaleKind.Commercial && p.Total > 0);
         PublishingTests.Until(state, () => volume.SalesClosed);
         Assert.Equal(52, volume.WeeksOnSale);
         var copies = volume.CopiesSold;
@@ -83,6 +91,7 @@ public class SalesTests
             AverageQuality = 70, ReleaseDate = first.ReleaseDate, ReleasedAt = first.ReleasedAt, SalesWindowWeeks = 52 };
         series.Volumes.Add(second);
         first.WeeksOnSale = 0;
+        first.SalesPlans = null;
         first.CopiesSold = 99990;
         first.AverageQuality = 70;
         var monday = state.Clock.Now.Date.AddDays(((int)DayOfWeek.Monday - (int)state.Clock.DayOfWeek + 7) % 7);
@@ -94,15 +103,17 @@ public class SalesTests
         var copies = SalesRules.CommercialCopies(series.Fanbase, 70, state.GenrePopularity(series.Genre), 1, tier);
         var record = state.StudioTrackRecord;
         var influence=state.Trends.Single(t=>t.Genre=="drama").PlayerInfluence;
-        state.SalesStep();
+        // Streaming sales (2026-10-03): Monday 00:00 plans the week; its shop hours release it.
+        void Week(DateTime start) { state.Clock.Now = start; state.SalesStep(); for (var h = 1; h < 24 * 7; h++) { state.Clock.Now = start.AddHours(h); state.SalesStep(); } }
+        Week(monday);
         Assert.Equal(copies + 99990, first.CopiesSold);
         Assert.Equal(copies, second.CopiesSold);
         Assert.True(series.MillionCopyInfluenceAwarded);
         Assert.Equal(Math.Min(100, record + 26), state.StudioTrackRecord);
         Assert.Equal(4, state.Events.Count(e => e.Type == EventType.VolumeMilestone));
         Assert.Equal(influence+.25, state.Trends.Single(t => t.Genre == "drama").PlayerInfluence, 10);
-        state.Clock.Now = monday.AddDays(7);
-        state.SalesStep();
+        Week(monday.AddDays(7));
+        Assert.True(first.CopiesSold > copies + 99990);
         Assert.Equal(4, state.Events.Count(e => e.Type == EventType.VolumeMilestone));
     }
     [Fact]
@@ -121,7 +132,8 @@ public class SalesTests
         PublishingTests.Until(state, () => volume.SalesClosed);
         Assert.Equal(0, volume.CopiesSold);
         Assert.Equal(4, volume.WeeksOnSale);
-        Assert.Equal(300000 + state.Ledger.Where(e => e.Kind == AccountEntryKind.Expense).Sum(e => e.Amount), state.Money);
+        // Goal rewards (career goals spec 2026-10-01) are income, but not sales income.
+        Assert.Equal(300000 + state.Ledger.Where(e => e.Kind is AccountEntryKind.Expense or AccountEntryKind.GoalReward).Sum(e => e.Amount), state.Money);
         Assert.DoesNotContain(state.Events, e => e.Type == EventType.ConventionRecap);
     }
     [Fact]

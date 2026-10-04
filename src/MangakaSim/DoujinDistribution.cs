@@ -1,3 +1,5 @@
+using MangakaSim.Rules;
+
 namespace MangakaSim;
 
 public sealed record DoujinDistribution(string Status,string LocalSales,string Channels,int Stock,long Sold,DateTime? NextCheck);
@@ -13,15 +15,16 @@ public partial class GameState
             pending is not null?"Printing · awaiting delivery":book.ReleasedAt is null?"Ready to print":
             PrintRuns.Any(r=>r.VolumeId==volumeId&&r.Delivered)?"Sold out · reprint to resume local sales":"No physical stock · print to start local sales";
         var from=pending is not null&&stock==0&&pending.DueAt>Clock.Now?pending.DueAt:Clock.Now;
-        var next=from.Date.AddDays((8-(int)from.DayOfWeek)%7);if(next<from||next<=Clock.Now)next=next.AddDays(7);
+        // Copies delivered on a shop hour sell on that very tick, so the first release is at or after the delivery, not after it.
+        var next=SalesRules.NextShopHour(from==Clock.Now?from:from.AddHours(-1));
         string local=book.SalesClosed?"Automatic local sales have ended for this book. Reprinting does not reopen that window; remaining copies can still be sold at conventions.":
             book.ReleasedAt is null&&pending is null?"No physical copies distributed yet. Order copies here. Delivery automatically starts local distribution; no separate distribute action is needed.":
             stock==0&&pending is null?"No stock available. Order more copies to supply the remaining local sales window.":
-            $"{(stock>0?"Local distribution is active":"Local distribution starts when copies arrive")}. Next sales check: {next:ddd d MMM · HH:mm}. Demand determines how many sell; a sale is not guaranteed.";
+            $"{(stock>0?"Local distribution is active":"Local distribution starts when copies arrive")}. Shops sell through the day, 10:00 to 20:00. Demand determines how many sell; a sale is not guaranteed.";
         var reserved=ConventionReserved(volumeId);
         if(reserved>0)local+=$"\n{reserved:N0} copies reserved for conventions (including pending deliveries); {stock-ConventionReserved(volumeId,true):N0} currently available for regular sales.";
         if(pending is not null)local+=$"\n{pending.Quantity:N0} copies due {pending.DueAt:ddd d MMM · HH:mm}.";
-        if(!book.SalesClosed)local+=$"\nSales checks remaining: {Math.Max(0,book.SalesWindowWeeks-book.WeeksOnSale)}.";
+        if(!book.SalesClosed)local+=$"\nSales weeks remaining: {Math.Max(0,book.SalesWindowWeeks-book.WeeksOnSale)}.";
         string Channel(ReleaseChannel channel)
         {
             var agreements=World.Channels.Where(a=>a.SeriesId==series.Id&&a.BusinessId==book.BusinessId&&a.Channel==channel&&

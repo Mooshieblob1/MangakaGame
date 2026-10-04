@@ -24,7 +24,7 @@ public partial class DebugMain
             await CheckHandStyled();
             await CheckReviewFixes();
             GD.Print($"BRAND SMOKE PASSED: {_smokeChecks} checks.");
-            var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => tree.Quit(); QueueFree();
+            var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => QuitTree(tree); QueueFree();
         }
         catch (Exception ex) { GD.PushError($"BRAND SMOKE FAILED: {ex.Message}\n{ex.StackTrace}"); GetTree().Quit(1); }
     }

@@ -17,18 +17,25 @@ public partial class DebugMain
         public string LossReason { get; private set; }="";
         public float GainOpacity=>(float)Math.Clamp(4-_gainAge,0,1);
         public float LossOpacity=>(float)Math.Clamp(4-_lossAge,0,1);
-        public void Reset(){_account=null;Gains=Losses=0;_gainAge=_lossAge=4;GainReason=LossReason="";}
+        private long _balance;
+        public void Reset(){_account=null;Gains=Losses=0;_gainAge=_lossAge=4;GainReason=LossReason="";_balance=0;}
         public void Observe(CashAccount account)
         {
             // Loading a career, changing accounts or rewinding never produces fake income.
             if(!ReferenceEquals(_account,account)||account.Entries.Count<_entries)
-            {Reset();_account=account;_entries=account.Entries.Count;return;}
+            {Reset();_account=account;_entries=account.Entries.Count;_balance=account.Balance;return;}
+            long added=0;
             for(;_entries<account.Entries.Count;_entries++)
             {
-                var entry=account.Entries[_entries];
+                var entry=account.Entries[_entries];added+=entry.Amount;
                 if(entry.Amount>0){Gains+=entry.Amount;_gainAge=0;GainReason=entry.Reason;}
                 else if(entry.Amount<0){Losses-=(decimal)entry.Amount;_lossAge=0;LossReason=entry.Reason;}
             }
+            // Streaming sales add to today's line instead of adding one (spec 2026-10-03).
+            var merged=account.Balance-_balance-added;
+            if(merged>0){Gains+=merged;_gainAge=0;GainReason="sales";}
+            else if(merged<0){Losses-=merged;_lossAge=0;LossReason="adjustment";}
+            _balance=account.Balance;
         }
         public void Advance(double seconds)
         {

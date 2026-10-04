@@ -63,7 +63,7 @@ public partial class DebugMain
             Check(_state.ToJson()==before&&_page=="Conventions","Booking view survives save and load");
             OpenOfficeSidebar("Inbox");await SettleUi();Check(!_report.Visible&&!_expanded&&_homeOffice.Visible,"Explicit office Inbox shortcut retains the office");
             GD.Print($"PRODUCTION SMOKE PASSED: {_smokeChecks} checks. First 16-page issue after {(series.Volumes[0].ReleaseDate-start).TotalDays:F1} days with afternoon shifts.");
-            var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
+            var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>QuitTree(tree);QueueFree();
         }
         catch(Exception ex){GD.PrintErr("PRODUCTION SMOKE FAILED: "+ex);GetTree().Quit(1);}
     }

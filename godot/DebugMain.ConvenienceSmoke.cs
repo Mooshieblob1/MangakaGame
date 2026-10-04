@@ -60,7 +60,7 @@ public partial class DebugMain
             await ToSignal(GetTree().CreateTimer(1),SceneTreeTimer.SignalName.Timeout);Check(!_speedFlash.Visible,"Speed feedback fades away automatically");
             Pause();Navigate("Conventions",series.Id);Press("Cancel booking");await SettleUi();Check(_state.ConventionReserved(book.Id)==0,"Cancel action releases reserved copies");
             Navigate("Series details",series.Id);await CaptureSmokeImage("convenience-series-720");
-            GD.Print($"CONVENIENCE SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>tree.Quit();QueueFree();
+            GD.Print($"CONVENIENCE SMOKE PASSED: {_smokeChecks} checks.");var tree=GetTree();tree.CreateTimer(.1).Timeout+=()=>QuitTree(tree);QueueFree();
         }
         catch(Exception ex){GD.PrintErr("CONVENIENCE SMOKE FAILED: "+ex);GetTree().Quit(1);}
     }

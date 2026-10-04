@@ -46,14 +46,16 @@ public partial class GameState
         var scene=HelperStories.Describe(this,c.Scene);
         Career.Journal.Add(new(c.Scene,c.Answer,Clock.Now,scene.Text+"\n\n"+(c.Answer==0?scene.First:c.Answer==1?scene.Second:"Conversation skipped")));
         Career.PendingScene=null;Career.DeferredUntil=null;Career.NextOffer=Clock.Now.AddDays(7);
+        if(Goals is {PendingScenes.Count:>0} goals){Career.PendingScene=goals.PendingScenes[0];goals.PendingScenes.RemoveAt(0);}
     }
-    private void RecordSales(Series s,Volume v,long copies,bool channels=true)
+    private void RecordSales(Series s,Volume v,long copies,bool channels=true,bool weekly=false)
     {
         var week=Monday(Clock.Now);
+        var at=weekly?(week<Career.AvailableFrom?Career.AvailableFrom:week):Clock.Now;
         var receipts=World.Receipts.Where(r=>r.VolumeId==v.Id&&r.Week==week).ToArray();
         long Units(ReleaseChannel channel)=>channels?receipts.Where(r=>World.Channels.Any(a=>a.Id==r.AgreementId&&a.Channel==channel)).Sum(r=>r.Units):0;
-        var existing=Career.Sales.FindIndex(x=>x.At==Clock.Now&&x.Volume==v.Id);
-        var sample=new SalesSample(Clock.Now,v.BusinessId,s.Id,v.Id,copies,Units(ReleaseChannel.DomesticDigital),Units(ReleaseChannel.Overseas));
+        var existing=Career.Sales.FindIndex(x=>x.At==at&&x.Volume==v.Id);
+        var sample=new SalesSample(at,v.BusinessId,s.Id,v.Id,copies,Units(ReleaseChannel.DomesticDigital),Units(ReleaseChannel.Overseas));
         if(existing<0)Career.Sales.Add(sample);
         else{var old=Career.Sales[existing];Career.Sales[existing]=sample with{Physical=old.Physical+copies,Digital=Math.Max(old.Digital,sample.Digital),Overseas=Math.Max(old.Overseas,sample.Overseas)};}
     }
@@ -99,7 +101,11 @@ public partial class GameState
     {
         using var doc=JsonDocument.Parse(json);
         if(doc.RootElement.ValueKind!=JsonValueKind.Object||!doc.RootElement.TryGetProperty("Version",out var version)||version.ValueKind!=JsonValueKind.Number||!version.TryGetInt32(out var number))return FromJson(json);
-        return number switch
+        var imported = number switch
         {3=>ImportStudioV3(json),4=>ImportTimelineV4(json),5=>ImportCareerV5(json),6=>ImportProgressionV6(json),7=>ImportAlphaV7(json),8=>ImportProductionV8(json),9=>ImportConvenienceV9(json),_=>FromJson(json)};
+        imported.EnsureGoals();
+        imported.EnsureDisclosure();
+        imported.EnsureStudioIsland();
+        return imported;
     }
 }

@@ -68,9 +68,9 @@ public partial class GameState
         var active=ActiveChannel(s,v,ReleaseChannel.DomesticDigital);
         return (long)Math.Floor(total*(1-(active is not null?Math.Max(active.DirectDoujin?.15:.05,DigitalPreference):DigitalPreference*.5)));
     }
-    private long SettleChannelDemand(Series s,Volume v,long domesticPotential)
+    // Streaming sales (spec 2026-10-03): a week's channel units become plans; the receipt fills as they are released.
+    private void PlanChannelDemand(Series s,Volume v,long domesticPotential,int hours)
     {
-        long newUnits=0;
         foreach(var channel in Enum.GetValues<ReleaseChannel>())
         {
             var a=ActiveChannel(s,v,channel);if(a is null)continue;
@@ -78,11 +78,18 @@ public partial class GameState
             var week=Monday(Clock.Now);
             if(World.Receipts.Any(r=>r.AgreementId==a.Id&&r.VolumeId==v.Id&&r.Week==week))continue;
             var units=a.DirectDoujin?DirectDownloadUnits(s,v,a):(long)Math.Floor(domesticPotential*(channel==ReleaseChannel.DomesticDigital?Math.Max(.05,DigitalPreference):.2*a.InternationalInterest/100));
-            var income=a.DirectDoujin?checked(units*DoujinDownloadNet(v)):v.IsDoujin?(long)Math.Floor(units*v.Price*.7):SalesRules.Income(units,Economy.PriceIndex(TrendCatalog,v.ReleaseDate),false);
-            if(income>0){AccountPost(BusinessOf(v.BusinessId).Account,income,channel==ReleaseChannel.DomesticDigital?"domestic digital receipts":"overseas licensed receipts",AccountEntryKind.Publishing,s.Id);VolumeContribution(v,income);}
-            World.Receipts.Add(new(){AgreementId=a.Id,VolumeId=v.Id,Week=week,Units=units,NetYen=income});newUnits+=units;
-            if(channel==ReleaseChannel.Overseas)a.InternationalInterest=Math.Clamp(a.InternationalInterest+units/1000d,0,100);
+            World.Receipts.Add(new(){AgreementId=a.Id,VolumeId=v.Id,Week=week,Units=0,NetYen=0});
+            (v.SalesPlans??=new()).Add(new(){Kind=a.DirectDoujin?SaleKind.Download:SaleKind.Channel,AgreementId=a.Id,Week=week,Total=units,Hours=hours});
         }
-        return newUnits;
+    }
+    private long ReleaseChannelUnits(Series s,Volume v,SalesPlan plan,long units)
+    {
+        var a=World.Channels.Single(x=>x.Id==plan.AgreementId);
+        var income=a.DirectDoujin?checked(units*DoujinDownloadNet(v)):v.IsDoujin?(long)Math.Floor(units*v.Price*.7):SalesRules.Income(units,Economy.PriceIndex(TrendCatalog,v.ReleaseDate),false);
+        if(income>0){AccountPostDaily(BusinessOf(v.BusinessId).Account,income,a.Channel==ReleaseChannel.DomesticDigital?"domestic digital receipts":"overseas licensed receipts",AccountEntryKind.Publishing,s.Id);VolumeContribution(v,income);}
+        var receipt=World.Receipts.Single(r=>r.AgreementId==a.Id&&r.VolumeId==v.Id&&r.Week==plan.Week);
+        receipt.Units=checked(receipt.Units+units);receipt.NetYen=checked(receipt.NetYen+income);
+        if(a.Channel==ReleaseChannel.Overseas)a.InternationalInterest=Math.Clamp(a.InternationalInterest+units/1000d,0,100);
+        return units;
     }
 }

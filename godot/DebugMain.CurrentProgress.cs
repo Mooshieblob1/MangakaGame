@@ -20,7 +20,7 @@ public partial class DebugMain
         _progressSeries=new OptionButton{ThemeTypeVariation="HeaderOption",FitToLongestItem=false,ClipText=true,TextOverrunBehavior=TextServer.OverrunBehavior.TrimEllipsis,CustomMinimumSize=new(230,32),SizeFlagsHorizontal=SizeFlags.ExpandFill,SizeFlagsVertical=SizeFlags.ShrinkCenter};
         _currentProgress.AddChild(_progressSeries);
         _currentFans=new Label{CustomMinimumSize=new(85,0),VerticalAlignment=VerticalAlignment.Center};_currentProgress.AddChild(_currentFans);
-        _currentCopies=new Label{CustomMinimumSize=new(200,0),VerticalAlignment=VerticalAlignment.Center};_currentProgress.AddChild(_currentCopies);
+        _currentCopies=new Label{CustomMinimumSize=new(200,0),VerticalAlignment=VerticalAlignment.Center,FocusMode=FocusModeEnum.All};_currentProgress.AddChild(_currentCopies);
         _progressDescription=new Label{CustomMinimumSize=new(240,0),SizeFlagsHorizontal=SizeFlags.ExpandFill,SizeFlagsStretchRatio=2,TextOverrunBehavior=TextServer.OverrunBehavior.TrimEllipsis};
         _currentProgress.AddChild(_progressDescription);
         foreach(var label in new[]{_currentFans,_currentCopies,_progressDescription})

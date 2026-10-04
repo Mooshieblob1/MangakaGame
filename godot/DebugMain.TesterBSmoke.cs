@@ -22,7 +22,7 @@ public partial class DebugMain
             await CheckContinueAfterImport();
             await CheckFurnishingLock();
             GD.Print($"TESTER B SMOKE PASSED: {_smokeChecks} checks.");
-            var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => tree.Quit(); QueueFree();
+            var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => QuitTree(tree); QueueFree();
         }
         catch (Exception ex) { GD.PushError($"TESTER B SMOKE FAILED: {ex.Message}\n{ex.StackTrace}"); GetTree().Quit(1); }
     }

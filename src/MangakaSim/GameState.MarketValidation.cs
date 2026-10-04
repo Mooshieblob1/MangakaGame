@@ -32,6 +32,7 @@ public partial class GameState
         Check(!HasInternet || Ledger.Any(e => e.Reason == "internet"), "internet purchase");
         Check(DoujinCopiesThisMonth >= 0 && Range(DoujinFansThisMonth, 0, double.MaxValue), "convention totals");
         Check(LastSalesAt is null || (Time(LastSalesAt.Value) && LastSalesAt.Value.Hour == 0 && LastSalesAt.Value.DayOfWeek == DayOfWeek.Monday), "sales timestamp");
+        Check(LastShopHourAt is null || (Time(LastShopHourAt.Value) && SalesRules.IsShopHour(LastShopHourAt.Value) && LastShopHourAt <= Clock.Now), "shop hour timestamp");
         Check(LastTrendUpdateMonth is null || (LastTrendUpdateMonth.Value == new DateTime(LastTrendUpdateMonth.Value.Year, LastTrendUpdateMonth.Value.Month, 1) &&
             LastTrendUpdateMonth.Value <= Clock.Now && LastTrendUpdateMonth.Value >= GameClock.Start.Date), "trend month");
         Check(Markets is not null && Markets.All(m => m is not null) && Markets.Count == PublisherCatalog.Magazines.Count &&
@@ -164,10 +165,15 @@ public partial class GameState
                     chapters.All(c => volume.IsDoujin ? c.DoujinEligible && c.PublishedAt is null : c.PublishedAt is not null), "volume chapters");
                 Check(volume.IsDoujin ? volume.SalesWindowWeeks is 4 or 8 : volume.SalesWindowWeeks == 52, "sales window");
                 Check(volume.WeeksOnSale >= 0 && volume.WeeksOnSale <= volume.SalesWindowWeeks &&
-                    volume.SalesClosed == (volume.WeeksOnSale == volume.SalesWindowWeeks) &&
+                    volume.SalesClosed == (volume.WeeksOnSale == volume.SalesWindowWeeks && !(volume.SalesPlans ?? []).Any(p => p.Kind != SaleKind.Download)) &&
                     volume.ReleaseDate.Ticks % TimeSpan.TicksPerHour == 0 && volume.ReleaseDate >= GameClock.Start &&
                     (volume.ReleasedAt is { } released ? Time(released) && released >= volume.ReleaseDate :
                     (volume.IsDoujin || volume.ReleaseDate > Clock.Now) && volume.WeeksOnSale == 0 && volume.CopiesSold == 0), "volume release");
+                Check(volume.SalesPlans is null || volume.SalesPlans.All(p => p is not null && Enum.IsDefined(p.Kind) && p.Total >= 0 &&
+                    p.Released >= 0 && p.Released <= p.Total && p.Hours >= 1 && p.HoursDone >= 0 && p.HoursDone < p.Hours && double.IsFinite(p.Carry) && p.Carry >= 0 && p.Carry < 1 &&
+                    p.Week >= Monday(GameClock.Start) && p.Week.TimeOfDay == TimeSpan.Zero && p.Week.DayOfWeek == DayOfWeek.Monday && p.Week <= Clock.Now &&
+                    volume.ReleasedAt is not null && (p.Kind is SaleKind.Shop or SaleKind.Commercial) == (p.AgreementId == 0)), "sales plan");
+                Check((volume.SalesPlans ?? []).Where(p => p.AgreementId != 0).All(p => World.Receipts.Any(r => r.AgreementId == p.AgreementId && r.VolumeId == volume.Id && r.Week == p.Week)), "sales plan receipt");
             }
             foreach (var person in People)
                 Check(series.Chapters.SelectMany(c => c.Stages).Sum(w => w.HoursByPerson.GetValueOrDefault(person.Id)) <=

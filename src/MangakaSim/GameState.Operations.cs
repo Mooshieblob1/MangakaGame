@@ -27,6 +27,20 @@ public partial class GameState
         account.Balance = next;
         account.Entries.Add(new(Clock.Now, amount, reason, seriesId, kind));
     }
+    // Streaming sales (spec 2026-10-03): hourly income adds to today's line for the same title and reason.
+    private void AccountPostDaily(CashAccount account, long amount, string reason, AccountEntryKind kind, int? seriesId)
+    {
+        if (amount <= 0) { if (amount < 0) AccountPost(account, amount, reason, kind, seriesId); return; }
+        for (var i = account.Entries.Count - 1; i >= 0 && account.Entries[i].Time.Date == Clock.Now.Date; i--)
+        {
+            var entry = account.Entries[i];
+            if (entry.Reason != reason || entry.SeriesId != seriesId || entry.Kind != kind || entry.TransferId is not null) continue;
+            account.Balance = checked(account.Balance + amount);
+            account.Entries[i] = entry with { Amount = checked(entry.Amount + amount) };
+            return;
+        }
+        AccountPost(account, amount, reason, kind, seriesId);
+    }
     private long FreeCash(int business) => Math.Max(0, Spendable(BusinessOf(business).Account) -
         People.Where(p => p.Employment?.BusinessId == business).Sum(p => Math.Max((long)Math.Ceiling(p.Employment!.AccruedPay),
             p.Employment.StartsAt.AddDays(7) > Clock.Now ? StudioRules.HiringReserve(p.Employment.MonthlySalary) : 0)) -
@@ -48,6 +62,10 @@ public partial class GameState
     private void AddBill(int business, long amount, string reason, int? person = null, int? location = null)
     {
         if (amount <= 0) return;
+        // Hourly sales accrue creator shares often; one unpaid bill per person and due date keeps the ledger short.
+        if (reason == "creator share" && person is not null && Bills.LastOrDefault(b => b.BusinessId == business && b.PersonId == person &&
+            b.Reason == reason && b.Remaining == b.Original && b.DueAt == new DateTime(Clock.Now.Year, Clock.Now.Month, 1).AddMonths(1)) is { } open)
+        { open.Original = checked(open.Original + amount); open.Remaining = checked(open.Remaining + amount); return; }
         Bills.Add(new() { Id = AllocateId(), BusinessId = business, PersonId = person, LocationId = location,
             Original = amount, Remaining = amount, Reason = reason, DueAt = person is null ? Clock.Now : new DateTime(Clock.Now.Year,Clock.Now.Month,1).AddMonths(1) });
     }

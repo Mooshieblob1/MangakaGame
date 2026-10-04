@@ -101,6 +101,8 @@ public sealed partial class Volume
     public bool IsDoujin { get; set; }
     [JsonRequired]
     public double AverageQuality { get; set; }
+    /// <summary>Open weekly sales plans released through shop hours (streaming sales, 2026-10-03). Absent in older saves.</summary>
+    public List<SalesPlan>? SalesPlans { get; set; }
 }
 public partial class Series
 {
@@ -214,6 +216,8 @@ public partial class GameState
     public double DoujinFansThisMonth { get; set; }
     [JsonRequired]
     public DateTime? LastSalesAt { get; set; }
+    /// <summary>The last shop hour whose sales were released, so a repeated step never sells twice. Absent in older saves.</summary>
+    public DateTime? LastShopHourAt { get; set; }
     [JsonIgnore] public PublisherCatalog PublisherCatalog => PublisherCatalog.LoadDefault();
     [JsonIgnore] public TrendCatalog TrendCatalog => TrendCatalog.LoadDefault();
     [JsonIgnore] public double EffectiveReputation => ReputationRules.Effective(StudioTrackRecord, ControlledStaff.Select(p => p.Reputation));
@@ -225,4 +229,19 @@ public partial class GameState
         return TrendRules.Effective(TrendRules.Baseline(TrendCatalog, key, Clock.Now), trend.Noise, trend.Boom, trend.PlayerInfluence);
     }
     public double Protection(Series series) => ReputationRules.Protection(series.ChaptersPublished, series.Fanbase, series.CulturalImpact);
+}
+
+public enum SaleKind { Shop, Commercial, Channel, Download }
+/// <summary>A week's quota of one kind of sale, released evenly over shop hours (streaming sales, 2026-10-03).</summary>
+public sealed class SalesPlan
+{
+    [JsonRequired] public SaleKind Kind { get; set; }
+    [JsonRequired] public int AgreementId { get; set; }
+    [JsonRequired] public DateTime Week { get; set; }
+    [JsonRequired] public long Total { get; set; }
+    [JsonRequired] public long Released { get; set; }
+    [JsonRequired] public int Hours { get; set; }
+    [JsonRequired] public int HoursDone { get; set; }
+    /// <summary>Fraction of a copy lost to the presentation penalty so far, carried into the next shop hour (Shop plans only).</summary>
+    public double Carry { get; set; }
 }

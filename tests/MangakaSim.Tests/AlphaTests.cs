@@ -42,10 +42,10 @@ public class AlphaTests
     {
         var s=GameState.NewGame();var p=new GuidancePreferences();var before=s.ToJson();
         Assert.Equal("create",CareerGuidance.Evaluate(s,p).Id);CareerGuidance.Observe(s,p);
-        Assert.Equal(before,s.ToJson());Assert.Empty(p.Completed);
+        Assert.Equal(before,s.ToJson());Assert.DoesNotContain(p.Completed,c=>!c.StartsWith("goal",StringComparison.Ordinal)&&!c.StartsWith("part:",StringComparison.Ordinal)); // goal markers are the board's bookkeeping, not path steps
         s.Apply(new CreateDoujinCommand("Small","drama"));before=s.ToJson();
         Assert.Equal("produce",CareerGuidance.Evaluate(s,p).Id);CareerGuidance.Observe(s,p);CareerGuidance.Observe(s,p);
-        Assert.Single(p.Completed);Assert.Equal(before,s.ToJson());
+        Assert.Single(p.Completed,c=>!c.StartsWith("goal",StringComparison.Ordinal)&&!c.StartsWith("part:",StringComparison.Ordinal));Assert.Equal(before,s.ToJson());
     }
     [Fact]public void Guidance_tracks_delivery_and_existing_sales_without_repeating_opening()
     {
@@ -54,6 +54,8 @@ public class AlphaTests
         s.Apply(new StudioActionCommand(StudioAction.Print,v.Id,Amount:10,Value:0));
         Assert.Equal("delivery",CareerGuidance.Evaluate(s,p).Id);s.Advance(24);
         Assert.Equal("sell",CareerGuidance.Evaluate(s,p).Id);s.Advance(24*7);
+        Assert.Equal("sell-more",CareerGuidance.Evaluate(s,p).Id); // the selling tutorial follows the first sale (spec 2026-10-03)
+        p.Thread.Add(new GuidanceMessage{Step="sell-more",Time=s.Clock.Now.AddDays(-4)}); // its three days are over
         Assert.Equal("continue-series",CareerGuidance.Evaluate(s,p).Id);CareerGuidance.Observe(s,p);Assert.Contains("first-sale",p.Completed);
         p.Route="contest";Assert.Equal("contest-create",CareerGuidance.Evaluate(s,p).Id);
         p.Route="doujin";Assert.Equal("continue-series",CareerGuidance.Evaluate(s,p).Id);

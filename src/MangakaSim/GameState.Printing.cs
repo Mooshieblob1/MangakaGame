@@ -80,23 +80,30 @@ public partial class GameState
         var raw=SalesRules.DoujinCopies(s.Fanbase,v.AverageQuality,s.IsIconic?1:GenrePopularity(s.Genre),online,v.WeeksOnSale+1);
         v.WeeklyDemand=(int)Math.Min(int.MaxValue,ChannelPhysicalDemand(s,v,(long)Math.Floor(raw*(1+s.Reach/100)*(v.SalesClosed?.1:1)*RivalDemand(s.Genre,v.AverageQuality)*RecognitionLift(s.Id))));
     }
-    private long SellStock(Series s, Volume v, long requested, bool convention)
+    private long SellStock(Series s, Volume v, long requested, bool convention, bool daily = false, SalesPlan? plan = null)
     {
         DemandFor(s,v);
-        var limit=(int)Math.Min(int.MaxValue,Math.Min(requested,v.WeeklyDemand));
+        // A first week spilling past Monday was already held to 30% of its own week's demand: it neither takes nor uses up this week's.
+        var spillover=plan is not null && plan.Week!=v.DemandWeek;
+        var limit=(int)Math.Min(int.MaxValue,spillover?requested:Math.Min(requested,v.WeeklyDemand));
         var sold=0;
         foreach (var run in PrintRuns.Where(r => r.VolumeId==v.Id && r.Delivered && r.Remaining>0).OrderBy(r => r.OrderedAt).ThenBy(r => r.Id))
         {
             var presentation=run.Tier==PrintTier.CopyShop?.25:run.Tier==PrintTier.LocalPrinter?.7:1;
             var established=Math.Clamp(Math.Max(s.ChaptersPublished/500d,s.Fanbase/500000),0,1);
-            var demand=(int)Math.Floor((limit-sold)*(1-(1-presentation)*(.02+.58*established*established)));
+            var real=(limit-sold)*(1-(1-presentation)*(.02+.58*established*established));
+            // Streaming sales: the penalty's fraction carries across the week's hours so they add up to one weekly sale.
+            if(plan is not null) real+=plan.Carry;
+            var demand=(int)Math.Floor(real);
+            if(plan is not null) plan.Carry=Math.Clamp(real-demand,0,.999999);
             var count=Math.Min(Math.Max(0,run.Remaining-ReservedFromRun(run.Id)),demand); run.Remaining-=count; sold+=count;
         }
-        v.WeeklyDemand-=sold;
+        if(!spillover) v.WeeklyDemand-=sold;
         var revenue=(long)Math.Floor(sold*v.Price*(convention?1:.7));
         if (revenue>0)
         {
-            AccountPost(BusinessOf(v.BusinessId).Account,revenue,"doujin sales",AccountEntryKind.Publishing,s.Id);
+            if (daily) AccountPostDaily(BusinessOf(v.BusinessId).Account,revenue,"doujin sales",AccountEntryKind.Publishing,s.Id);
+            else AccountPost(BusinessOf(v.BusinessId).Account,revenue,"doujin sales",AccountEntryKind.Publishing,s.Id);
             VolumeContribution(v,revenue);
         }
         return sold;

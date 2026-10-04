@@ -15,6 +15,14 @@ public class GuidanceTests
         return s;
     }
 
+    /// <summary>Preferences for a player whose selling tutorial (the three "sell more" days after the first sale) is already over.</summary>
+    private static GuidancePreferences AfterTutorial(GameState s, string route = "career")
+    {
+        var p = new GuidancePreferences { Route = route };
+        p.Thread.Add(new GuidanceMessage { Step = "sell-more", Time = s.Clock.Now.AddDays(-4) });
+        return p;
+    }
+
     private static string Step(GameState s, GuidancePreferences p) { CareerGuidance.Observe(s, p); return CareerGuidance.Evaluate(s, p).Id; }
 
     /// <summary>Advances a day at a time, recording each distinct step, until the predicate holds.</summary>
@@ -32,7 +40,7 @@ public class GuidanceTests
     [Theory][InlineData(0)][InlineData(1)][InlineData(42)]
     public void Career_path_leads_from_first_sale_to_a_settled_studio(int seed)
     {
-        var s = Sold(seed); var p = new GuidancePreferences(); var seen = new HashSet<string>();
+        var s = Sold(seed); var p = AfterTutorial(s); var seen = new HashSet<string>();
         var step = CareerGuidance.Evaluate(s, p);
         Assert.Equal("continue-series", step.Id); Assert.Equal("series", step.Target);
         s.Apply(new ContinueOneShotCommand(step.Project));
@@ -69,7 +77,8 @@ public class GuidanceTests
             if (arrangement.Purchases.Count > 0) s.Apply(new ApplyOfficeLayoutCommand(location, s.OfficeRevision, arrangement.Placements, arrangement.Purchases, []));
             s.Apply(new HireStaffCommand(c.Id, location, Math.Max(StudioRules.MinimumMonthlySalary, c.ExpectedSalary)));
         }
-        Assert.Equal("career-settled", Step(s, p));
+        // After the first hire guidance carries on with the goals board (Q51), or settles when every goal is done.
+        Assert.True(Step(s, p) is "career-settled" || Step(s, p).StartsWith(CareerGuidance.GoalStep + "-next:"), Step(s, p));
         Assert.All(p.Thread.SelectMany(m => m.Texts), t => Assert.True(t.Length <= CareerGuidance.TextLimit, t));
     }
 
@@ -118,7 +127,7 @@ public class GuidanceTests
         var s = Sold();
         foreach (var route in new[] { "opening", "doujin", "grow", "career" })
         {
-            var p = new GuidancePreferences { Route = route };
+            var p = AfterTutorial(s, route);
             Assert.Equal("continue-series", CareerGuidance.Evaluate(s, p).Id);
             CareerGuidance.Observe(s, p); Assert.Equal("career", p.Route);
         }
@@ -130,6 +139,7 @@ public class GuidanceTests
     public void Thread_adds_one_message_per_step_and_tracks_unread()
     {
         var s = GameState.NewGame(); var p = new GuidancePreferences();
+        s.Goals = null; // this test counts path messages; goal texts are covered by GoalGuidanceTests
         CareerGuidance.Observe(s, p); CareerGuidance.Observe(s, p);
         Assert.Single(p.Thread); Assert.Equal("create", p.Thread[0].Step); Assert.Equal(1, CareerGuidance.Unread(p));
         CareerGuidance.Say(p, s.Clock.Now, "Here is the create button!\nPick a genre.");
@@ -165,7 +175,7 @@ public class GuidanceTests
     {
         for (int seed = 0; seed < 40; seed++)
         {
-            var s = Sold(seed); var p = new GuidancePreferences(); var series = s.Series[0];
+            var s = Sold(seed); var p = AfterTutorial(s); var series = s.Series[0];
             s.Apply(new ContinueOneShotCommand(series.Id));
             var best = CareerGuidance.PitchOutlooks(s, series).First();
             s.Apply(new PitchSeriesCommand(series.Id, best.Magazine.Id));
