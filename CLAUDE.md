@@ -400,6 +400,12 @@ playtesting.
   which also carries the last display settings files) and the Tier 1 closeout
   with A6 and A7 (record `docs/superpowers/tier1-closeout-completion.md`). See
   `docs/superpowers/session-handoff.md`.
+- **Tier 1 closeout (2026-10-04, Q53):** T1.1, T1.3, T1.4 and T1.8 ticked
+  with evidence; T1.10 moved to Tier 2 as a stranger playtest; T1.2 and T1.5
+  wait for the user's sign-off (T1.5 after the quick start trim). A6 licence
+  terms explained on the offer card (presentation only, not yet built); A7
+  closed with no new work (caused by A1). Record:
+  `docs/superpowers/tier1-closeout-completion.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

@@ -65,9 +65,17 @@ public partial class DebugMain
         foreach(var p in _state.Progression.Projects.Where(p=>p.BusinessId==_state.ControlledBusinessId||p.CreatorId==_state.ProtagonistPersonId).TakeLast(35).Reverse())
         {
             var box=Card($"{_state.FindSeries(p.SeriesId)!.Title} · {p.Kind}"+(p.Kind==LicenseKind.Anime?$" · Season {p.Season}":""),$"{p.Partner} · {p.Phase}");
-            Words(box,$"{p.Outcome}\nLicense payment ¥{p.Payment:N0} · creator {p.CreatorPercent}%\nFit {p.Fit:0}/100 · reliability {p.Reliability:P0}\nProduction {p.Weeks} weeks · next date {p.DueAt:d MMM yyyy}\nApproval: {new[]{"Delegated","Consultation","Close supervision"}[p.Control]}");
-            Words(box,"This category is exclusive during the agreed term. Signing payment 20%; remainder on release. Cancelled production retains the signing payment. Merchandise also settles monthly receipts during its one-year term.",13);
-            Words(box,$"Paid to {_state.Businesses.Single(b=>b.Id==p.BusinessId).Name}; {_state.FindPerson(p.CreatorId)!.Name} receives {p.CreatorPercent}% on the next monthly settlement. These recipients stay with the signed deal.",13);
+            var creator=_state.FindPerson(p.CreatorId)!.Name;
+            var signing=p.Payment/5;
+            bool anime=p.Kind==LicenseKind.Anime;
+            Words(box,$"{p.Outcome}\nGuaranteed payment ¥{p.Payment:N0}: ¥{signing:N0} on signing, ¥{p.Payment-signing:N0} on release\n{creator} receives {p.CreatorPercent}% of every payment\nFit {p.Fit:0}/100 · reliability {p.Reliability:P0} · approval: {new[]{"delegated","consultation","close supervision"}[p.Control]}\nProduction {p.Weeks} weeks · next date {p.DueAt:d MMM yyyy}");
+            Words(box,anime?"No royalties: an anime pays the guaranteed payment only. Its reward is new readers and a six-month lift for the manga."
+                :$"Then royalties every month for a year, up to ¥{p.Payment*8/100:N0} a month, more when the products are well received.",13);
+            if(p.Phase==LicensePhase.Offer)
+                Words(box,$"Fit is how well {p.Partner} suits this series. Reliability is how likely they stay on schedule without disputes. Both raise the reception, and a well-received release brings more new readers"+
+                    (anime?". Approval is your say over the story: with more of it you can approve original material if the anime catches up with the manga.":" and higher royalties."),13);
+            Words(box,"Exclusive in its category during the term. If production is cancelled, the signing payment is kept.",13);
+            Words(box,$"Paid to {_state.Businesses.Single(b=>b.Id==p.BusinessId).Name}; {creator}'s share follows on the next monthly settlement. These recipients stay with the signed deal.",13);
             var s=_state.FindSeries(p.SeriesId)!;
             bool permitted=p.BusinessId==_state.ControlledBusinessId&&s.BusinessId==_state.ControlledBusinessId&&
                 ( _state.Control==ControlMode.OwnerDirector||s.LeadPersonId==_state.ProtagonistPersonId)&&p.CreatorId==s.RightsLeadPersonId;
