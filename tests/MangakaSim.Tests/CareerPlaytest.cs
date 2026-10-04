@@ -202,6 +202,9 @@ public class CareerPlaytest
                     case EventType.WageArrears: Mark("First wage arrears"); Note(e.Message); break;
                     case EventType.AwardResult: Mark("First award result"); break;
                     case EventType.LicenseOffered: Mark("First licence offer"); break;
+                    case EventType.GoalCompleted: Mark(e.Message.Split(". Reward")[0]); break;
+                    case EventType.GoalChapterCompleted: Mark(e.Message.Split("! Reward")[0]); break;
+                    case EventType.PartOpened: Mark(e.Message); break;
                 }
             }
         }

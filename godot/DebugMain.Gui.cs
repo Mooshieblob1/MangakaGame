@@ -68,7 +68,7 @@ public partial class DebugMain
     {
         _mainTabs.CurrentTab=WorkspaceTabs[route];_report.Show();_side.Hide();_homeOffice.Show();
         _workspaceTitle.Text=route switch{"Publishing"=>"Magazine publishing","Production"=>"Production & work schedules","Business actions"=>"Funding & business decisions",_=>route};Empty(_workspaceActions);
-        foreach(var (label,destination) in WorkspaceLinks(route))
+        foreach(var (label,destination) in WorkspaceLinks(route).Where(link=>PageShown(link.Item2)))
         {var target=destination;ActionButton(_workspaceActions,label,()=>Navigate(target));}
         if(WorkspaceTabs[route]==3)
             StudioSection(route switch{"Team settings"=>"Team","Business actions"=>"Money","Distribution settings"=>"Publishing","Career moves"=>"Career","Properties"=>"Locations",_=>"Overview"});

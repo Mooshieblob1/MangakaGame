@@ -47,6 +47,8 @@ namespace MangakaSim;
 [JsonDerivedType(typeof(AssignDeskCommand), "AssignDesk")]
 [JsonDerivedType(typeof(SetAppearanceCommand), "Appearance")]
 [JsonDerivedType(typeof(RelocateOfficeCommand), "RelocateOffice")]
+[JsonDerivedType(typeof(OpenPartCommand), "OpenPart")]
+[JsonDerivedType(typeof(ShowEveryScreenCommand), "ShowEveryScreen")]
 public interface ICommand
 {
 }
@@ -86,3 +88,8 @@ public record HireStaffCommand(int CandidateId, int LocationId, long MonthlySala
 public record DismissStaffCommand(int PersonId) : ICommand;
 public record AssignStaffCommand(int PersonId, int SeriesId, bool Lead = false) : ICommand;
 public record AssignStageCommand(int ChapterId, Stage Stage, int? PersonId) : ICommand;
+
+/// <summary>Opens a part of the interface because the player went to one of its pages (progressive disclosure spec 2026-10-02).</summary>
+public sealed record OpenPartCommand(string Part) : ICommand;
+/// <summary>The "Experienced player: show every screen" choice.</summary>
+public sealed record ShowEveryScreenCommand(bool On) : ICommand;

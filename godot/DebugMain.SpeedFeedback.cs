@@ -13,6 +13,7 @@ public partial class DebugMain
     private double _daySpeed=1;
     private void ChooseSpeed(double speed)
     {
+        if(speed>=QuietSpeed&&_managementReady&&!_state.PartShown("quiet-speed"))return; // 32x opens with the first sale (spec 2026-10-02)
         // Choosing 32x yourself counts as Helper-Chan's introduction (Q28).
         if(speed>=QuietSpeed&&_managementReady)_presentation.Guidance.Completed.Add(CareerGuidance.QuietSpeedStep);
         SetSpeed(speed);

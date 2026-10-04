@@ -117,7 +117,8 @@ public partial class GameState
     }
     private void GenerateRivalOffer()
     {
-        foreach(var person in ControlledStaff.Where(p=>!IsHistoricalAssistant(p.Id)&&p.Employment is {NoticeEndsAt:null} job&&job.StartsAt.AddDays(90)<=Clock.Now).OrderBy(p=>p.Id))
+        foreach(var person in ControlledStaff.Where(p=>!IsHistoricalAssistant(p.Id)&&p.Employment is {NoticeEndsAt:null} job&&job.StartsAt.AddDays(90)<=Clock.Now&&
+            (p.Id!=ProtagonistPersonId||PartShown("industry"))).OrderBy(p=>p.Id)) // Q57: Aki is approached once Industry is open
         {
             if(World.Offers.Any(o=>o.PersonId==person.Id&&o.Status==NegotiationStatus.Pending)||World.LastApproach.TryGetValue(person.Id,out var last)&&last.AddDays(90)>Clock.Now)continue;
             var destination=Locations.Where(l=>World.RivalBusinesses.Contains(l.BusinessId)&&l.BusinessId!=ControlledBusinessId&&!l.Closed&&FreeTimelineDesks(l.Id)>0).OrderBy(l=>l.Id).FirstOrDefault();

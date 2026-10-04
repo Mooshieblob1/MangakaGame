@@ -52,11 +52,12 @@ public partial class DebugMain
             if(selected is null){Navigate("New doujin");return;}
             RunSeriesNextAction(selected);
         });_dashboardAction.ThemeTypeVariation="PrimaryAction";
+        BuildDashboardGoals(content);
         actions=StudioCard(content,"QUICK ACTIONS");
         ActionButton(actions,"+  Create a one-shot",()=>Navigate("New doujin"));
         ActionButton(actions,"+  Start an ongoing series",()=>Navigate("New series"));
         ActionButton(actions,"Manage series",()=>OpenOfficeSidebar("Series"));
-        ActionButton(actions,"Books, printing & online sales",()=>Navigate("Books"));
+        _dashboardBooks=ActionButton(actions,"Books, printing & online sales",()=>Navigate("Books"));
         _dashboardConvention=ActionButton(actions,"Book a convention",()=>Navigate("Conventions",_progressSeriesId));
         foreach(var button in _officeDashboard.FindChildren("*","Button",true,false).OfType<Button>().Where(b=>b.GetParent() is VBoxContainer))
         {button.AutowrapMode=TextServer.AutowrapMode.WordSmart;button.CustomMinimumSize=new(0,40);}
@@ -64,6 +65,7 @@ public partial class DebugMain
     }
     private void RefreshOfficeDashboard()
     {
+        _dashboardBooks.Visible=_dashboardConvention.Visible=PartShown("books");
         if(_officeDashboard is null)return;
         var titles=_state.Series.Where(s=>s.BusinessId==_state.ControlledBusinessId&&(_state.Control==ControlMode.OwnerDirector||s.LeadPersonId==_state.ProtagonistPersonId)).ToArray();
         var series=titles.FirstOrDefault(s=>s.Id==_progressSeriesId);

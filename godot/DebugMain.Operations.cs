@@ -65,12 +65,14 @@ public partial class DebugMain
         Action(pay,"Set salary",()=>new StudioActionCommand(StudioAction.SetFounderSalary,Amount:(long)salary.Value));
         Action(pay,"Set selected employee salary",()=>new StudioActionCommand(StudioAction.SetEmployeeSalary,SelectedPerson.Id,Amount:(long)salary.Value));
         Action(pay,"Four-hour paid commission",()=>new StudioActionCommand(StudioAction.RecoveryCommission));
-        Action(pay,"Dismiss employee with 30-day buyout",()=>new StudioActionCommand(StudioAction.DismissBuyout,SelectedPerson.Id));
+        _moneyControls.Add(Action(pay,"Dismiss employee with 30-day buyout",()=>new StudioActionCommand(StudioAction.DismissBuyout,SelectedPerson.Id)));
         var credit=Row("Borrowing","Personal: 24% APR · incorporated business: 8% APR. These are game terms. Personal borrowing stays in your personal account."); var amount=Number(credit,1000,3000000,100000,1000,label:"Borrow amount · ¥");
+        _moneyControls.Add(credit.GetParent().GetParent<Control>()); // borrowing waits for the money part (progressive disclosure)
         Action(credit,"Personal loan",()=>new StudioActionCommand(StudioAction.BorrowPersonal,Amount:(long)amount.Value));
         Action(credit,"Card cash advance",()=>new StudioActionCommand(StudioAction.BorrowCard,Amount:(long)amount.Value));
         Action(credit,"Business loan",()=>new StudioActionCommand(StudioAction.BorrowBusiness,Amount:(long)amount.Value));
         var debt=Row("Existing debt"); _loanChoice=Choice(debt); var repay=Number(debt,1,3000000,10000,1000,label:"Repayment · ¥");
+        _moneyControls.Add(debt.GetParent().GetParent<Control>());
         Action(debt,"Repay",()=>new StudioActionCommand(StudioAction.RepayLoan,_loanChoice.GetSelectedId(),Amount:(long)repay.Value));
         Action(debt,"Incorporate — ¥200,000 setup",()=>new StudioActionCommand(StudioAction.Incorporate));
         section=_studioSections["Locations"];

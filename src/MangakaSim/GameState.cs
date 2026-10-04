@@ -42,6 +42,8 @@ public partial class GameState
         state.InitializeTimeline();
         state.InitializeCareer();
         state.InitializeProgression();
+        state.Goals = new();
+        state.Disclosure = new();
         return state;
     }
 
@@ -82,6 +84,8 @@ public partial class GameState
         PitchStep(closes);
         RiskStep();
         DayEndStep();
+        EvaluateGoals();
+        EvaluateParts();
         if (Clock.Hour == 0) StartNewDay();
         else RunPlanner();
     }

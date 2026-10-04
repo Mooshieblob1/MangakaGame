@@ -33,6 +33,7 @@ public partial class DebugMain
         switch(_page)
         {
             case "Guidance":GuidancePage();break;
+            case "Goals":BuildGoals();break;
             case "New doujin":NewDoujinPage();break;
             case "New series":NewOngoingPage();break;
             case "Conventions":ConventionPage();break;
@@ -78,8 +79,8 @@ public partial class DebugMain
         LiveWords(release,()=>SeriesSalesText(s),14);
         var buttons=new HFlowContainer();_sideContent.AddChild(buttons);
         ActionButton(buttons,"Production & schedule",()=>{SelectSeriesForWorkbench(s.Id);OpenWorkspace("Production");});
-        ActionButton(buttons,"Magazine pitch & contract",()=>{SelectSeriesForWorkbench(s.Id);OpenWorkspace("Publishing");});
-        ActionButton(buttons,"Print & sell",()=>OpenPrinting(s.Id));
+        var pitch=ActionButton(buttons,"Magazine pitch & contract"+(PartIsNew("publishing")?"  · New":""),()=>{SelectSeriesForWorkbench(s.Id);OpenWorkspace("Publishing");});pitch.Visible=PartShown("publishing");
+        ActionButton(buttons,"Print & sell",()=>OpenPrinting(s.Id)).Visible=PartShown("books");
         Words(_sideContent,s.StandaloneDoujin?"One-shot: one complete story, one book. Production ends after this chapter.":s.Publishing==PublishingStatus.Unpublished?$"Ongoing doujin · {(_state.ChaptersTowardCollection(s)%5)} / 5 finished chapters toward the next collected book. "+(s.ReleaseShortIssues?"Each finished chapter is also printable as a numbered issue.":"Enable short issues below to print individual chapters before the collection is ready."):s.Publishing is PublishingStatus.Pitching or PublishingStatus.Offered?"The pitch sample is separate from your doujin chapters. Publisher deadlines begin after you accept a contract.":"Magazine serialization follows the publisher's issue deadlines.",14);
         if(!s.StandaloneDoujin&&s.Publishing==PublishingStatus.Unpublished&&!s.ReleaseShortIssues)ActionButton(_sideContent,"Enable short numbered issues",()=>ProgressionAction(new SetDoujinIssuesCommand(s.Id)));
         foreach(var book in s.Volumes.Where(v=>v.IsDoujin&&v.BusinessId==_state.ControlledBusinessId).TakeLast(1))
@@ -92,10 +93,11 @@ public partial class DebugMain
         }
         var extras=Disclosure(_sideContent,"Promotion, showcase & adaptations");
         var extraActions=new HFlowContainer();extras.AddChild(extraActions);
-        ActionButton(extraActions,"Send to convention",()=>Navigate("Conventions",s.Id));
-        ActionButton(extraActions,"Digital & overseas",()=>{SelectSeriesForWorkbench(s.Id);OpenWorkspace("Industry contacts");});
+        ActionButton(extraActions,"Send to convention",()=>Navigate("Conventions",s.Id)).Visible=PartShown("books");
+        ActionButton(extraActions,"Digital & overseas",()=>{SelectSeriesForWorkbench(s.Id);OpenWorkspace("Industry contacts");}).Visible=PartShown("industry");
         ActionButton(extraActions,"Showcase",()=>Navigate("Showcase",s.Id));
-        ActionButton(extraActions,"Awards & contests",()=>Navigate("Awards"));ActionButton(extraActions,"Adaptations & merchandise",()=>Navigate("Licenses"));
+        ActionButton(extraActions,"Awards & contests",()=>Navigate("Awards")).Visible=PartShown("contests");
+        ActionButton(extraActions,"Adaptations & merchandise",()=>Navigate("Licenses")).Visible=PartShown("industry");
         var earlier=s.Chapters.Where(c=>c!=current).TakeLast(8).Reverse().ToArray();
         var history=Disclosure(_sideContent,"Chapter & ranking history",earlier.Length==0?"No earlier chapters yet.":"Up to eight recent chapters are shown below.");
         foreach(var chapter in earlier)
@@ -153,7 +155,7 @@ public partial class DebugMain
             Metric(metrics,"RESERVED WAGES",()=>$"¥{_state.ReservedWages:N0}");
             Metric(metrics,"UNPAID BILLS",()=>$"¥{_state.Bills.Where(b=>b.BusinessId==_state.ControlledBusinessId).Sum(b=>b.Remaining):N0}");
         }
-        ActionButton(_sideContent,"Funding, loans & incorporation",()=>OpenWorkspace("Business actions"));PeriodSelector();
+        var fundingButton=ActionButton(_sideContent,"Funding, loans & incorporation"+(PartIsNew("money")?"  · New":""),()=>OpenWorkspace("Business actions"));fundingButton.Visible=PartShown("money");PeriodSelector();
         var entries=account.Entries.Where(e=>e.Time>=ChartStart()).ToArray();
         var balance=account.OpeningBalance;var balances=new List<(DateTime,double)>();
         foreach(var group in account.Entries.GroupBy(e=>e.Time.Date).OrderBy(g=>g.Key)){balance+=group.Sum(e=>e.Amount);if(group.Key>=ChartStart().Date)balances.Add((group.Key,balance));}
@@ -198,7 +200,7 @@ public partial class DebugMain
         _popupEvents.Enqueue(index);
     }
     private int UnreadCount()=>_state.Events.Select((e,i)=>(e,i)).Count(x=>InboxEvent(x.e)&&BelongsInInbox(x.e)&&!_presentation.ReadEvents.Contains(x.i));
-    private static bool ImportantEvent(GameEvent e)=>e.Type is EventType.AwardResult or EventType.AwardNomination or EventType.LicenseOffered or EventType.LicenseDecision or EventType.LicenseReleased or EventType.CareerMilestone or EventType.IndustryDecision or EventType.StaffNotice or EventType.WageArrears or EventType.SerializationOffered or EventType.OfferAccepted or EventType.SeriesBecameIconic or EventType.DeadlineMissed or EventType.CancellationWarning or EventType.SeriesCancelled or EventType.VolumeReleased;
+    private static bool ImportantEvent(GameEvent e)=>e.Type is EventType.AwardResult or EventType.AwardNomination or EventType.LicenseOffered or EventType.LicenseDecision or EventType.LicenseReleased or EventType.CareerMilestone or EventType.GoalChapterCompleted or EventType.IndustryDecision or EventType.StaffNotice or EventType.WageArrears or EventType.SerializationOffered or EventType.OfferAccepted or EventType.SeriesBecameIconic or EventType.DeadlineMissed or EventType.CancellationWarning or EventType.SeriesCancelled or EventType.VolumeReleased;
     private static bool InboxEvent(GameEvent e)=>ImportantEvent(e)||e.Type is EventType.IndustryNews or EventType.VolumeReleased or EventType.SeriesCancelled or EventType.DeadlineMissed or EventType.DailyRecap or EventType.RankingPublished;
     private void BuildInbox()
     {
@@ -262,9 +264,9 @@ public partial class DebugMain
     {
         if(id<0||id>=_state.Events.Count)return;var e=_state.Events[id];_presentation.ReadEvents.Add(id);
         if(ImportantEvent(e))Pause();
-        HelperBody(ImportantEvent(e)?"concerned":"happy",Humanize(e.Type.ToString()),e.Message,out var copy);
+        HelperBody(ImportantEvent(e)&&e.Type!=EventType.GoalChapterCompleted?"concerned":"happy",Humanize(e.Type.ToString()),e.Message,out var copy);
         if(e.Type==EventType.SerializationOffered&&e.SeriesId is {} offerSeries&&_state.FindSeries(offerSeries)?.PendingOffer is null)Words(copy,"This offer has already been resolved or expired.",14);
-        ActionButton(copy,"Open relevant controls",()=>{_helperPopup.Hide();if(e.Type is EventType.AwardResult or EventType.AwardNomination)Navigate("Awards");else if(e.Type is EventType.LicenseOffered or EventType.LicenseDecision or EventType.LicenseReleased)Navigate("Licenses");else if(e.Type==EventType.CareerMilestone)Navigate("Legacy");else if(e.Type==EventType.IndustryDecision)OpenWorkspace("Industry contacts");else if(e.Type==EventType.WageArrears)Navigate("Finances");else if(e.PersonId is {} person){_selectedPersonId=person;OpenWorkspace("Recruitment");}else if(e.SeriesId is {} series){Navigate("Series details",series);}else OpenWorkspace("Industry contacts");});
+        ActionButton(copy,"Open relevant controls",()=>{_helperPopup.Hide();if(e.Type==EventType.GoalChapterCompleted)Navigate("Goals");else if(e.Type is EventType.AwardResult or EventType.AwardNomination)Navigate("Awards");else if(e.Type is EventType.LicenseOffered or EventType.LicenseDecision or EventType.LicenseReleased)Navigate("Licenses");else if(e.Type==EventType.CareerMilestone)Navigate("Legacy");else if(e.Type==EventType.IndustryDecision)OpenWorkspace("Industry contacts");else if(e.Type==EventType.WageArrears)Navigate("Finances");else if(e.PersonId is {} person){_selectedPersonId=person;OpenWorkspace("Recruitment");}else if(e.SeriesId is {} series){Navigate("Series details",series);}else OpenWorkspace("Industry contacts");});
         ActionButton(copy,"Keep in inbox",()=>{_helperPopup.Hide();RefreshManagement();});RefreshManagement();
     }
     private void ShowStory(string id)

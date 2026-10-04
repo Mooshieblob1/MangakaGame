@@ -50,6 +50,8 @@ public partial class GameState
             case RelocateOfficeCommand c: ApplyOfficeRelocation(c); break;
             case ApplyOfficeLayoutCommand c: ApplyOffice(c); break;
             case AssignDeskCommand c: AssignDesk(c); break;
+            case OpenPartCommand c: ApplyOpenPart(c); break;
+            case ShowEveryScreenCommand c: if (Disclosure is not null) Disclosure.ShowAll = c.On; break;
             case SetAppearanceCommand c:
                 if (c.Appearance is null || !c.Appearance.Valid) throw new InvalidCommandException("Choose a valid appearance.");
                 if (Clock.Now != GameClock.Start) throw new InvalidCommandException("Set the starting appearance before time advances.");
@@ -99,6 +101,7 @@ public partial class GameState
         Emit(EventType.CommandApplied, command.ToString() ?? command.GetType().Name);
         RunPlanner();
         RiskStep();
+        EvaluateParts();
     }
 
     private Series RequireSeries(int seriesId) =>

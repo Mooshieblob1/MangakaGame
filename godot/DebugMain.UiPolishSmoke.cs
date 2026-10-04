@@ -1,4 +1,5 @@
 using Godot;
+using MangakaSim;
 
 namespace MangakaGame;
 
@@ -6,6 +7,7 @@ public partial class DebugMain
 {
     private void CheckUiPolishNavigation()
     {
+        _state.Apply(new OpenPartCommand("books")); // the dashboard's Books button only shows once Books has opened (progressive disclosure)
         var before=_state.ToJson();var period=_chartDays;var personal=_personalAccount;
         ShowOffice();
         Check(!_currentStageBar.Visible&&!_dashboardTotals.Visible,"Empty career avoids meaningless progress and sales panels");

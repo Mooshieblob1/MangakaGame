@@ -70,7 +70,7 @@ public partial class DebugMain
             LiveWords(card,()=>SeriesSalesText(s),14);
             var actions=new HFlowContainer();card.AddChild(actions);SeriesNextAction(actions,s);
             ActionButton(actions,"Open series",()=>Navigate("Series details",s.Id));
-            ActionButton(actions,"Send to convention",()=>Navigate("Conventions",s.Id));
+            ActionButton(actions,"Send to convention",()=>Navigate("Conventions",s.Id)).Visible=PartShown("books");
             if(s.StandaloneDoujin)ActionButton(actions,"Continue as ongoing series",()=>ContinueOneShotFromSidebar(s.Id));
         }
         if(!ManagedSeries.Any())Words(Card("Your first page","Create a one-shot or an ongoing series above."),"Helper-Chan will guide you from production to your first sale.");
