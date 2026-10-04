@@ -6,6 +6,10 @@ Helper-Chan is read from `references/helper-chan.png`. Vibe Transfer and Precise
 Reference are not on V5 yet, so the text carries her whole look; keep the
 Character Block identical everywhere so she stays consistent.
 
+Commercial use was checked on 2026-10-04: NovelAI's terms let us use these
+images on the Steam store page and title screen, with Steam's AI disclosure.
+See `specs/2026-10-04-novelai-commercial-terms-research.md`.
+
 ## How the pieces fit
 
 | # | Image | Used for |
