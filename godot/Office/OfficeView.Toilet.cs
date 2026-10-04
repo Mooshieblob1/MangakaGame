@@ -83,6 +83,10 @@ public partial class OfficeView
         }
     }
 
+    // Smoke checks send someone on a trip now instead of waiting for the schedule.
+    internal void SendToToilet(int personId){if(!_actors.ContainsKey(personId)||!ToiletAvailable())return;_staffToiletId=personId;_toiletLeaveRequested=false;_targets.Remove(personId);SyncActors();}
+    internal void SendToBreakRoom(int personId){if(!_actors.ContainsKey(personId))return;_visualBreaks[personId]=new(){Seat=0};_targets.Remove(personId);SyncActors();}
+
     private void FinishToiletApproach(OfficeActor actor)
     {
         if(_staffToiletId!=actor.PersonId||_toiletInside||actor.Moving)return;

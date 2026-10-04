@@ -20,6 +20,8 @@ public partial class MusicPlayer : Node
     private bool _started;
 
     public Action<string>? Failed { get; set; }
+    /// <summary>"music &lt;track&gt;", "music quiet" or "music fade out", for the problem report timeline (Q58).</summary>
+    public Action<string>? Changed { get; set; }
     public string? Current => _plan.Current;
     public float ActiveGain => _gain[_active];
     public float InactiveGain => _gain[1 - _active];
@@ -36,7 +38,7 @@ public partial class MusicPlayer : Node
             p => (Func<AudioStream?>)(() => ResourceLoader.Exists(p.Value) ? ResourceLoader.Load<AudioStream>(p.Value) : null)), seed);
     }
 
-    public void UseTracks(IReadOnlyDictionary<string, Func<AudioStream?>> tracks, int seed, double gapMin = 60, double gapMax = 120)
+    public void UseTracks(IReadOnlyDictionary<string, Func<AudioStream?>> tracks, int seed, double gapMin = MusicPlan.QuietMin, double gapMax = MusicPlan.QuietMax)
     {
         _tracks = tracks; _plan = new MusicPlan(tracks.Keys, seed, gapMin, gapMax);
         foreach (var player in _players) player.Stop();
@@ -50,7 +52,7 @@ public partial class MusicPlayer : Node
         var active = _players[_active];
         // A track has ended only when it stopped by itself: not paused, not faded out by us.
         var finished = _started && !active.Playing && !active.StreamPaused;
-        if (finished) _started = false;
+        if (finished) { _started = false; Changed?.Invoke("music quiet"); }
         // Unfocused time does not count toward the quiet gap.
         Apply(_plan.Update(focused ? delta : 0, context, finished));
 
@@ -71,7 +73,7 @@ public partial class MusicPlayer : Node
         {
             case MusicTransition.FadeIn: Start(command.TrackId!, 1 / FadeInSeconds); break;
             case MusicTransition.Crossfade: Start(command.TrackId!, 1 / CrossfadeSeconds); break;
-            case MusicTransition.FadeOut: _target[_active] = 0; _rate = 1 / FadeOutSeconds; _started = false; break;
+            case MusicTransition.FadeOut: _target[_active] = 0; _rate = 1 / FadeOutSeconds; _started = false; Changed?.Invoke("music fade out"); break;
         }
     }
 
@@ -83,5 +85,6 @@ public partial class MusicPlayer : Node
         _target[_active] = 0;
         _players[next].Stream = stream; _players[next].StreamPaused = false; _players[next].Play();
         _gain[next] = 0; _target[next] = 1; _active = next; _rate = rate; _started = true;
+        Changed?.Invoke("music " + trackId);
     }
 }

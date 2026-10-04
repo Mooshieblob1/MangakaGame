@@ -14,6 +14,8 @@ public readonly record struct MusicContext(bool InMenu, DateTime GameTime, bool 
 public sealed class MusicPlan
 {
     public const double FirstTrackDelay = 5;
+    /// <summary>Quiet between rotation tracks (Q58, 2026-10-03; was 60 to 120 seconds under Q36).</summary>
+    public const double QuietMin = 15, QuietMax = 30;
     private static readonly (string Prefix, MusicPool Pool)[] Prefixes =
     [
         ("title-", MusicPool.Title), ("day-", MusicPool.Day), ("night-", MusicPool.Night), ("studio-", MusicPool.Studio),
@@ -31,7 +33,7 @@ public sealed class MusicPlan
 
     public string? Current { get; private set; }
 
-    public MusicPlan(IEnumerable<string> trackIds, int seed, double gapMin = 60, double gapMax = 120)
+    public MusicPlan(IEnumerable<string> trackIds, int seed, double gapMin = QuietMin, double gapMax = QuietMax)
     {
         _random = new Random(seed); _gapMin = gapMin; _gapMax = gapMax;
         foreach (var id in trackIds.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(i => i, StringComparer.Ordinal))

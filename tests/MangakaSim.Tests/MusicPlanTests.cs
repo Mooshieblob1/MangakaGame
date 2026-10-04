@@ -55,14 +55,15 @@ public class MusicPlanTests
         }
     }
 
-    [Fact] public void Quiet_gaps_last_60_to_120_seconds()
+    // Q58 (2026-10-03): the quiet between tracks shortened from 60 to 120 seconds, which players heard as the music stopping.
+    [Fact] public void Quiet_gaps_last_15_to_30_seconds()
     {
         var plan = new MusicPlan(["day-01", "day-02"], 7);
         UntilStart(plan, At(10));
         for (int i = 0; i < 10; i++)
         {
             Assert.Equal(MusicTransition.None, Finish(plan, At(10)).Transition);
-            Assert.InRange(UntilStart(plan, At(10), 0.5).Waited, 60, 120.5);
+            Assert.InRange(UntilStart(plan, At(10), 0.5).Waited, 15, 30.5);
         }
     }
 

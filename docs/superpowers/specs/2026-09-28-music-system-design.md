@@ -35,6 +35,15 @@ minutes or so; the gaps roughly halve that and give the existing ambience a
 role. Rejected: nearly continuous (repetition shows quickly) and mostly quiet
 (3 to 5 minute gaps; the game may feel empty).
 
+### Q58. Shorter quiet stretches (decided 2026-10-03, supersedes the gap length above)
+
+A playtest report ("music stopped playing") matched a planned 60 to 120 second
+gap exactly: about a third of play was silent and read as broken. The quiet
+between rotation tracks is now 15 to 30 seconds (`MusicPlan.QuietMin` and
+`QuietMax`), and every track start, natural end ("music quiet") and fade out is
+written to the session timeline attached to problem reports. Rejected: no gaps
+(repeats show sooner) and keeping the long gaps with a "next track soon" hint.
+
 ## What plays when
 
 - **Main menu and its screens:** the title pool (`title-01`).
@@ -47,8 +56,8 @@ role. Rejected: nearly continuous (repetition shows quickly) and mostly quiet
     32x days (about 11 seconds each) and the overnight skip never cause
     switching.
   - The same track never plays twice in a row when the pool has another.
-  - After each rotation track, a quiet gap of 60 to 120 seconds, chosen at
-    random.
+  - After each rotation track, a quiet gap of 15 to 30 seconds, chosen at
+    random (Q58; was 60 to 120).
 - **Big moments** crossfade in over about 3 seconds, play once, then the
   rotation resumes after a normal quiet gap:
   - good news (`good-news-`): a serialization offer, an accepted serialization,
@@ -116,8 +125,8 @@ role. Rejected: nearly continuous (repetition shows quickly) and mostly quiet
 ## Testing
 
 - **Automated tests for `MusicPlan`:** day and night pools; studio tracks
-  joining after a move; no immediate repeats; quiet gaps between 60 and 120
-  seconds; each big moment interrupting once and not twice in one game day;
+  joining after a move; no immediate repeats; quiet gaps between 15 and 30
+  seconds (Q58); each big moment interrupting once and not twice in one game day;
   priority when several happen together; nothing during the overnight skip;
   no switching when 32x flips day and night within one track; title pool in
   menus; quiet for empty pools; an empty folder behaving like today.

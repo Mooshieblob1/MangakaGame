@@ -61,6 +61,21 @@ public partial class ChapterProgressBar : ProgressBar
             }));
         _segments?.QueueRedraw();
     }
+    /// <summary>Where a stage's fill currently ends, in canvas coordinates: work sparkles land there (2026-10-03).</summary>
+    public Vector2? StagePoint(Stage stage)
+    {
+        if(_segments is null||Chapter is null)return null;
+        var total=_sections.Sum(s=>s.Weight);if(total<=0)return null;
+        var width=Math.Max(0,_segments.Size.X-4);var x=2f;
+        for(var i=0;i<_sections.Length&&i<Stages.Length;i++)
+        {
+            var section=_sections[i];var extent=(float)(width*section.Weight/total);
+            if(Stages[i].Stage==stage)
+                return _segments.GetGlobalTransformWithCanvas()*new Vector2(x+(section.Weight>0?(float)(extent*section.Done/section.Weight):0),_segments.Size.Y/2);
+            x+=extent;
+        }
+        return null;
+    }
     private void DrawSections(Control canvas)
     {
         var total=_sections.Sum(s=>s.Weight);if(total<=0)return;
