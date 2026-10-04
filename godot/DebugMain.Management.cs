@@ -134,7 +134,7 @@ public partial class DebugMain
         var railScroll=new ScrollContainer{HorizontalScrollMode=ScrollContainer.ScrollMode.Disabled};railPanel.AddChild(railScroll);
         _rail=new VBoxContainer{CustomMinimumSize=new(148,0)};railScroll.AddChild(_rail);
         Words(_rail,"MANGAKA\nDAYS",21).AutowrapMode=TextServer.AutowrapMode.Off;
-        Words(_rail,"マンガスタジオ",12);
+        Words(_rail,"マンガカ・デイズ",12);
         _shell=new VBoxContainer{SizeFlagsHorizontal=SizeFlags.ExpandFill};_shell.AddThemeConstantOverride("separation",4);layout.AddChild(_shell);
         var header=new HFlowContainer();_managementHeader=header;_shell.AddChild(header);header.AddThemeConstantOverride("v_separation",4);
         _status=Words(header,"",14);_status.CustomMinimumSize=new(150,0);_status.SizeFlagsVertical=SizeFlags.ShrinkCenter;

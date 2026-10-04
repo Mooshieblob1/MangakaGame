@@ -1,7 +1,7 @@
-MANGAKA STUDIO, private test (alpha.12)
-=======================================
+MANGAKA DAYS, private test (alpha.13)
+=====================================
 
-Thank you for testing. Mangaka Studio is a manga career and studio
+Thank you for testing. Mangaka Days is a manga career and studio
 management game that starts in Tokyo in 1996. You guide a young manga
 artist from making self-published comics (doujin) at their parents'
 house to magazine serialization and running a studio. Helper-Chan, the
@@ -23,17 +23,18 @@ that is fine, just say so in the questionnaire. Giving up is also fine
 and still very useful: please send the report anyway.
 
 STARTING THE GAME
-Unzip the folder and run MangakaStudio.exe. Windows may show a blue
+Unzip the folder and run MangakaDays.exe. Windows may show a blue
 "Windows protected your PC" box, because this test build is not signed.
 Click "More info", then "Run anyway".
 
 THE PRACTICE CAREER
-Open the main menu ("Menu", bottom left), choose "Load Career", then
+On the title screen (or in game: "Menu" on the left, or Esc), choose
+"Load Career", then
 "Import career or previous save", and pick
 "Practice - a struggling series.mangaka" from this folder.
 
 SENDING YOUR REPORT
-1. Main menu, "Report a problem".
+1. Title screen or in-game menu, "Report a problem".
 2. Write a short note (anything, even "finished").
 3. Keep "Attach session timeline" ticked and also tick "Attach career".
 4. Press "Export local report", and send the ZIP file together with your
@@ -50,4 +51,4 @@ everything before sending. Nothing is uploaded by the game; you decide
 how to send it.
 
 KNOWN GAPS
-There is no music yet.
+Sound effects are simple placeholders. Steam features are not in yet.

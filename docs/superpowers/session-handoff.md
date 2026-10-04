@@ -27,8 +27,12 @@ roadmap or a completion record. Replace its contents when the task changes.
   790 xUnit tests, the affected smoke checks and the display sweep (616
   screens, 0 flagged). The A6 offer card compiled but has not been looked at:
   run `--progression-smoke --capture` at the next authorized build.
-- Next: Tier 2. C1 still needs a fresh-player re-check (the stranger
-  playtest). A new tester build (alpha.13) needs the user's go-ahead.
+- 2026-10-05: alpha.13 packaged (`builds/MangakaDays-0.8.0-private-alpha.13-Windows.zip`,
+  record `alpha-13-build-verification.md`) with the rail subtitle fix, the
+  renamed tester kit and the A6 card rendered. Next: the user sends it to one
+  new tester for C1 and does the "Mangaka Days" trademark search; then
+  Steamworks and achievements (10 of about 25 exist), controller and Steam
+  Deck, ten-year balance, sound effects, store page and Steam Playtest.
 - NovelAI terms are researched
   (`specs/2026-10-04-novelai-commercial-terms-research.md`); read it before
   any store use of NovelAI art.

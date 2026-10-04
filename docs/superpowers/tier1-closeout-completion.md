@@ -70,6 +70,10 @@ been rendered. When building is next authorized, run
 `--progression-smoke --capture` and a look at the Licenses page at 1280 x 720
 with large interface size, since the card has two more lines.
 
+Rendered 2026-10-05 for alpha.13: `progression-offer.avif` at 1600 x 900 shows
+the explained terms with nothing clipped. The 1280 x 720 large-size look is
+still to do. See the [alpha.13 build verification](alpha-13-build-verification.md).
+
 ## Next step
 
 Done: T1.2 and T1.5 were ticked after the quick start (`2bb6d66`), so Tier 1

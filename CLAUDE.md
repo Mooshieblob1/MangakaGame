@@ -407,6 +407,14 @@ playtesting.
   (presentation only, compiled, not yet rendered); A7
   closed with no new work (caused by A1). Record:
   `docs/superpowers/tier1-closeout-completion.md`.
+- **Tier 2 start, alpha.13 (2026-10-05):** rail subtitle now マンガカ・デイズ,
+  roadmap T1.3 and T1.4 boxes ticked, A6 offer card rendered at 1600 x 900
+  (1280 x 720 large size still unchecked), tester kit renamed to Mangaka Days
+  with a C1 question, alpha.13 packaged for one new tester (C1). Tier 2 order
+  (recommended 2026-10-05): tester and the user's trademark search, Steamworks
+  and about 25 achievements (10 exist), controller and Steam Deck, ten-year
+  balance, sound effects, store page and Steam Playtest, hardware testing,
+  trailer. Record: `docs/superpowers/alpha-13-build-verification.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

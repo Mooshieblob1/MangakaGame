@@ -191,7 +191,7 @@ report; three remarks passed on by the user ("you need a better starter guide").
 
 | # | Finding | Evidence | Proposed triage | User decision |
 |---|---|---|---|---|
-| C1 | Starting the game feels like reading an installation document | Remark 1 | Re-check against the current opening (disclaimer, first-launch volume, title, New Career, Helper-Chan's first texts) after the display work; much of alpha.12's opening has changed | Q65 option 1 approved 2026-10-04: quick start ([record](quick-start-completion.md)); not yet built or re-tested |
+| C1 | Starting the game feels like reading an installation document | Remark 1 | Re-check against the current opening (disclaimer, first-launch volume, title, New Career, Helper-Chan's first texts) after the display work; much of alpha.12's opening has changed | Q65 option 1 approved 2026-10-04: quick start ([record](quick-start-completion.md)); built into alpha.13 on 2026-10-05 ([build verification](alpha-13-build-verification.md)); waits for a new tester |
 | C2 | Text still too small on a laptop even at the largest text size | Remark 2; text scale tops out at 150% and lives only in a career's Settings; the window ignores Windows display scaling (no stretch mode, fixed 1600 x 900) | Tier 1 display sub-project | Approved; fixed 2026-10-04 ([display settings](display-settings-completion.md)) |
 | C3 | No resolution or full-screen setting | Remark 3; none exists | Tier 1 display sub-project (also needed for Steam Deck in Tier 2) | Approved; fixed 2026-10-04 ([display settings](display-settings-completion.md)) |
 
@@ -205,6 +205,11 @@ report; three remarks passed on by the user ("you need a better starter guide").
 ## Round 2 (alpha.13)
 
 ### Fixes since round 1
+
+Package: `builds/MangakaDays-0.8.0-private-alpha.13-Windows.zip`
+([build verification](alpha-13-build-verification.md)). Everything from the
+round 1 triage, the career goals board, progressive disclosure, display
+settings and the quick start (C1).
 
 ### Tester D
 

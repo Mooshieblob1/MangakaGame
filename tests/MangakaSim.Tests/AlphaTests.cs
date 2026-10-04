@@ -154,7 +154,7 @@ public class AlphaTests
         Assert.True(JsonNode.Parse(report)!["Timeline"]!.GetValue<bool>());
         using var log=new StreamReader(zip.GetEntry("timeline.log")!.Open());
         Assert.Contains("milestone first-sale",log.ReadToEnd());
-        Assert.Equal("0.8.0-private-alpha.12",ProblemReport.Build);
+        Assert.Equal("0.8.0-private-alpha.13",ProblemReport.Build);
     }
     [Fact]public void ProblemReport_without_a_timeline_has_only_the_report()
     {

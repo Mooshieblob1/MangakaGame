@@ -1,5 +1,5 @@
-MANGAKA STUDIO, alpha.12 questionnaire
-======================================
+MANGAKA DAYS, alpha.13 questionnaire
+====================================
 Write your answers under each question and send this file back with the
 report ZIP. Short answers are fine.
 
@@ -7,7 +7,10 @@ report ZIP. Short answers are fine.
 
 2. Where were you stuck or confused, and how did you get past it?
 
-3. How did the pace feel at the start, while waiting for your series to
+3. How did the first few minutes feel, from starting the game to your
+   first drawing? Was anything slow or confusing?
+
+   How did the pace feel at the start, while waiting for your series to
    debut, and later on?
 
 4. Did the 32x speed help, and did it stop at the right moments?

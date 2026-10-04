@@ -6,7 +6,7 @@ namespace MangakaSim;
 
 public static class ProblemReport
 {
-    public const string Build = "0.8.0-private-alpha.12";
+    public const string Build = "0.8.0-private-alpha.13";
     public static byte[] Create(string note,GameState state,byte[]? screenshot=null,byte[]? career=null,IReadOnlyList<(string Name,string Text)>? timeline=null)
     {
         if(string.IsNullOrWhiteSpace(note)||note.Length>12000)throw new InvalidDataException("Describe the problem in 1–12,000 characters.");
