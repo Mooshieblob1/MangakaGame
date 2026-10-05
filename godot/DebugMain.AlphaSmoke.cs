@@ -92,6 +92,7 @@ public partial class DebugMain
             var activity=_audio.ActivityCount;var effects=_audio.EffectCount;
             for(int frame=0;frame<600;frame++){_audio.Update(1d/60,true,true,.35,.6);_audio.Cue();}
             Check(_audio.ActivityCount-activity<=2&&_audio.EffectCount-effects<=40,"Audio budgets use real time and bounded voices");
+            Check(_audio.UsingRecordings,"Recorded CC0 sound effects load, room tone loops");
             using var waveform=OfficeAudio.Wave(.2,1);Check(waveform.MixRate==22050&&waveform.Data.Length==8820,"Original procedural audio generated");
             waveform.SaveToWav(Path.Combine(SmokeOutput,"alpha-pencil.wav"));
             _audio.Update(.1,false,false,0,0);

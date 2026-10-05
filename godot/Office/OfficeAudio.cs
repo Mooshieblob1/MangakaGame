@@ -19,6 +19,9 @@ public partial class OfficeAudio : Node
     public int ActivityCount { get; private set; }
     public int BuzzCount { get; private set; }
     public bool EffectPlaying => _effect.Playing;
+    /// <summary>True when every sound comes from the Assets/Sfx recordings and the room tone loops, for the smoke check.</summary>
+    public bool UsingRecordings => _room.Stream is AudioStreamOggVorbis { Loop: true } && _effect.Stream is AudioStreamOggVorbis
+        && _buzz.Stream is AudioStreamOggVorbis && _strokes.Length == 5 && _pages.Length == 2;
     public override void _Ready()
     {
         AddChild(_room);AddChild(_activity);AddChild(_effect);AddChild(_buzz);
