@@ -1,3 +1,5 @@
+using MangakaSim.Rules;
+
 namespace MangakaSim;
 
 public partial class GameState
@@ -226,7 +228,7 @@ public partial class GameState
                 p.Outcome = p.Reception >= 75 ? "A well-received release" : p.Reception >= 55 ? "Mixed reception, with some new readers" : "Disappointing reception";
                 if (!p.Settled) { SettleLicense(p, p.Payment - p.Payment / 5); p.Settled = true; }
                 double reach = (p.Kind == LicenseKind.Anime ? 1 : .4) * (p.ShortSeason ? .65 : 1) / Math.Sqrt(p.Season);
-                s.Fanbase += Math.Min(50000, (200 + Math.Sqrt(s.Fanbase) * 10) * p.Reception / 100 * reach);
+                s.Fanbase += FanbaseRules.Saturated(s.Fanbase, Math.Min(50000, (200 + Math.Sqrt(s.Fanbase) * 10) * p.Reception / 100 * reach));
                 Progression.Effects.Add(new(p.Id, s.Id, Clock.Now, Clock.Now.AddDays(182), Math.Max(.01, p.Reception / 500)));
                 if (p.Reception >= 75) RecognitionImpact(s, 4d / p.Season);
                 if (p.Reception < 45)

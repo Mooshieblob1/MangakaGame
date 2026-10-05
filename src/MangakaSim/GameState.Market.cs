@@ -103,8 +103,10 @@ public partial class GameState
                 var series = FindSeries(row.SeriesId!.Value)!;
                 var chapter = published[series.Id];
                 series.LastRank = chapter.Rank = row.Rank;
+                // Long runs tire (balance pass 2026-10-05), counted from the series' first magazine chapter.
+                var runMonths = (Clock.Now - series.Chapters.Where(c => c.PublishedAt is not null).Min(c => c.PublishedAt!.Value)).TotalDays / (365.25 / 12);
                 series.Fanbase = FanbaseRules.AfterPublication(series.Fanbase, magazine.Tier, chapter.Quality!.Value,
-                    row.Rank, magazine.CancellationRank, magazine.RosterSize, series.IsIconic);
+                    row.Rank, magazine.CancellationRank, magazine.RosterSize, series.IsIconic, runMonths, FanbaseRules.ChaptersPerMonth(magazine.Cadence));
                 CheckIconic(series);
                 series.CulturalImpact = Math.Min(100, series.CulturalImpact + .05);
                 if (chapter.Quality >= 70 && series.ChaptersPublished - series.LastBreakthroughChapter >= 12 &&

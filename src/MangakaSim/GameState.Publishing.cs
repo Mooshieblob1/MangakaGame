@@ -135,6 +135,10 @@ public partial class GameState
         series.PagesPerChapter = Math.Max(series.PagesPerChapter, CadenceRules.MagazinePages(magazine.Cadence));
         ClearCancellation(series);
         series.LastRank = null;
+        // Readers follow their creator (balance pass 2026-10-05): a new magazine series starts with part of the readers
+        // of the creator's other titles. It never lowers a readership and never stacks across titles.
+        var following = Series.Where(s => s.Id != series.Id && s.LeadPersonId == series.LeadPersonId).Sum(s => s.Fanbase) * FanbaseRules.FollowingShare;
+        series.Fanbase = Math.Max(series.Fanbase, Math.Min(FanbaseRules.ReadershipCeiling, following));
         series.NextChapterDueOverride = offer.FirstIssueClose;
         var open = series.Chapters.FirstOrDefault(c => c.Status != ChapterStatus.Complete);
         if (open is not null)

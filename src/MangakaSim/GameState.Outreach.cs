@@ -1,3 +1,5 @@
+using MangakaSim.Rules;
+
 namespace MangakaSim;
 
 public partial class GameState
@@ -104,14 +106,14 @@ public partial class GameState
             long sold=0;
             foreach(var (s,v) in books)
             {
-                var count=SellStock(s,v,capacity-sold,true); sold+=count; v.CopiesSold+=count; s.Fanbase+=count*.2;
+                var count=SellStock(s,v,capacity-sold,true); sold+=count; v.CopiesSold+=count; s.Fanbase+=FanbaseRules.Saturated(s.Fanbase,count*.2);
                 RecordSales(s,v,count,false);
                 if(sold>=capacity) break;
             }
             b.CopiesSold=sold;
             var promoted=b.SeriesId is {} titleId?FindSeries(titleId):null;
             var readers=promoted is null?0:(int)Math.Floor(capacity*.1);
-            if(promoted is not null)promoted.Fanbase+=readers;
+            if(promoted is not null)promoted.Fanbase+=FanbaseRules.Saturated(promoted.Fanbase,readers);
             StudioMessage($"Convention in {b.District}{(promoted is null?"":" · "+promoted.Title)}: {sold} copies sold; {readers} readers reached through promotion; travel ¥{b.TravelCost:N0}, booth ¥{b.Fee:N0}.");
         }
     }

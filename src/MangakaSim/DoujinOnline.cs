@@ -40,7 +40,9 @@ public partial class GameState
         // spec 2026-10-03), so the next Monday is week 2. Older saves first planned on the Monday after listing: same ages.
         var first=World.Receipts.Where(r=>r.AgreementId==listing.Id&&r.VolumeId==book.Id).Select(r=>r.Week).DefaultIfEmpty(Monday(Clock.Now)).Min();
         var age=Math.Max(1,1+(int)((Monday(Clock.Now)-first).TotalDays/7));
-        var demand=SalesRules.DoujinCopies(series.Fanbase,book.AverageQuality,series.IsIconic?1:GenrePopularity(series.Genre),0,age);
+        // A magazine series' old doujin sells to a doujin-sized following, not to every magazine reader (balance pass 2026-10-05).
+        var fans=MagazineHistory(series)?Math.Min(series.Fanbase,SalesRules.DoujinBackCatalogueFans):series.Fanbase;
+        var demand=SalesRules.DoujinCopies(fans,book.AverageQuality,series.IsIconic?1:GenrePopularity(series.Genre),0,age);
         // Small early online audience; later historical adoption expands reach.
         var share=Math.Max(.15,DigitalPreference);
         return (long)Math.Floor(demand*share*(age>8?.1:1)*(1+series.Reach/100)*RivalDemand(series.Genre,book.AverageQuality)*RecognitionLift(series.Id));

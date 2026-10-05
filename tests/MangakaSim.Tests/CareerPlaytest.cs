@@ -284,7 +284,7 @@ public class CareerPlaytest
 
         private void SecondSeries()
         {
-            // "Start a second ongoing series once your team has spare desks."
+            // "Pitch a second ongoing series once your team has spare desks."
             var active = OwnedActive();
             if (active.Count(s => s.Publishing == PublishingStatus.Serialized) != 1 || State.ControlledStaff.Count() < 3) return;
             if (active.Any(s => !s.StandaloneDoujin && s.Publishing is PublishingStatus.Unpublished or PublishingStatus.Pitching or PublishingStatus.Offered)) return;

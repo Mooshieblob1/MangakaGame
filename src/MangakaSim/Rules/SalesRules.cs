@@ -32,6 +32,8 @@ public static class SalesRules
     public static long CommercialCopies(double fans, double quality, double trend, int week, int tier = 1) => week is < 1 or > 52 ? 0 :
         Copies(TierDemand(tier) * (week == 1 ? fans * .6 * (quality / 70) * trend : fans * .04 * (quality / 70) * Math.Pow(.93, week - 2)));
     public const double CommercialFanGain = .03;
+    // Readers a magazine series' old doujin can still reach through download shops (balance pass 2026-10-05).
+    public const double DoujinBackCatalogueFans = 20000;
     // Publishers pay royalties on copies printed: a first print run at release, then each reprint.
     public const long FirstPrintRun = 10000;
     public static long Rung(long copiesSold)
