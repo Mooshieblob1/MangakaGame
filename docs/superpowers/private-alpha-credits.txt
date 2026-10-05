@@ -4,8 +4,9 @@ Game direction and Helper-Chan references supplied by the project owner.
 Helper-Chan portraits and the desk illustration use the supplied references;
 expression variants and manga showcase atlases were generated for this project.
 Customizable chibi employees, furniture and environments use original procedural geometry. Fixed Helper-Chan and parent models were generated and rigged with Tripo from the owner-supplied references and generated chibi adaptations. Their animation clips were authored locally for this project.
-Room tone, pencil activity and soft interface effects are original procedural
-audio authored for this project.
+Sound effects: CC0 (public domain) recordings, cut and levelled for this project.
+Interface click and page turns from Kenney (kenney.nl). Pencil strokes, phone
+buzz and room tone from Freesound users fthgurdy, sirrealist2, Breviceps and mzui.
 Music: AI-generated with Suno (Pro plan, which grants commercial use) from
 prompts written for this project. No voice recordings are bundled.
 Logo and title screen art: AI-generated with NovelAI Diffusion V5 from prompts by

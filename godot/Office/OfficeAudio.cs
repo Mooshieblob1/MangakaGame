@@ -3,10 +3,16 @@ using Godot;
 
 namespace MangakaGame;
 
-/// <summary>Original procedural room tone, pencil strokes and soft interface cues, timed in real seconds.</summary>
+/// <summary>Room tone, pencil strokes, page turns, interface clicks and the phone buzz, timed in real seconds.
+/// The sounds are CC0 recordings in Assets/Sfx (Q67, see its README); the procedural waves stand in if a file is missing.</summary>
 public partial class OfficeAudio : Node
 {
+    private const string Folder="res://Assets/Sfx/";
     private readonly AudioStreamPlayer _room=new(),_activity=new(),_effect=new(),_buzz=new();
+    private AudioStream[] _strokes=[],_pages=[];
+    // Presentation only: picks which stroke plays next and never touches the simulation's random numbers.
+    private readonly Random _pick=new(1996);
+    private AudioStream? _lastActivity;
     private double _elapsed,_nextActivity,_nextEffect;
     private bool _active,_effectsOn=true;
     public int EffectCount { get; private set; }
@@ -16,7 +22,11 @@ public partial class OfficeAudio : Node
     public override void _Ready()
     {
         AddChild(_room);AddChild(_activity);AddChild(_effect);AddChild(_buzz);
-        _room.Stream=Wave(12,0,true);_activity.Stream=Wave(.24,1);_effect.Stream=Wave(.13,2);_buzz.Stream=Wave(.42,3);
+        var room=Sound("room-tone");if(room is AudioStreamOggVorbis ogg)ogg.Loop=true;
+        _room.Stream=room??Wave(12,0,true);_effect.Stream=Sound("click")??Wave(.13,2);_buzz.Stream=Sound("phone-buzz")??Wave(.42,3);
+        _strokes=Sounds("pencil-0",5);_pages=Sounds("page-0",2);
+        if(_strokes.Length==0)_strokes=[Wave(.24,1)];
+        _activity.Stream=_strokes[0];
         foreach (var player in new[] { _room, _activity, _effect, _buzz }) player.Bus = "Effects";
     }
     public void Update(double delta,bool active,bool working,double ambience,double effects)
@@ -30,10 +40,25 @@ public partial class OfficeAudio : Node
         if((!active||effects==0)&&_previewLeft<=0){_effect.Stop();_buzz.Stop();}
         _effectsOn=effects>0;
         if(active&&working&&ambience>0&&_elapsed>=_nextActivity)
-        {_activity.Play();ActivityCount++;_nextActivity=_elapsed+7.5;}
+        {_activity.Stream=NextActivity();_activity.Play();ActivityCount++;_nextActivity=_elapsed+7.5;}
         if(!active||!working)_nextActivity=_elapsed+3;
     }
-    /// <summary>A pencil scratch at the current level, for the Sound effects slider.</summary>
+    /// <summary>A pencil stroke most of the time and now and then a page turn, never the same sound twice running.</summary>
+    private AudioStream NextActivity()
+    {
+        var pool=_pages.Length>0&&_pick.Next(5)==0?_pages:_strokes;
+        var next=pool[_pick.Next(pool.Length)];
+        if(next==_lastActivity&&pool.Length>1)next=pool[(Array.IndexOf(pool,next)+1)%pool.Length];
+        return _lastActivity=next;
+    }
+    private static AudioStream? Sound(string name)=>ResourceLoader.Exists(Folder+name+".ogg")?ResourceLoader.Load<AudioStream>(Folder+name+".ogg"):null;
+    private static AudioStream[] Sounds(string prefix,int count)
+    {
+        var found=new System.Collections.Generic.List<AudioStream>();
+        for(int i=1;i<=count;i++)if(Sound(prefix+i) is { } sound)found.Add(sound);
+        return found.ToArray();
+    }
+    /// <summary>The interface click at the current level, for the Sound effects slider.</summary>
     public void Preview() { if (!_effect.Playing) _effect.Play(); _previewLeft = .3; }
     private double _previewLeft;
     public void Cue()

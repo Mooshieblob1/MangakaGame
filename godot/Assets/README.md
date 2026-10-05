@@ -6,11 +6,12 @@ Generation prompts, source output locations and runtime paths are recorded in
 
 ## Audio
 
-`Office/OfficeAudio.cs` generates original low room tone, pencil strokes and soft
-interface effects as PCM at runtime. No external samples, music, voice recordings
-or audio service are used. Playback budgets use real elapsed seconds; simulation
-speed never changes pitch or increases the activity-cue rate. Ambience/effects
-volumes are saved with the career and can each be muted.
+Sound effects are CC0 recordings in `Sfx/`, cut and levelled by
+`scripts/convert-sfx.ps1`; sources and licences are in `Sfx/README.md`.
+`Office/OfficeAudio.cs` plays them and falls back to its original procedural
+waves if a file is missing. Music tracks are in `Music/` (see its README).
+Playback budgets use real elapsed seconds; simulation speed never changes pitch
+or increases the activity-cue rate. No voice recordings or audio service are used.
 
 ## Helper-Chan
 
