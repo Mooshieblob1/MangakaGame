@@ -434,6 +434,11 @@ playtesting.
   progression, journey, management and `--steam-smoke` pass; no package
   built. Next for this item: app ID, Steamworks entries and 50 icons. Record:
   `docs/superpowers/steam-achievements-completion.md`.
+- **Ten-year balance playtest (2026-10-05):** the guided playtest now runs to
+  2006 and follows the goals board. Found an online-download runaway (seed 42
+  reaches about ¥48 trillion), struggling careers stuck in a yearly
+  cancellation loop, and an empty middle game for successful ones. Four fixes
+  proposed, none made yet. Record: `docs/superpowers/ten-year-balance-findings.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 
