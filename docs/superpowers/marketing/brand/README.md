@@ -12,7 +12,7 @@ One thickened to match the logo's heavy letters.
   (`#2e2426` to `#221a1c`), sized to stay whole when cropped to a circle.
 - `md-monogram-512/256/128/32-dark.png`: smaller copies of the dark version.
 - `md-monogram-options.png`: the three layouts offered (A side by side, chosen
-  by default; B stacked like the logo; C interlocked), circle-cropped at 512,
+  by Blob on 2026-10-05; B stacked like the logo; C interlocked), circle-cropped at 512,
   128, 64 and 32 px.
 
 Regenerate with `python scripts/make-md-monogram.py OUT_DIR a` (Pillow and
