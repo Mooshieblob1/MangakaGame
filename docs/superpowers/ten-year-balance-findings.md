@@ -195,3 +195,84 @@ pulling research points or training forward from Tier 3. Recommendation: make
 fixes 1 to 4, re-run the ten-year playtest, and only then decide whether Aki's
 story milestones (the cheapest Tier 3 item, which would fill the quiet years
 with texts) are still needed.
+
+## Re-run after the four fixes (2026-10-05)
+
+The coordinator approved all four fixes (Blob gave it discretion), and they are
+made on branch `claude/project-thread-kpkoc9`, not on `main`:
+
+1. Fan gains shrink towards a 10 million readership ceiling
+   (`FanbaseRules.Saturated`). A magazine series' old doujin downloads reach at
+   most a 20,000-reader following and add fans at the collected-volume rate.
+2. A newly accepted magazine series starts with 30% of the readers of the
+   creator's other titles, without lowering or stacking readerships.
+3. After about 70 months a series joins readers more slowly (down to a quarter
+   of the usual gain) and loses up to 0.6% more a month, at the same pace per
+   month for weekly and monthly magazines.
+4. "Run two series at once" counts only titles running in magazines.
+
+Verified by: 797 simulation tests passing (seven new ones in
+`TenYearBalanceTests.cs`), and the same six ten-year careers re-run. Reports
+are kept locally in `TestResults/career-playtest/ten-year-fixes-2026-10-05/`.
+No save format change.
+
+| Career | Business, April 2006 | Savings, April 2006 | Cancellations | Left the Serialized chapter |
+|---|---|---|---|---|
+| Seed 0 Standard | ¥1.04 million to ¥5.24 million | ¥11.4 million to ¥16.0 million | 7 to 5 | December 2005 to November 2003 |
+| Seed 1 Standard | ¥63.3 million to ¥48.8 million | ¥32.5 million to ¥36.6 million | 1 to 1 | October 1998 to September 1998 |
+| Seed 42 Standard | ¥48.6 trillion to ¥1.96 billion | ¥12.2 trillion to ¥518 million | 1 to 1 | February 1999 to July 1999 |
+| Seed 7 Standard | ¥1.12 million to ¥4.63 million | ¥12.8 million to ¥18.9 million | 8 to 8 | Never to August 2005 |
+| Seed 7 Relaxed | ¥121.6 million to ¥54.3 million | ¥49.1 million to ¥38.3 million | 0 to 1 | November 1997 to December 1997 |
+| Seed 7 Challenging | ¥0.02 million to ¥5.20 million | ¥5.6 million to ¥10.9 million | 9 to 8 | Never to November 2004 |
+
+All six careers pass the save round trip and full replay check.
+
+### What changed
+
+- **The runaway is gone.** Seed 42's top series levels off at about 1.6 million
+  readers (1.55 million in 2004, 1.60 million in 2005) instead of 94 billion.
+  It is still a weekly mega-hit earning about ¥500 million a year in reprint
+  royalties, which is plausible for a hit of that size but leaves money
+  meaningless for that career.
+- **Hits now peak and fade.** Seed 7 Relaxed peaks at about 254,000 readers in
+  2004 and slips to 245,000 in 2005, with yearly reprint royalties falling from
+  ¥21.0 million to ¥17.0 million. Seed 1 flattens at about 230,000. Final
+  business money roughly halves for both.
+- **Every career now runs two magazine series** at some point (seed 7
+  Relaxed from early 1998, seed 1 from late 1998), so that path is now tested.
+- **Struggling careers can climb, but too late.** All three now escape the
+  cancellation loop and reach the Legend goal chapter, but only after 7.5 to 9.5
+  years, in November 2003, November 2004 and August 2005. Cancellations barely
+  fall (5 to 8 instead of 7 to 9). Readers following the creator add up only as
+  cancelled titles pile up, so the escape still depends on outlasting the loop.
+
+### Is the middle game still empty?
+
+Yes, for careers with a hit. From their fifth year seeds 1, 42 and 7 Relaxed
+make 0 to 5 decisions a year, almost all accepting licence offers, with quiet
+stretches of 90 to 285 days and 0 or 1 Helper-Chan texts a year.
+Struggling careers stay busy, but with the same pitch, debut and cancellation
+cycle until they break out.
+
+Two gaps remain: there are few decisions with consequences once a studio
+settles, and nothing large to spend money on.
+
+### Which Tier 3 item would fill it best
+
+Of the three parked items (research or know-how points, staff and Aki training,
+Aki's story milestones), **Aki's story milestones** fit best, if each one asks
+the player a real choice with a cost (time away from the desk, money, a staff
+member's future), spread through the quiet years:
+
+- Training does little while page quality is already 90 to 99 from the start
+  (Aki begins at 95 in every stage), so it would add clicks, not decisions.
+- Research points need something worth buying. Without a money sink they repeat
+  the "nothing to spend on" problem.
+- Story milestones reuse the existing story scenes and Helper-Chan texts
+  (`StoryCommand`), so they are the cheapest of the three, and they put a moment
+  that needs the player into each quiet year.
+
+A smaller tuning question is also open: the struggling careers' climb could be
+made earlier (for example a larger following share or a debut boost for a
+creator's later series). That is a balance call, not a Tier 3 item, and is not
+made.
