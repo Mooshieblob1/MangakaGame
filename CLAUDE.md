@@ -415,6 +415,14 @@ playtesting.
   and about 25 achievements (10 exist), controller and Steam Deck, ten-year
   balance, sound effects, store page and Steam Playtest, hardware testing,
   trailer. Record: `docs/superpowers/alpha-13-build-verification.md`.
+- **Sound effects (2026-10-05, Q67 option 1 "for now"):** ten CC0 recordings
+  from Kenney and Freesound replace the procedural placeholders (room tone,
+  pencil strokes, page turns, click, phone buzz), cut by
+  `scripts/convert-sfx.ps1`, sources in `godot/Assets/Sfx/README.md`. No AI
+  audio, so the Steam AI disclosure is unchanged. Builds clean, alpha and
+  start-up smokes pass; not yet heard in the game. Branch
+  `claude/project-thread-pzzl18`. Record:
+  `docs/superpowers/sound-effects-completion.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 
