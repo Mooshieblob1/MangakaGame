@@ -53,6 +53,8 @@ public partial class DebugMain : Control
 
     public override void _Ready()
     {
+        _steam.Log=text=>{GD.Print("[steam] "+text);LogTimeline(text);};
+        if(!_steam.Start(OS.GetCmdlineUserArgs())){GetTree().Quit();return;}
         if(OS.GetCmdlineUserArgs().Contains("--smoke-test")) ManagementInterface=false;
         var margin = new MarginContainer();
         margin.SetAnchorsPreset(LayoutPreset.FullRect);
@@ -113,6 +115,7 @@ public partial class DebugMain : Control
         if (OS.GetCmdlineUserArgs().Contains("--work-feedback-smoke")) CallDeferred(nameof(RunWorkFeedbackSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--selling-smoke")) CallDeferred(nameof(RunSellingSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--display-smoke")) CallDeferred(nameof(RunDisplaySmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--steam-smoke")) CallDeferred(nameof(RunSteamSmoke));
     }
 
     // Only the title screen plays the title music; the pause menu keeps the career rotation (spec 2026-09-28).
@@ -126,6 +129,7 @@ public partial class DebugMain : Control
         ApplyAudioSettings();
         if(_managementReady)_audio.Update(delta,!_inMenu&&AudioFocused,_speed>0&&!OfficeEditing,AmbienceBalance,1);
         UpdateMusic(delta);
+        _steam.Update(delta);
         UpdateWorkFeedback(delta);
         if (_overnightTarget is not null) TickOvernight(delta);
         else if (_speed > 0)

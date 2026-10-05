@@ -60,6 +60,7 @@ public partial class DebugMain
             DrainUnexpectedErrors();_timeline?.End();
             if(_managementReady)QuitGame();
         }
+        if(what==NotificationPredelete)_steam.Stop();
         if(what==NotificationPredelete&&_errorLogger is not null){OS.RemoveLogger(_errorLogger);_errorLogger=null;}
     }
 }

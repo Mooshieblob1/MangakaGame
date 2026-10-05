@@ -104,14 +104,14 @@ public partial class GameState
         series.CulturalImpact = Math.Min(100, series.CulturalImpact + gain);
         CheckIconic(series);
     }
-    private void MarkMilestone(string key, int entity, string text, bool achievement = true)
+    private void MarkMilestone(string key, int entity, string text, bool achievement = true, bool announce = true)
     {
         bool first = !Progression.Milestones.Any(m => m.Key == key && m.Entity == entity);
         if (first) Progression.Milestones.Add(new(key, entity, Clock.Now, text));
         if (achievement && (entity == ProtagonistPersonId || Series.Any(s => s.Id == entity && s.RightsLeadPersonId == ProtagonistPersonId)) &&
             AchievementDelivery.Eligible(this) && !Progression.Achievements.Any(a => a.Key == key))
             Progression.Achievements.Add(new(key, Clock.Now));
-        if (first && (entity == ProtagonistPersonId || Series.Any(s => s.Id == entity && s.LeadPersonId == ProtagonistPersonId)))
+        if (first && announce && (entity == ProtagonistPersonId || Series.Any(s => s.Id == entity && s.LeadPersonId == ProtagonistPersonId)))
             Emit(EventType.CareerMilestone, text, personId: ProtagonistPersonId);
     }
     private void ProgressionStep()
@@ -128,6 +128,7 @@ public partial class GameState
             if (s.Fanbase >= 1000000) MarkMilestone("readers_million", s.Id, $"A million readers for {s.Title}.");
             if (s.IsIconic) MarkMilestone("iconic_series", s.Id, $"{s.Title} is part of manga history.");
         }
+        CareerAchievementStep();
         var cutoff = Clock.Now.AddDays(-365);
         if (Clock.Now >= Progression.AvailableFrom.AddDays(365) && Clock.Now >= ControlledBusiness.FoundedAt.AddDays(365) &&
             ControlledBusiness.Account.Entries.Where(e => e.Time >= cutoff && (e.Kind is AccountEntryKind.Publishing or AccountEntryKind.LicenseIncome or AccountEntryKind.Expense or AccountEntryKind.Salary ||

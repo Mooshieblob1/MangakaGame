@@ -1,0 +1,5 @@
+Steamworks.NET 2025.164.1 (Steamworks SDK 1.64), Windows x64 files from the official standalone release:
+https://github.com/rlabrecque/Steamworks.NET/releases/tag/2025.164.1
+Steamworks.NET-Standalone_2025.164.1.zip sha256 9412348cc404563be5a43a28347cfeda3c679ee044a14d87a507ed2d796a537d
+Steamworks.NET.dll is MIT licensed (LICENSE.txt). steam_api64.dll is Valve's redistributable from the Steamworks SDK.
+Downloaded 2026-10-05 with Blob's OK (Q68).

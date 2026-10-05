@@ -7,7 +7,9 @@ namespace MangakaGame;
 
 public partial class DebugMain
 {
-    private readonly AchievementSession _achievementSink = new(new NoOpAchievementSink());
+    private readonly SteamAchievements _steam = new();
+    private AchievementSession? _achievements;
+    private AchievementSession AchievementSink => _achievements ??= new(_steam);
     private void ProgressionAction(ICommand command)
     {
         _state.Apply(command); _dirty = true; BuildManagementPage(); RefreshManagement();
@@ -116,8 +118,8 @@ public partial class DebugMain
     private void BuildLegacy()
     {
         Words(_sideContent,"Career journal",26);
-        Words(_sideContent,AchievementDelivery.Eligible(_state)?"Steam achievement eligibility: eligible. Platform integration is not connected in this build.":"Steam achievements disabled for this save. Career milestones and stories remain available.");
-        foreach(var m in _state.Progression.Milestones.AsEnumerable().Reverse().Take(60))Words(Card(m.Key.Replace('_',' '),$"{m.At:d MMM yyyy}"),m.Text);
+        Words(_sideContent,!AchievementDelivery.Eligible(_state)?"Steam achievements disabled for this save. Career milestones and stories remain available.":_steam.Connected?"Steam achievements are on for this save.":"This save can earn Steam achievements. They reach Steam the next time you play with Steam running.");
+        foreach(var m in _state.Progression.Milestones.AsEnumerable().Reverse().Take(60))Words(Card(ProgressionCatalog.Achievements.FirstOrDefault(a=>a.Key==m.Key)?.Name??m.Key.Replace('_',' '),$"{m.At:d MMM yyyy}"),m.Text);
     }
     private Func<DifficultyCommand> DifficultyControls(Control parent, bool newGame)
     {

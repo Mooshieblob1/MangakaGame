@@ -67,6 +67,12 @@ Proposed additions (draft, to confirm when Tier 2 starts):
 `comeback` depends on cancellation being reachable, which is a Tier 1 balance
 fix from the playtest findings.
 
+**Q69 (decided 2026-10-05): the draft above with two gentler targets.**
+`deadline_streak` needs ten chapters in a row instead of twelve, and
+`copies_10m` became `copies_1m` (1,000,000 career copies), since balance past
+year five is untested. Steamworks.NET was chosen as the library (Q68). Record:
+[steam-achievements-completion.md](../steam-achievements-completion.md).
+
 ### Q4. Career length: open-ended, balanced for 1996 to 2006 (decided 2026-09-26)
 
 The career stays open-ended through the dated timeline to 2025 and the simulated

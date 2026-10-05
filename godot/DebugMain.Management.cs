@@ -280,7 +280,7 @@ public partial class DebugMain
         if(_side.Visible&&_page=="Print doujin")_refreshPrintPanel?.Invoke();
         if(_side.Visible&&_page=="Conventions")_refreshConvention?.Invoke();
         if(_side.Visible&&_page=="Sell online")_refreshOnlinePanel?.Invoke();
-        AchievementDelivery.Deliver(_state,_achievementSink);
+        AchievementDelivery.Deliver(_state,AchievementSink);
         RefreshSpeedFeedback();
         RefreshCompactHeader();
         RefreshMoneyHeader();

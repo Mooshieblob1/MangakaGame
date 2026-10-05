@@ -26,6 +26,10 @@ if($process.ExitCode -ne 0) { throw "Export failed; see $log and $err" }
 # The step-by-step guide (docs/superpowers/private-alpha-testing.md) is left out while fresh players test the game's own guidance (T1.10).
 Copy-Item -LiteralPath (Join-Path $repo 'docs/superpowers/private-alpha-credits.txt') -Destination (Join-Path $output 'CREDITS.txt')
 Copy-Item -LiteralPath (Join-Path $repo 'godot/Assets/Fonts/OFL-LilitaOne.txt') -Destination (Join-Path $output 'OFL-LilitaOne.txt')
+# Steam achievements (Q68): Valve's redistributable sits beside the executable, where Steam and .NET both look for it.
+$steamworks = Join-Path $repo 'godot/ThirdParty/Steamworks.NET'
+Copy-Item -LiteralPath (Join-Path $steamworks 'steam_api64.dll') -Destination $output
+Copy-Item -LiteralPath (Join-Path $steamworks 'LICENSE.txt') -Destination (Join-Path $output 'LICENSE-Steamworks.NET.txt')
 # T1.10 fresh-player kit: tester instructions, questionnaire and the practice career.
 $kit = Join-Path $repo 'docs/superpowers/fresh-player-kit'
 Copy-Item -LiteralPath (Join-Path $kit 'READ ME FIRST.txt') -Destination $output

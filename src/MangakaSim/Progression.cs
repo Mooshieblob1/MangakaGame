@@ -126,8 +126,9 @@ public sealed class ProgressionState
     [JsonRequired] public Dictionary<string, double> AnnualImpact { get; set; } = new();
 }
 
-public interface IAchievementSink { void Unlock(string key); }
-public sealed class NoOpAchievementSink : IAchievementSink { public void Unlock(string key) { } }
+/// <summary>Sends one unlock to the platform. Returns false when the platform could not take it yet, so it is retried.</summary>
+public interface IAchievementSink { bool Unlock(string key); }
+public sealed class NoOpAchievementSink : IAchievementSink { public bool Unlock(string key) => true; }
 public static class AchievementDelivery
 {
     public static bool Eligible(GameState state) => state.Progression.VerifiedOrigin && !state.Progression.EverSandbox &&
@@ -147,11 +148,12 @@ public sealed class AchievementSession : IAchievementSink
     private readonly HashSet<string> _sent = new();
     private readonly IAchievementSink _sink;
     public AchievementSession(IAchievementSink sink) => _sink = sink;
-    public void Unlock(string key)
+    public bool Unlock(string key)
     {
-        if (_sent.Contains(key)) return;
-        _sink.Unlock(key);
+        if (_sent.Contains(key)) return true;
+        if (!_sink.Unlock(key)) return false;
         _sent.Add(key);
+        return true;
     }
     public void AccountChanged() => _sent.Clear();
 }

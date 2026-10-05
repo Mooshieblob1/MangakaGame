@@ -423,6 +423,17 @@ playtesting.
   start-up smokes pass; not yet heard in the game. Branch
   `claude/project-thread-pzzl18`. Record:
   `docs/superpowers/sound-effects-completion.md`.
+- **Steam achievements (2026-10-05, Q68 Steamworks.NET, Q69 list):** 25
+  achievements (the ten older ones plus the Q3 draft, with ten on-time chapters
+  and 1,000,000 career copies as the gentler targets), checked daily on the
+  save so older saves catch up, quiet in the inbox. `godot/Platform/SteamAchievements.cs`
+  sends them to Steam; `--steam` connects to Valve's test app 480 in
+  development, and `ReleaseAppId` stays 0 until the Steam Direct fee is paid,
+  so packages never touch Steam. Steamworks.NET 2025.164.1 and
+  `steam_api64.dll` live in `godot/ThirdParty/Steamworks.NET`. Unit tests,
+  progression, journey, management and `--steam-smoke` pass; no package
+  built. Next for this item: app ID, Steamworks entries and 50 icons. Record:
+  `docs/superpowers/steam-achievements-completion.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

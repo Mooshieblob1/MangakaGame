@@ -9,4 +9,11 @@
     <ProjectReference Include="../src/MangakaSim/MangakaSim.csproj" />
     <EmbeddedResource Include="Tools/screenshot_avif.py" LogicalName="MangakaGame.ScreenshotAvif" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Steam achievements (Q68): Steamworks.NET with Valve's steam_api64.dll beside the game assemblies. -->
+    <Reference Include="Steamworks.NET">
+      <HintPath>ThirdParty/Steamworks.NET/Steamworks.NET.dll</HintPath>
+    </Reference>
+    <None Include="ThirdParty/Steamworks.NET/steam_api64.dll" Link="steam_api64.dll" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

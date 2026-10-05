@@ -39,7 +39,7 @@ public class ProgressionTests
         s.Progression.Projects.Add(p); return (s, p);
     }
     private sealed class Recorder : IAchievementSink
-    { public List<string> Keys { get; } = new(); public void Unlock(string key) => Keys.Add(key); }
+    { public List<string> Keys { get; } = new(); public bool Unlock(string key) { Keys.Add(key); return true; } }
 
     [Theory]
     [InlineData(SandboxAssist.PersonalFunds)] [InlineData(SandboxAssist.BusinessFunds)]
@@ -245,6 +245,15 @@ public class ProgressionTests
         AchievementDelivery.Deliver(s,session);AchievementDelivery.Deliver(s,session);Assert.Equal(["MKG_FIRST_PUBLICATION"],recorder.Keys);
         s.Apply(new DifficultyCommand(CareerDifficulty.Sandbox));session.AccountChanged();AchievementDelivery.Deliver(s,session);
         Assert.Single(recorder.Keys);RoundTrip(s);
+    }
+    private sealed class FlakySink : IAchievementSink
+    { public bool Ready; public List<string> Keys { get; } = new(); public bool Unlock(string key) { Keys.Add(key); return Ready; } }
+    [Fact] public void Achievement_session_retries_unlocks_the_platform_could_not_take()
+    {
+        var sink=new FlakySink();var session=new AchievementSession(sink);
+        Assert.False(session.Unlock("MKG_FIRST_SALE"));Assert.False(session.Unlock("MKG_FIRST_SALE"));
+        sink.Ready=true;Assert.True(session.Unlock("MKG_FIRST_SALE"));Assert.True(session.Unlock("MKG_FIRST_SALE"));
+        Assert.Equal(3,sink.Keys.Count);
     }
     [Fact] public void Consultation_consumes_real_manga_work_time_without_double_bookings()
     {
