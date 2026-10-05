@@ -33,11 +33,19 @@ AI audio is used, so the Steam AI disclosure list is unchanged.
 - Source inspection and measurement of the ten files with ffmpeg (length, mean
   and peak loudness).
 - A listening page for the user: https://claude.ai/artifact/3VnAyqDwdG5GMxwvNu4Rfa
-- Not yet done: the Godot import of the new files, a compiled build, the
-  `--alpha-smoke` and `--startup-smoke` checks, and hearing them in the game.
-  These need the user's OK to build (project instruction 10).
+- Build authorized by the user 2026-10-05. Because other threads had unfinished
+  work in the shared checkout (Steamworks files without their package), the
+  branch was cloned into a clean folder and checked there: Godot import of the
+  ten files, `dotnet build MangakaGame.sln -warnaserror` with 0 warnings and
+  0 errors, `--alpha-smoke` 48 checks passed (including the new "Recorded CC0
+  sound effects load, room tone loops" check) and `--startup-smoke` 17 checks
+  passed. These are automated headless checks.
+- Not yet done: hearing the sounds inside the running game. The `.ogg.import`
+  files are git-ignored like the music's, so each checkout runs the Godot import
+  step before playing or packaging.
 
 ## Next
 
-The user listens and approves or swaps individual sounds; then, with an OK to
-build, import, build, run the audio smokes and listen in the game.
+The user listens (listening page, then in the game) and approves or swaps
+individual sounds; swaps go through `scripts/convert-sfx.ps1`. Merge the branch
+into main when approved.
