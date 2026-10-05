@@ -1,7 +1,8 @@
 # Mangaka Days marketing plan
 
-Date: 2026-10-05 (all times GMT+8). Status: proposal for Blob to review. Nothing
-has been posted, no accounts were created and no money was spent.
+Date: 2026-10-05 (all times GMT+8). Status: timeline decided by Blob on
+2026-10-05 (June 2027 Next Fest, option 1); the rest is a proposal. Nothing has
+been posted, no accounts were created and no money was spent.
 
 Made with the marketing plugin's `competitive-brief`, `campaign-plan` and
 `draft-content` skills, with a `brand-review` pass on the sample posts. Two
@@ -216,7 +217,7 @@ starts showing on Steam's Popular Upcoming list
 Soon page is usually advised 6 to 12 months before release
 ([Steam Page Analyzer](https://www.steampageanalyzer.com/blog/how-many-wishlists-before-launch)).
 
-### Recommended: June 2027 Next Fest, launch late July 2027
+### Decided: June 2027 Next Fest, launch late July 2027
 
 | When (GMT+8) | What | Channel | Cost | Depends on |
 |---|---|---|---|---|
@@ -235,7 +236,7 @@ Soon page is usually advised 6 to 12 months before release
 | 25 Jun to 9 Jul 2027 | Steam Summer Sale. Don't launch inside it | | | |
 | Proposed 23 Jul 2027, 01:00 (22 Jul 10:00 Pacific) | **Early Access launch at US$9.99.** Launch post everywhere, creator keys out a week before, Discord launch event | All | Free | Launch build, Steam review of the build |
 
-### Faster option: February 2027 Next Fest, launch April 2027
+### Not chosen: February 2027 Next Fest, launch April 2027
 
 Page public by 1 Dec 2026, register by **11 Jan 2027, 15:59**, all fest
 materials in by 9 Feb (8 Feb Pacific), fest **23 Feb 02:00 to 2 Mar 02:00**, then launch in
@@ -414,8 +415,9 @@ running table, and drop channels that bring nothing after a month.
 
 ## 11. What Blob decides
 
-1. **Timeline:** June 2027 Next Fest and a late July launch (recommended), or
-   the faster February fest and April launch.
+1. **Timeline:** decided 2026-10-05, option 1: Steam page public by
+   4 Dec 2026, June 2027 Next Fest with a demo, launch proposed for
+   23 Jul 2027.
 2. **When to pay the US$100 Steam fee:** recommended at the point the Steam
    integration thread needs a real app ID, since the same app serves the page.
 3. **Claiming the handles:** only Blob can create the accounts; it's free and
