@@ -223,7 +223,7 @@ Soon page is usually advised 6 to 12 months before release
 | Now to end of Oct 2026 | Claim @mangakadays on Bluesky, X, TikTok, YouTube, Instagram and a Reddit account. Set up a small Discord. Start a clip library (hyperlapse days, first sale, sparkles, PHS texts) | Owned | Free | Nothing |
 | From 10 Oct 2026, every Saturday | #ScreenshotSaturday post with a real capture | Bluesky, X | Free | Clip library |
 | Oct to Nov 2026 | Store art (NovelAI, per the [store art brief](../store-art-brief.md)), 5+ screenshots, trailer v1 (Q9), store text from section 7 | Steam | Free | Tier 1 visuals final (done) |
-| When Steamworks needs a real app ID | Pay the US$100 Steam Direct fee, create the app. The same app covers the page, Playtest, the demo and achievements | Steam | US$100, refunded after US$1,000 earned | Blob's go-ahead |
+| By about 16 Nov 2026, as late as is safe (Blob, 2026-10-05) | Pay the US$100 Steam Direct fee and create the app. Leaves time for Valve's account checks (identity, tax, bank) and the page review before 4 Dec. Until then, Steam integration keeps using the free test app 480. The same app later covers the page, Playtest, the demo and achievements | Steam | US$100, refunded after US$1,000 earned | Blob's go-ahead |
 | About a week before the page goes public | IP Australia class 9 filing, as already planned | Legal | Filing fee | Final name check |
 | By 4 Dec 2026 | **Coming Soon page public.** Announce on Reddit (r/tycoon first), Bluesky, X, Discord, short clip. Page live before the Winter Sale (18 Dec 2026 to 5 Jan 2027) when shoppers browse | Steam, all | Free | Valve's page review takes a few days |
 | Dec 2026 to Feb 2027 | **Steam Playtest** for stranger testing (T1.10 moved to Tier 2). Invite Discord members. Monthly devlog event on Steam | Steam, Discord | Free | App exists |
@@ -419,8 +419,9 @@ running table, and drop channels that bring nothing after a month.
 1. **Timeline:** decided 2026-10-05, option 1: Steam page public by
    4 Dec 2026, June 2027 Next Fest with a demo, launch proposed for
    23 Jul 2027.
-2. **When to pay the US$100 Steam fee:** recommended at the point the Steam
-   integration thread needs a real app ID, since the same app serves the page.
+2. **When to pay the US$100 Steam fee:** decided 2026-10-05, as late as is
+   safe: about 16 Nov 2026. If money is still short then, the page date
+   slips with it, at the cost of some wishlist weeks.
 3. **Claiming the handles:** only Blob can create the accounts; it's free and
    worth doing this week.
 4. **AI-assisted code and text:** decided 2026-10-05, disclose it (section 4).
