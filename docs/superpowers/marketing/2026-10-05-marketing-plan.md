@@ -422,6 +422,6 @@ running table, and drop channels that bring nothing after a month.
 2. **When to pay the US$100 Steam fee:** decided 2026-10-05, as late as is
    safe: about 16 Nov 2026. If money is still short then, the page date
    slips with it, at the cost of some wishlist weeks.
-3. **Claiming the handles:** only Blob can create the accounts; it's free and
-   worth doing this week.
+3. **Claiming the handles:** done 2026-10-05. Blob parked accounts on TikTok,
+   X, Bluesky, YouTube and Instagram. Nothing is posted yet.
 4. **AI-assisted code and text:** decided 2026-10-05, disclose it (section 4).
