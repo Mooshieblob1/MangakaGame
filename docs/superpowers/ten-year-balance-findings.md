@@ -276,3 +276,43 @@ A smaller tuning question is also open: the struggling careers' climb could be
 made earlier (for example a larger following share or a debut boost for a
 creator's later series). That is a balance call, not a Tier 3 item, and is not
 made.
+
+## Re-run with the first three story milestones (2026-10-06)
+
+Blob chose to implement Aki's story milestones (2026-10-05) and the first three
+are built on branch `claude/project-thread-kpkoc9`: the final arc, a bigger
+magazine calls, and an assistant who wants to debut (spec
+`specs/2026-10-05-aki-story-milestones-design.md`). The balance fixes above were
+merged to `main` first (`b335443`, after 805 simulation tests passed on the
+combined code). With the milestones, 817 simulation tests pass and the whole
+solution builds without warnings. The milestone card has not been checked on
+screen yet.
+
+The playtest answers each milestone with the first answer on even seeds (0, 42)
+and the second on odd seeds (1, 7).
+
+| Career | Milestones met | Decisions a year, years 5 to 10 (before) | Longest quiet stretch, years 5 to 10 (before) |
+|---|---|---|---|
+| Seed 1 Standard | debut (wait), final arc four times (keep running) | 2 to 7 (1 to 4) | 92 to 271 days (92 to 271) |
+| Seed 42 Standard | debut (back it), final arc twice (plan the ending), bigger magazine (accept) | 2 to 5 (0 to 4) | 115 to 246 days (90 to 285) |
+| Seed 7 Relaxed | bigger magazine (stay loyal), debut (wait), final arc three times (keep running) | 0 to 4 (0 to 3) | 150 to 275 days (151 to 275) |
+| Seeds 0, 7 Standard | one debut each | unchanged in kind | unchanged in kind |
+| Seed 7 Challenging | none (never settles until 2005) | unchanged | unchanged |
+
+- Hit careers make a little more use of their middle years, and planning an
+  ending works as intended: seed 42's runaway hit ends, and the business ends
+  at ¥1.11 billion instead of ¥1.96 billion.
+- The target (at least four decisions a year after year five and no quiet
+  stretch past about 150 days) is **not met**. Only the final arc can recur, and
+  the other two happen once per career, so the quiet years return once they
+  are used.
+- Struggling careers are not interrupted, as designed.
+- Seed 42 was re-run alone to confirm its save round trip and replay check
+  pass with the milestones (the six-career run stopped before recording its
+  checks).
+
+
+Recommended next step: build the remaining three milestones (teaching, an
+overseas convention, the parents' house) and let some recur (a new assistant
+debut every two years or so, the bigger magazine again after a loyalty
+period), then re-run.

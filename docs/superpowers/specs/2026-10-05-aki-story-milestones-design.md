@@ -1,6 +1,6 @@
 # Aki's story milestones: design
 
-Date: 2026-10-05. Status: draft for review. Not implemented, not approved.
+Date: 2026-10-05. Status: approved by Blob 2026-10-05. Milestones 1 to 3 implemented 2026-10-06 on branch `claude/project-thread-kpkoc9`; 4 to 6 not yet.
 
 Background: the ten-year balance pass
 (`docs/superpowers/ten-year-balance-findings.md`) found the middle game empty
