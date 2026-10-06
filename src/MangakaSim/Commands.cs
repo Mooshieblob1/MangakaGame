@@ -12,6 +12,7 @@ namespace MangakaSim;
 [JsonDerivedType(typeof(AdoptManuscriptCommand), "AdoptManuscript")]
 [JsonDerivedType(typeof(LicenseCommand), "License")]
 [JsonDerivedType(typeof(StoryCommand), "Story")]
+[JsonDerivedType(typeof(MilestoneCommand), "Milestone")]
 [JsonDerivedType(typeof(TimelineCommand), "Timeline")]
 [JsonDerivedType(typeof(StudioActionCommand), "StudioAction")]
 [JsonDerivedType(typeof(CreateSeriesCommand), "CreateSeries")]

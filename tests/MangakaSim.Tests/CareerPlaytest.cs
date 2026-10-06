@@ -240,6 +240,13 @@ public class CareerPlaytest
             var owned = State.Series.Where(s => s.BusinessId == State.ControlledBusinessId).ToArray();
             if (owned.Length == 0) { if (Try("Create doujin", new CreateDoujinCommand("First pages", "adventure"))) Mark("First doujin created"); return; }
 
+            // Story milestones (spec 2026-10-05): even seeds take the first answer, odd seeds the second.
+            if (State.PendingMilestone is { } milestone)
+            {
+                var answer = _seed % 2 == 0 ? 0 : 1;
+                if (Try("Story milestone", new MilestoneCommand(milestone.Id, answer)))
+                { Mark("First story milestone"); Note($"Story milestone: {milestone.Title}. Answered \"{(answer == 0 ? milestone.First : milestone.Second)}\"."); }
+            }
             FundBusiness();
             SellBooks(owned);
             // After the first sale the player does what Helper-Chan's latest message asks, nothing more.

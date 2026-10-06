@@ -66,6 +66,7 @@ public partial class GameState
                     Emit(EventType.ChapterPublished, $"{series.Title} ch.{chapter.Number} published in {magazine.Name}.", series.Id, chapter.Number,
                         context: new(MagazineId: magazine.Id, Amount: amount));
                     published[series.Id] = chapter;
+                    CountFinalArcChapter(series);
                     CollectCommercial(series, magazine.ChaptersPerVolume);
                 }
                 else
@@ -129,6 +130,7 @@ public partial class GameState
             Emit(EventType.RankingPublished, $"{magazine.Name} rankings published" + (best is null ? "." : $"; studio best #{best}."),
                 context: new(MagazineId: magazine.Id, Rank: best));
             foreach (var series in competitors) CancellationStep(series, magazine, grace[series.Id]);
+            EndFinishedArc(competitors);
             foreach (var filler in market.Fillers.OrderBy(f => f.Id).ToArray())
             {
                 // Keep the established per-slot market draw; historical outcomes use their own timeline.

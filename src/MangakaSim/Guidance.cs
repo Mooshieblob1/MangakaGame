@@ -105,6 +105,11 @@ public static class CareerGuidance
     {
         if (state.Control != ControlMode.OwnerDirector)
             return new("employed", "Settle into your studio", "You work for another studio now.\nKeep your chapters on schedule and review your team in Staff.", "staff");
+        // A waiting story milestone leads her texts until it is answered (spec 2026-10-05).
+        if (state.PendingMilestone is { } decision)
+            return new($"milestone:{decision.Id}", decision.Title, $"A decision is waiting: {decision.Title}\n" +
+                "Open it from my card in the office or in Help. I wrote down what each choice costs.\n" +
+                $"Please decide by {state.Milestones.DueAt:d MMM yyyy}. After that I'll pick the safer choice.", "help");
         var active = owned.Where(s => s.Status == SeriesStatus.Active).ToArray();
         var offered = active.FirstOrDefault(s => s.Publishing == PublishingStatus.Offered && s.PendingOffer is not null);
         if (offered is not null)
@@ -258,7 +263,8 @@ public static class CareerGuidance
         return state.PublisherCatalog.Magazines.Select(m => new PitchOutlook(m,
                 Math.Min(.95, PitchRules.Chance(m.Tier, quality, reputation, series.IsIconic ? 1 : m.Affinity(genre), trend) * state.PitchFactor(series.BusinessId) + recognition +
                     (series.BusinessId == state.ControlledBusinessId && state.Goals?.PitchBoost == true ? .1 : 0)),
-                series.PitchCooldowns.TryGetValue(m.Id, out var until) && until > state.Clock.Now ? until : null))
+                series.PitchCooldowns.TryGetValue(m.Id, out var until) && until > state.Clock.Now ? until :
+                    series.BusinessId == state.ControlledBusinessId ? state.MilestoneClosed(m.Id) : null))
             .OrderByDescending(o => o.Open).ThenByDescending(o => o.Chance).ThenBy(o => o.Magazine.Id).ToArray();
     }
 
@@ -438,7 +444,7 @@ public static class CareerGuidance
     {
         EventType.IndustryDecision, EventType.SerializationOffered, EventType.PitchRejected, EventType.EditorRedoRequested,
         EventType.CancellationWarning, EventType.SeriesCancelled, EventType.DeadlineMissed, EventType.IssueMissed,
-        EventType.ChapterAtRisk, EventType.WageArrears, EventType.GoalChapterCompleted,
+        EventType.ChapterAtRisk, EventType.WageArrears, EventType.GoalChapterCompleted, EventType.MilestoneOffered,
     };
 
     /// <summary>

@@ -25,4 +25,5 @@ public enum EventType
     StaffHired, StaffNotice, StaffDeparted, RecruitmentCompleted, WageArrears,
     AwardNomination, AwardResult, LicenseOffered, LicenseDecision, LicenseReleased, CareerMilestone,
     GoalCompleted, GoalChapterCompleted, PartOpened,
+    MilestoneOffered,
 }

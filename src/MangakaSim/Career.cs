@@ -27,9 +27,15 @@ public static class HelperStories
     public static readonly string[] Arc = ["beside", "page", "reader", "same", "ordinary", "still"];
     public static readonly string[] Everyday = ["margin", "shelf", "tea", "migration", "desk_moment"];
     public static readonly string[] Chapters = ["goal-doujin-days", "goal-rookie", "goal-serialized", "goal-studio-head", "goal-legend"];
-    public static bool Known(string id) => Arc.Contains(id) || Everyday.Contains(id) || Chapters.Contains(id);
+    public static bool Known(string id) => Arc.Contains(id) || Everyday.Contains(id) || Chapters.Contains(id) || AkiMilestones.Known(id);
     public static StoryScene Describe(GameState state, string id)
     {
+        // Answered story milestones show in the journal under their own title; their entry holds the full text.
+        if (AkiMilestones.Known(id) && state.Milestones.Done.LastOrDefault(r => r.Id == id) is var record)
+        {
+            var milestone = AkiMilestones.Describe(state, id, record?.Target ?? 0, null);
+            return new(id, milestone.Title, milestone.Text, milestone.First, milestone.Second, milestone.Expression);
+        }
         var journal = state.Career.Journal;
         int Answer(string scene) => journal.LastOrDefault(e => e.Scene == scene)?.Answer ?? -1;
         var wish = Answer("beside") == 0 ? "making something you're proud of" : Answer("beside") == 1 ? "reaching someone who needs your story" : "finding your own way";

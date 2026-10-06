@@ -218,6 +218,9 @@ public partial class DebugMain
         {var series=s;var card=Card("Decision needed · "+s.Title,$"Serialization offer · expires {s.PendingOffer!.ExpiresAt:d MMM · HH:mm}");ActionButton(card,"Review publishing offer",()=>{SelectSeriesForWorkbench(series.Id);OpenWorkspace("Publishing");});}
         foreach(var offer in _state.World.Offers.Where(o=>o.Status==NegotiationStatus.Pending&&(o.ToBusiness==_state.ControlledBusinessId||o.FromBusiness==_state.ControlledBusinessId)).OrderBy(o=>o.EndsAt))
         {var card=Card("Pending staff negotiation",$"{_state.FindPerson(offer.PersonId)?.Name} · decision {offer.EndsAt:d MMM · HH:mm}");ActionButton(card,"Review staff decision",()=>OpenWorkspace("Industry contacts"));}
+        // Story milestones are decisions with a cost, so they show even with optional stories turned off (spec 2026-10-05).
+        if(_state.PendingMilestone is {} decision)
+        {var card=Card("Decision needed · Helper-Chan",$"{decision.Title} · decide by {_state.Milestones.DueAt:d MMM yyyy}");ActionButton(card,"Read and decide",ShowMilestone);}
         if(_presentation.Stories&&_state.Career.PendingScene is {} scene&&(_state.Career.DeferredUntil is null||_state.Career.DeferredUntil<=_state.Clock.Now))
         {var card=Card("Helper-Chan",HelperStories.Describe(_state,scene).Title);ActionButton(card,"Read conversation",()=>ShowStory(scene));}
         }
@@ -279,10 +282,25 @@ public partial class DebugMain
         void Respond(int answer,bool defer=false){_state.Apply(new StoryCommand(id,answer,defer));_dirty=true;_storyOpen=false;_helperPopup.Hide();BuildManagementPage();if(_popupEvents.Count==0&&!_recapDialog.Visible&&_pendingRecap is null&&_storyResume>0)SetSpeed(_storyResume);}
         ActionButton(copy,scene.First,()=>Respond(0));ActionButton(copy,scene.Second,()=>Respond(1));ActionButton(copy,"Read later",()=>Respond(-1,true));ActionButton(copy,"Skip this conversation",()=>Respond(-1));
     }
+    // A story milestone: the scene, then each answer with the plain line of what it costs and gives.
+    private void ShowMilestone()
+    {
+        if(OfficeEditing||_popupEvents.Count>0){Notify("Resolve the urgent notice or finish editing first.");return;}
+        if(_state.PendingMilestone is not {} scene)return;
+        _storyResume=_speed;Pause();_storyOpen=true;
+        HelperBody(scene.Expression,scene.Title,scene.Text,out var copy);
+        void Close(){_storyOpen=false;_helperPopup.Hide();BuildManagementPage();if(_popupEvents.Count==0&&!_recapDialog.Visible&&_pendingRecap is null&&_storyResume>0)SetSpeed(_storyResume);}
+        void Respond(int answer){_state.Apply(new MilestoneCommand(scene.Id,answer));_dirty=true;Close();}
+        ActionButton(copy,scene.First,()=>Respond(0));Words(copy,scene.FirstCost);
+        ActionButton(copy,scene.Second,()=>Respond(1));Words(copy,scene.SecondCost);
+        Words(copy,$"Decide by {_state.Milestones.DueAt:d MMM yyyy}. After that Helper-Chan picks \"{scene.Second}\".");
+        ActionButton(copy,"Decide later",Close);
+    }
     private void BuildHelp()
     {
         Words(_sideContent,"Your first reader, always beside you.",22);ActionButton(_sideContent,"Objectives and direction",()=>Navigate("Guidance"));ActionButton(_sideContent,"Tutorial and notification settings",SettingsMenu);
         foreach(var page in new[]{"Inbox","Series","Staff","Finances","Studios","Industry"})Words(Card(page,"Guide"),TutorialText(page)!);
+        if(_state.PendingMilestone is {} decision)ActionButton(_sideContent,$"Decide: {decision.Title}",ShowMilestone);
         if(_state.Career.PendingScene is {} scene)ActionButton(_sideContent,"Talk to Helper-Chan",()=>ShowStory(scene));
         Words(_sideContent,"Our conversations",23);foreach(var entry in _state.Career.Journal.AsEnumerable().Reverse().Take(40))
         {

@@ -85,6 +85,7 @@ public partial class GameState
     {
         RepairSupersededDrafts();
         ValidateGoals();
+        ValidateMilestones();
         ValidateDisclosure();
         static void Check([DoesNotReturnIf(false)] bool valid, string field)
         {

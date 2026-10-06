@@ -16,6 +16,8 @@ public partial class GameState
             throw new InvalidCommandException("Only an active unpublished series can pitch.");
         if (series.PitchCooldowns.TryGetValue(magazine.Id, out var until) && until > Clock.Now)
             throw new InvalidCommandException($"This magazine will consider another pitch after {until:d MMM yyyy}.");
+        if (series.BusinessId == ControlledBusinessId && MilestoneClosed(magazine.Id) is { } closed)
+            throw new InvalidCommandException($"You chose to stay loyal, so {magazine.Name} won't take a pitch from you until {closed:d MMM yyyy}.");
         var open = series.Chapters.Where(c => c.Status != ChapterStatus.Complete).ToArray();
         // Preserve started doujin chapters; only untouched drafts are replaced by the sample.
         foreach (var chapter in open.Where(c=>c.Stages.All(w=>w.Status==StageStatus.NotStarted&&w.HoursDone==0&&w.OvertimeHours==0&&w.HoursByPerson.Count==0)))DropChapter(series,chapter);
@@ -92,7 +94,9 @@ public partial class GameState
             sample.PitchResolved = true;
             var recognition = Progression.Awards.Any(a => a.SeriesId == series.Id && a.Prize > 0 && a.ResolvedAt >= Clock.Now.AddDays(-365)) ? .1 : 0;
             var boost = TakePitchBoost(series);
-            if (Rng.NextDouble() < Math.Min(.95, PitchRules.Chance(magazine.Tier, quality, reputation, affinity, trend) * PitchFactor(series.BusinessId) + recognition + boost))
+            // The roll is always drawn, so a guaranteed offer (story milestone) leaves the random stream unchanged.
+            var roll = Rng.NextDouble();
+            if (TakeGuaranteedPitch(series, magazine) | roll < Math.Min(.95, PitchRules.Chance(magazine.Tier, quality, reputation, affinity, trend) * PitchFactor(series.BusinessId) + recognition + boost))
             {
                 var first = IssueSchedule.AddIssues(magazine, Clock.Now, 4);
                 series.PendingOffer = new(magazine.Id, ReputationRules.Fee(magazine.FeePerPageMin, magazine.FeePerPageMax,

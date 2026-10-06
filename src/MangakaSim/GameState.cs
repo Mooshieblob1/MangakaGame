@@ -79,6 +79,7 @@ public partial class GameState
         CareerStep();
         TimelineStaffStep();
         CareerNarrativeStep();
+        MilestoneStep();
         RefreshOfficeAssignments();
         OfficeRevision++;
         PitchStep(closes);

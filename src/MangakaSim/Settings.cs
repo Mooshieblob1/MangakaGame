@@ -18,7 +18,7 @@ public class Settings
         settings.AutoPause[EventType.DeadlineMissed] = true;
         foreach (var type in new[] { EventType.SerializationOffered, EventType.PitchRejected,
             EventType.EditorRedoRequested, EventType.CancellationWarning, EventType.SeriesCancelled,
-            EventType.VolumeMilestone, EventType.ConventionRecap, EventType.SeriesBecameIconic })
+            EventType.VolumeMilestone, EventType.ConventionRecap, EventType.SeriesBecameIconic, EventType.MilestoneOffered })
             settings.AutoPause[type] = true;
         return settings;
     }

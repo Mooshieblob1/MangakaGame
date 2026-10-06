@@ -84,6 +84,7 @@ public partial class GameState
             case DeclineOfferCommand c: ApplyDeclineOffer(c); break;
             case WithdrawSeriesCommand c: ApplyWithdraw(c); break;
             case EndSeriesCommand c: ApplyEnd(c); break;
+            case MilestoneCommand c: ApplyMilestone(c); break;
             case GetOnlineCommand: ApplyGetOnline(); break;
             case ContributeFundsCommand c: ApplyContribution(c); break;
             case RecruitStaffCommand c: ApplyRecruit(c); break;
