@@ -71,10 +71,11 @@ public partial class OfficeView : SubViewportContainer
 
     public override void _Ready()
     {
+        // Click focus only: a controller moves between panels and never lands on the whole office picture.
         // Not stretched: the 3D image is sized by RenderScale and shown through a picture that fills this control, so it
         // stays sharp at large interface sizes (display settings, spec 2026-10-04). Our own native draw is hidden.
         Stretch=false;SizeFlagsHorizontal=SizeFlags.ExpandFill;SizeFlagsVertical=SizeFlags.ExpandFill;
-        CustomMinimumSize=new(640,400);FocusMode=FocusModeEnum.All;MouseDefaultCursorShape=CursorShape.Arrow;
+        CustomMinimumSize=new(640,400);FocusMode=FocusModeEnum.Click;MouseDefaultCursorShape=CursorShape.Arrow;
         // Held under a plain node so this container neither measures nor draws it; the picture below shows it.
         var holder=new Node{Name="ViewportHolder"};AddChild(holder);
         _viewport=new SubViewport{OwnWorld3D=true,TransparentBg=false,Size=new(1000,650),Msaa3D=Viewport.Msaa.Msaa2X,RenderTargetUpdateMode=SubViewport.UpdateMode.Always};holder.AddChild(_viewport);
@@ -383,7 +384,22 @@ public partial class OfficeView : SubViewportContainer
         if(_actors.TryGetValue(SelectedPerson,out var actor))
         {_pan=actor.Position-new Vector3((_plan.Width+12)*.125f,0,_plan.Depth*.125f);UpdateCamera();}
     }
-    public void ResetCamera(){_pan=Vector3.Zero;_angle=.7f;_zoom=Math.Max(10,Math.Max(_plan.Width+16,_plan.Depth)*.30f);UpdateCamera();}
+    public void ResetCamera(){_pan=Vector3.Zero;_angle=.7f;_zoom=Math.Max(10,Math.Max(_plan.Width+16,_plan.Depth)*.30f);_zoomStep=0;UpdateCamera();}
+    // R3 on a controller steps through three zoom levels (controller support, 2026-10-06).
+    private int _zoomStep;
+    public void CycleZoom()
+    {
+        if(_plan is null)return;
+        _zoomStep=(_zoomStep+1)%3;
+        _zoom=Math.Clamp(Math.Max(10,Math.Max(_plan.Width+16,_plan.Depth)*.30f)*(_zoomStep switch{0=>1f,1=>.62f,_=>.38f}),4,40);UpdateCamera();
+    }
+    /// <summary>The grid step that best matches a direction on screen, whichever way the camera faces (furniture move buttons).</summary>
+    public (int X,int Z) GridStep(Vector2 screen)
+    {
+        var right=_camera.GlobalBasis.X;var forward=-_camera.GlobalBasis.Z;
+        var world=new Vector2(right.X,right.Z).Normalized()*screen.X-new Vector2(forward.X,forward.Z).Normalized()*screen.Y;
+        return Math.Abs(world.X)>=Math.Abs(world.Y)?(Math.Sign(world.X),0):(0,Math.Sign(world.Y));
+    }
     public void FocusCompanion()
     {
         if(_helper is null)return;

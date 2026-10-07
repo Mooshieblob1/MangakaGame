@@ -201,8 +201,10 @@ The other automated checks run the same way: `--progression-smoke`,
 safety saves) `--brand-smoke` (the logo palette, slab buttons and fonts) and
 `--tester-b-smoke` (fixes from fresh-player tester B) `--goals-smoke`
 (the career goals board), `--disclosure-smoke` (progressive disclosure),
-`--work-feedback-smoke` (work sparkles, "done" bubbles and right-click back) and
-`--selling-smoke` (streaming sales and the selling tutorial).
+`--work-feedback-smoke` (work sparkles, "done" bubbles and right-click back),
+`--selling-smoke` (streaming sales and the selling tutorial) and
+`--gamepad-smoke` (controller navigation on every core screen, the buttons,
+and layout at 1280 x 800 and 1280 x 720 with the prompts showing).
 
 The automated Godot walkthrough tests the actual scene controls, timing,
 automatic pauses, recaps, queue editing, offers and expiry, editor review,

@@ -66,6 +66,7 @@ public partial class DebugMain
     {
         // The curtain stops the mouse; keys and controller buttons wait for the fade too (final review).
         if(Fading&&ev is InputEventKey or InputEventJoypadButton){GetViewport().SetInputAsHandled();return;}
+        if(_managementReady&&HandlePadInput(ev)){GetViewport().SetInputAsHandled();return;} // controller support (2026-10-06)
         if(ev is InputEventMouseButton{ButtonIndex:MouseButton.Right} rightClick){HandleRightClick(rightClick);return;}
         if(ev is not InputEventKey key||!key.Pressed||key.Echo)return;
         // F11 or Alt+Enter switches fullscreen anywhere (display settings, spec 2026-10-04).
@@ -86,9 +87,14 @@ public partial class DebugMain
         if(!GameKeysAvailable())return false;
         if(key==Key.Space){TogglePause();return true;}
         if(key is not (Key.Key1 or Key.Key2 or Key.Kp1 or Key.Kp2))return false;
-        if(_overnightTarget is not null){SetSpeed(key is Key.Key1 or Key.Kp1?0:OvernightSpeed);return true;}
+        StepSpeed(key is Key.Key2 or Key.Kp2);return true;
+    }
+    // 1 and 2 on the keyboard, LT and RT on a controller.
+    private void StepSpeed(bool faster)
+    {
+        if(_overnightTarget is not null){SetSpeed(faster?OvernightSpeed:0);return;}
         var speeds=new double[]{0,1,2,4,8,QuietSpeed};int index=Array.IndexOf(speeds,_speed);
-        ChooseSpeed(speeds[Math.Clamp(index+(key is Key.Key1 or Key.Kp1?-1:1),0,speeds.Length-1)]);return true;
+        ChooseSpeed(speeds[Math.Clamp(index+(faster?1:-1),0,speeds.Length-1)]);
     }
     private void PanWithKeys(double delta)
     {

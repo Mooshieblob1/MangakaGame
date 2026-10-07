@@ -434,6 +434,16 @@ playtesting.
   progression, journey, management and `--steam-smoke` pass; no package
   built. Next for this item: app ID, Steamworks entries and 50 icons. Record:
   `docs/superpowers/steam-achievements-completion.md`.
+- **Controller and Steam Deck (2026-10-06):** every screen by gamepad (stick
+  or D-pad, A, B back, LB/RB sections, Y pause, LT/RT speed, Start menu, View
+  inbox, X phone, right stick scroll or look), our own direction search, focus
+  kept inside menus and popups, a gold focus ring and Xbox-style prompts with
+  the focused tooltip, Steam's on-screen keyboard on a Deck, furniture Move
+  buttons, a scrolling furnishing workspace. `--gamepad-smoke` (27 screens
+  fully reachable, buttons, 1280x800 and 1280x720 layout, A6 card at
+  1280x720, 1280x800 and 150%) passes. Open: 11 to 12 px text at 1280x800
+  (Blob to decide), real Deck test. Branch `claude/project-thread-b9i0a0`.
+  Record: `docs/superpowers/controller-support-completion.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 

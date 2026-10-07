@@ -180,7 +180,12 @@ public partial class DebugMain
         _report.VisibilityChanged+=()=>_notice.Visible=!_report.Visible;
         var production=(Control)_mainTabs.GetChild(0);_mainTabs.RemoveChild(production);
         var productionScroll=new ScrollContainer{Name="Production"};_mainTabs.AddChild(productionScroll);_mainTabs.MoveChild(productionScroll,0);productionScroll.AddChild(production);
-        production.SizeFlagsHorizontal=production.SizeFlagsVertical=SizeFlags.ExpandFill;_mainTabs.CurrentTab=0;
+        production.SizeFlagsHorizontal=production.SizeFlagsVertical=SizeFlags.ExpandFill;
+        // The furnishing workspace ran off a 1280 x 800 or 720 window (controller smoke, 2026-10-06), so it scrolls too.
+        var furnishing=(Control)_mainTabs.GetChild(5);_mainTabs.RemoveChild(furnishing);
+        var furnishingScroll=new ScrollContainer{Name="Office",HorizontalScrollMode=ScrollContainer.ScrollMode.Disabled};_mainTabs.AddChild(furnishingScroll);_mainTabs.MoveChild(furnishingScroll,5);furnishingScroll.AddChild(furnishing);
+        furnishing.SizeFlagsHorizontal=furnishing.SizeFlagsVertical=SizeFlags.ExpandFill;furnishing.Show(); // the tab container had hidden it as a background tab
+        _mainTabs.CurrentTab=0;
         _workbenchNotice=Words(reportBox,"Changes use the selected studio, person and series.",14);
         // The developer event stream is not part of the player-facing workbench.
         _log.Hide();
@@ -196,6 +201,7 @@ public partial class DebugMain
         BuildAlpha();BuildSpeedFeedback();PrepareWorkspaceForms();
         BuildFloatingOffice(margin,railPanel,body,shade);
         BuildWorkFeedback();
+        BuildGamepad();
         _side.VisibilityChanged+=RefreshNavigation;_report.VisibilityChanged+=RefreshNavigation;
         GetViewport().SizeChanged+=ResizeGui;_managementReady=true;ApplyInterfaceSize();
         GetTree().AutoAcceptQuit=false; // the close button keeps a safety save first (HandleCloseRequest)

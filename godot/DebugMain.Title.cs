@@ -90,7 +90,7 @@ public partial class DebugMain
         _titlePageContent = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill }; pageScroll.AddChild(_titlePageContent);
         // New Career, Load, Settings and Report keep writing into _menuContent; on the title screen that is the page panel.
         _menuContent = _titlePageContent;
-        ShowTitleMenu(); LayoutTitle();
+        ShowTitleMenu(); LayoutTitle(); UpdateFocusTrap();
     }
 
     // The title screen always sits over dark art, so its words stay light in both themes (rendered review).
@@ -109,7 +109,7 @@ public partial class DebugMain
         RemoveChild(_title); _title.QueueFree();
         _title = null; _titleArt = _titleLogo = null; _titleColumn = null; _titlePage = null; _titleShade = null;
         _titleMenuBox = _titlePageContent = null; _titleNotice = _titlePageNotice = null; _titlePushIn = null; _titleMainButton = null;
-        _menuContent = _pauseMenuContent;
+        _menuContent = _pauseMenuContent; UpdateFocusTrap();
     }
 
     // Zooms the picture inside its fixed frame. Scaling the control itself stepped visibly on large screens, because
@@ -166,6 +166,7 @@ public partial class DebugMain
         var baseBox = Slab(depth, 11, 0); baseBox.ContentMarginBottom = 5;
         var slabBase = new PanelContainer(); slabBase.AddThemeStyleboxOverride("panel", baseBox); outline.AddChild(slabBase);
         var button = ActionButton(slabBase, text, action);
+        button.SetMeta("focus_frame", edge); // the controller ring goes round the whole sticker, not inside its outline
         var ui = (float)_presentation.UiScale;
         StyleBoxFlat Face(Color colour) { var box = Slab(colour, 11, 0); box.ContentMarginTop = box.ContentMarginBottom = 4 * ui; box.ContentMarginLeft = box.ContentMarginRight = 16 * ui; return box; }
         button.AddThemeStyleboxOverride("normal", Face(face)); button.AddThemeStyleboxOverride("pressed", Face(face));
