@@ -182,13 +182,13 @@ public partial class DebugMain
                 {
                     Reset(); await SettleUi(); open(); await SettleUi(); await PadFrame(); await PadFrame();
                     foreach (var p in Inspect()) { var line = $"{label} {name}: {p}"; flagged.Add(line); GD.Print("GAMEPAD LAYOUT FLAG " + line); }
-                    // Valve asks for text about 9 px tall or more at 1280 x 800; report the smallest sizes for review.
+                    // Valve asks for text about 9 px tall at 1280 x 800, so nothing is smaller than 13 px (Q70).
                     if (label == "1280x800")
-                    {
-                        var small = FindChildren("*", "Label", true, false).OfType<Label>().Where(l => l.IsVisibleInTree() && l.Text.Length > 0)
-                            .Select(l => (Size: l.GetThemeFontSize("font_size"), Text: l.Text)).Where(l => l.Size < 13).ToList();
-                        if (small.Count > 0) GD.Print($"GAMEPAD TEXT {name}: smallest {small.Min(s => s.Size)} px, {small.Count} labels under 13 px, e.g. \"{small.OrderBy(s => s.Size).First().Text.ReplaceLineEndings(" ")[..Math.Min(40, small.OrderBy(s => s.Size).First().Text.ReplaceLineEndings(" ").Length)]}\"");
-                    }
+                        foreach (var small in FindChildren("*", "Label", true, false).OfType<Label>().Where(l => l.IsVisibleInTree() && l.Text.Length > 0 && l.GetThemeFontSize("font_size") < MinTextSize))
+                        {
+                            var line = $"{label} {name}: text {small.GetThemeFontSize("font_size")} px {DisplaySweep.Describe(small)}";
+                            flagged.Add(line); GD.Print("GAMEPAD TEXT FLAG " + line);
+                        }
                     if (label == "1280x800" && name is "office" or "pause-menu" or "series-details" or "books" or "furniture" or "event-popup" or "title" or "settings")
                     {
                         var focused = GetViewport().GuiGetFocusOwner();

@@ -46,7 +46,7 @@ public partial class DebugMain
         Label Text(Control parent,string text,int size)
         {
             // Explicit sizes so the phone grows with the text setting even before it joins the tree.
-            var label=Words(parent,text,size);label.AddThemeFontSizeOverride("font_size",(int)(size*scale));
+            var label=Words(parent,text,size);label.AddThemeFontSizeOverride("font_size",(int)(Math.Max(size,MinTextSize)*scale));
             label.AddThemeColorOverride("font_color",_phone.TextColor);return label;
         }
         StyleBoxFlat Bubble(Color color,float radius)

@@ -101,8 +101,12 @@ public partial class DebugMain
         var button=ActionButton(parent,title,action);button.ThemeTypeVariation="HeaderButton";
         button.SizeFlagsVertical=SizeFlags.ShrinkCenter;button.CustomMinimumSize=new(0,32);return button;
     }
+    // Steam Deck legibility (Q70, 2026-10-07): at 1280 x 800 the interface cannot grow past 100%, so no text is set
+    // smaller than 13 px (about 9 px tall letters, Valve's guidance). Captions asked for at 11 or 12 px get 13.
+    internal const int MinTextSize=13;
     private static Label Words(Control parent,string text,int size=16)
     {
+        size=Math.Max(size,MinTextSize);
         var label=new Label{Text=text,AutowrapMode=TextServer.AutowrapMode.WordSmart,SizeFlagsHorizontal=SizeFlags.ExpandFill};label.SetMeta("base_font_size",size);parent.AddChild(label);
         var root=parent.IsInsideTree()?parent.GetTree().Root.GetChildren().OfType<DebugMain>().FirstOrDefault():null;label.AddThemeFontSizeOverride("font_size",(int)(size*(root?._presentation.UiScale??1)));
         if(size>=20&&HeadingFont is not null)label.AddThemeFontOverride("font",HeadingFont); // headings (20 px and above)

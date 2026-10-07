@@ -98,11 +98,14 @@ All on this PC, authorized by Blob on 2026-10-06.
 
 ## Open
 
-- **Small text on Steam Deck.** At 1280 x 800 the interface cannot grow past
-  100% (it needs a 1280 x 720 layout), and some labels are 11 or 12 px (the
-  stage legend under the progress bar, the rail subtitle, captions). Valve
-  asks for text about 9 px tall; 12 px type is about 8 to 9 px tall. Raising
-  the smallest sizes to 13 px is a design choice for Blob.
+- **Small text on Steam Deck: done 2026-10-07 (Q70, Blob chose option 1).**
+  At 1280 x 800 the interface cannot grow past 100%, and some labels were 11
+  or 12 px (the stage legend under the progress bar, the rail subtitle,
+  captions), under Valve's guidance of about 9 px tall letters. Every label
+  made by `Words` and every phone text now has a 13 px floor
+  (`DebugMain.MinTextSize`), on all screens. `--gamepad-smoke` now fails on
+  any visible label under 13 px at 1280 x 800 (none left), and the display
+  sweep reruns clean (see below).
 - The furnishing workspace scrolls at 1280 x 800 but its 3D view is small
   there; fine for a rare task, worth a look in a Deck playtest.
 - Testing on a real Deck is still to be arranged (Q6: outside testers).

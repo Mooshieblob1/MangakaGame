@@ -450,8 +450,8 @@ playtesting.
   the focused tooltip, Steam's on-screen keyboard on a Deck, furniture Move
   buttons, a scrolling furnishing workspace. `--gamepad-smoke` (27 screens
   fully reachable, buttons, 1280x800 and 1280x720 layout, A6 card at
-  1280x720, 1280x800 and 150%) passes. Open: 11 to 12 px text at 1280x800
-  (Blob to decide), real Deck test. Branch `claude/project-thread-b9i0a0`.
+  1280x720, 1280x800 and 150%) passes. Smallest text raised to 13 px on every
+  screen (Q70 option 1). Open: real Deck test. Branch `claude/project-thread-b9i0a0`.
   Record: `docs/superpowers/controller-support-completion.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
