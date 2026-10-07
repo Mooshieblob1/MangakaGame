@@ -94,6 +94,8 @@ public partial class GameState
         VolumeContribution(volume, revenue);
         return revenue;
     }
+    /// <summary>True once a series has run in a magazine, under its current contract or an earlier one.</summary>
+    internal static bool MagazineHistory(Series series) => series.Contract is not null || series.PastContracts.Count > 0;
     private int SeriesTier(Series series) =>
         (series.Contract ?? series.PastContracts.LastOrDefault()) is { } contract ? PublisherCatalog.Get(contract.MagazineId).Tier : 1;
     internal void SalesStep()
@@ -125,7 +127,7 @@ public partial class GameState
                 PlanVolumeWeek(series, volume, fans, trend, SalesRules.ShopHoursPerWeek);
             if (BusinessOf(series.BusinessId).HasInternet && series.Publishing == PublishingStatus.Unpublished && series.Volumes.Any(v => v.ReleasedAt is not null))
             {
-                var mouth = series.Fanbase * .01 * Economy.InternetReach(TrendCatalog, Clock.Now);
+                var mouth = FanbaseRules.Saturated(series.Fanbase, series.Fanbase * .01 * Economy.InternetReach(TrendCatalog, Clock.Now));
                 series.Fanbase += mouth;
                 DoujinFansThisMonth += mouth;
             }
@@ -193,7 +195,8 @@ public partial class GameState
             foreach (var threshold in new[] { 100000L, 1000000L })
                 if (old < threshold && volume.CopiesSold >= threshold) milestones.Add((volume, threshold));
         }
-        var fanGain = (copies + units) * (volume.IsDoujin ? .3 : SalesRules.CommercialFanGain);
+        // A magazine series' old doujin reaches readers it already has, so it adds fans at the collected-volume rate (balance pass 2026-10-05).
+        var fanGain = FanbaseRules.Saturated(series.Fanbase, (copies + units) * (volume.IsDoujin && !MagazineHistory(series) ? .3 : SalesRules.CommercialFanGain));
         series.Fanbase += fanGain;
         if (volume.IsDoujin) { DoujinCopiesThisMonth = checked(DoujinCopiesThisMonth + copies); DoujinFansThisMonth += fanGain; }
     }

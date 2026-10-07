@@ -6,9 +6,11 @@ using Xunit;
 namespace MangakaSim.Tests;
 
 /// <summary>
-/// Sub-project 10 guided-player playtest. A scripted player follows Helper-Chan's guidance and
-/// ordinary player choices for three in-game years; after the first sale it acts only on the current guidance step, recording milestones, money, estimated real
-/// time and every rejected action. Excluded from the normal suite; run with
+/// Sub-project 10 guided-player playtest, extended to ten in-game years (1996 to 2006) for the Tier 2 balance pass.
+/// A scripted player follows Helper-Chan's guidance and ordinary player choices; after the first sale it acts only on the
+/// current guidance step, and after the first hire on the goals board (moving out, staff, incorporation, a second series,
+/// licences). It records milestones, money, estimated real time, mid-career activity and every rejected action.
+/// Excluded from the normal suite; run with
 /// dotnet test --filter Category=Playtest
 /// </summary>
 [Trait("Category", "Playtest")]
@@ -19,7 +21,10 @@ public class CareerPlaytest
     private const double WorkSecondsPerHour = 36.0 / 8, NightSecondsPerHour = 2.5 / 32;
     // Mid-career pacing (Q26 to Q28): daytime at 32x instead of 8x, for the per-year comparison.
     private const double QuietWorkSecondsPerHour = 36.0 / 32;
-    private const int Years = 3;
+    // Tier 2 balance covers 1996 to 2006 (early access considerations Q3).
+    private const int Years = 10;
+    // The practice career fixture looks for its warning in the first three years only.
+    private const int PracticeYears = 3;
 
     [Theory]
     [InlineData(0, CareerDifficulty.Standard)]
@@ -28,7 +33,7 @@ public class CareerPlaytest
     [InlineData(7, CareerDifficulty.Standard)]
     [InlineData(7, CareerDifficulty.Relaxed)]
     [InlineData(7, CareerDifficulty.Challenging)]
-    public void Three_year_guided_career(int seed, CareerDifficulty difficulty)
+    public void Ten_year_guided_career(int seed, CareerDifficulty difficulty)
     {
         var run = new GuidedPlayer(seed, difficulty);
         run.Play(Years);
@@ -48,7 +53,7 @@ public class CareerPlaytest
     {
         var scout = new GuidedPlayer(0, CareerDifficulty.Standard);
         var warning = DateTime.MinValue;
-        for (var year = 1; year <= Years && warning == DateTime.MinValue; year++)
+        for (var year = 1; year <= PracticeYears && warning == DateTime.MinValue; year++)
         {
             scout.Play(year);
             warning = scout.State.Events.FirstOrDefault(e => e.Type == EventType.CancellationWarning &&
@@ -108,7 +113,13 @@ public class CareerPlaytest
         private bool _hired;
         // Per career year: daytime hours, night hours, daily recaps (a click each at 8x), 32x stop events and new Helper-Chan texts.
         private readonly Dictionary<int, (int Work, int Night, int Recaps, int Stops, int Texts)> _pace = new();
-        private int _textsSeen;
+        // The thread keeps its newest 200 messages, so new texts are counted from the last one seen, not from the count.
+        private GuidanceMessage? _lastText;
+        // Ten-year view: successful player commands, moments that call for the player, and month-end snapshots.
+        private readonly List<(DateTime At, string Action)> _actions = new();
+        private readonly List<DateTime> _attention = new();
+        private readonly List<(DateTime At, long Personal, long Business, int Serialized, int Staff, double Fans, int Chapter)> _snapshots = new();
+        private readonly HashSet<int> _licenceTried = new();
 
         public GuidedPlayer(int seed, CareerDifficulty difficulty)
         {
@@ -125,7 +136,7 @@ public class CareerPlaytest
 
         private bool Try(string label, ICommand command)
         {
-            try { State.Apply(command); return true; }
+            try { State.Apply(command); _actions.Add((State.Clock.Now, label)); return true; }
             catch (InvalidCommandException e) { _rejections.Add((State.Clock.Now, label, e.Message)); return false; }
         }
 
@@ -147,8 +158,11 @@ public class CareerPlaytest
                 ReadEvents();
                 if (State.Clock.Now >= _nextMonth)
                 {
+                    var serializedNow = State.Series.Count(s => s.BusinessId == State.ControlledBusinessId && s.Publishing == PublishingStatus.Serialized);
+                    var fans = State.Series.Where(s => s.BusinessId == State.ControlledBusinessId).Select(s => s.Fanbase).DefaultIfEmpty(0).Max();
+                    _snapshots.Add((State.Clock.Now, State.PersonalMoney, State.Money, serializedNow, State.ControlledStaff.Count(), fans, State.Goals?.Chapter ?? 0));
                     _monthly.Add($"| {State.Clock.Now:yyyy-MM} | {Minutes / 60:F1} | {State.PersonalMoney:N0} | {State.Money:N0} | " +
-                        $"{State.Series.Count(s => s.Publishing == PublishingStatus.Serialized)} | {State.ControlledStaff.Count()} | {Guide().Id} |");
+                        $"{serializedNow} | {State.ControlledStaff.Count()} | {fans:N0} | {Guide().Id} |");
                     _nextMonth = _nextMonth.AddMonths(1);
                 }
             }
@@ -157,13 +171,16 @@ public class CareerPlaytest
         private GuidanceStep Guide()
         {
             CareerGuidance.Observe(State, _guide);
-            // Each new Helper-Chan text stops a 32x day, like the stop events.
-            var texts = _guide.Thread.Count;
-            if (texts > _textsSeen)
+            // Each new Helper-Chan text stops a 32x day, like the stop events. Goal and part texts never stop 32x (spec 2026-10-01).
+            var thread = _guide.Thread;
+            var fresh = thread.Skip(_lastText is null ? 0 : thread.LastIndexOf(_lastText) + 1)
+                .Count(m => !m.Step.StartsWith(CareerGuidance.GoalStep, StringComparison.Ordinal));
+            _lastText = thread.LastOrDefault();
+            if (fresh > 0)
             {
                 var year = (int)((State.Clock.Now - _start).TotalDays / 365.25);
-                var pace = _pace.GetValueOrDefault(year); pace.Texts += texts - _textsSeen; _pace[year] = pace;
-                _textsSeen = texts;
+                var pace = _pace.GetValueOrDefault(year); pace.Texts += fresh; _pace[year] = pace;
+                _attention.Add(State.Clock.Now);
             }
             return CareerGuidance.Evaluate(State, _guide);
         }
@@ -176,7 +193,7 @@ public class CareerPlaytest
                 var year = (int)((e.Time - _start).TotalDays / 365.25);
                 var pace = _pace.GetValueOrDefault(year);
                 if (e.Type == EventType.DailyRecap) pace.Recaps++;
-                if (CareerGuidance.FastSpeedStops.Contains(e.Type)) pace.Stops++;
+                if (CareerGuidance.FastSpeedStops.Contains(e.Type)) { pace.Stops++; _attention.Add(e.Time); }
                 _pace[year] = pace;
                 switch (e.Type)
                 {
@@ -202,6 +219,10 @@ public class CareerPlaytest
                     case EventType.WageArrears: Mark("First wage arrears"); Note(e.Message); break;
                     case EventType.AwardResult: Mark("First award result"); break;
                     case EventType.LicenseOffered: Mark("First licence offer"); break;
+                    case EventType.LicenseReleased: Mark("First licence released"); Note(e.Message); break;
+                    case EventType.SeriesBecameIconic: Mark("First iconic series"); Note(e.Message); break;
+                    case EventType.CareerMilestone: Note("Milestone: " + e.Message); break;
+                    case EventType.AwardNomination when Owned(e.SeriesId): Note("Nomination: " + e.Message); break;
                     case EventType.GoalCompleted: Mark(e.Message.Split(". Reward")[0]); break;
                     case EventType.GoalChapterCompleted: Mark(e.Message.Split("! Reward")[0]); break;
                     case EventType.PartOpened: Mark(e.Message); break;
@@ -223,7 +244,108 @@ public class CareerPlaytest
             SellBooks(owned);
             // After the first sale the player does what Helper-Chan's latest message asks, nothing more.
             if (_seen.Contains("First sale")) FollowGuidance();
-            if (_hired) GrowStudio();
+            if (_hired) { GrowStudio(); MidCareer(); }
+        }
+
+        // After the first hire Helper-Chan points at the goals board (Q51). A player reads the whole board, so the bot works on
+        // every unfinished goal of the current chapter that a player can act on, not only the first one.
+        private void MidCareer()
+        {
+            AnswerLicences();
+            if (State.Goals is not { } goals || goals.Chapter >= GoalCatalog.Chapters.Length) return;
+            foreach (var goal in GoalCatalog.In(goals.Chapter).Where(g => !State.GoalDone(g.Id)))
+                switch (goal.Id)
+                {
+                    case "moved-out" when State.Locations.Single(l => l.Id == State.Protagonist.Employment!.LocationId).IsFamilyHome:
+                        // "Move once income covers the rent with room to spare": a year of the cheapest rent in the account.
+                        var home = TokyoProperties.All.Where(p => p.Seats >= 4).OrderBy(p => p.Rent).First();
+                        if (State.AvailableBusinessCash >= home.Rent * 12) MoveTo(home.Seats);
+                        break;
+                    case "incorporated":
+                        // The player sees the capital rule on the button and waits for it (¥3,000,000 before May 2006).
+                        var capital = (State.Clock.Now < new DateTime(2006, 5, 1) ? 3_000_000 : 0) + 200_000;
+                        if (State.AvailableBusinessCash >= capital && Try("Incorporate", new StudioActionCommand(StudioAction.Incorporate)))
+                        { Mark("Incorporated"); Note("Incorporated the studio."); }
+                        break;
+                    case "two-series":
+                        SecondSeries();
+                        break;
+                    case "anime":
+                        PitchLicence([LicenseKind.Anime]);
+                        break;
+                    case "merchandise":
+                        PitchLicence([LicenseKind.Figures, LicenseKind.Stationery, LicenseKind.Clothing]);
+                        break;
+                }
+            PitchSpare();
+        }
+
+        private Series[] OwnedActive() => State.Series.Where(s => s.BusinessId == State.ControlledBusinessId && s.Status == SeriesStatus.Active).ToArray();
+
+        private void SecondSeries()
+        {
+            // "Pitch a second ongoing series once your team has spare desks."
+            var active = OwnedActive();
+            if (active.Count(s => s.Publishing == PublishingStatus.Serialized) != 1 || State.ControlledStaff.Count() < 3) return;
+            if (active.Any(s => !s.StandaloneDoujin && s.Publishing is PublishingStatus.Unpublished or PublishingStatus.Pitching or PublishingStatus.Offered)) return;
+            var genre = BestGenre();
+            if (Try("Create second series", new CreateSeriesCommand($"Second series {State.Series.Count + 1}", genre, Cadence.Monthly, 16)))
+            { Mark("Second series created"); Note($"Created a second {genre} series to pitch alongside the first."); }
+        }
+
+        // With one series already running, guidance shows goals rather than pitch steps, so the player pitches spare titles directly.
+        private void PitchSpare()
+        {
+            if (!OwnedActive().Any(s => s.Publishing == PublishingStatus.Serialized)) return;
+            foreach (var spare in OwnedActive().Where(s => !s.StandaloneDoujin && s.Publishing == PublishingStatus.Unpublished && !s.Chapters.Any(c => c.IsOneShot && !c.PitchResolved)))
+            {
+                var best = CareerGuidance.PitchOutlooks(State, spare).FirstOrDefault(o => o.Open);
+                if (best is not null && Try("Pitch second series", new PitchSeriesCommand(spare.Id, best.Magazine.Id)))
+                    Note($"Pitched {spare.Title} to {best.Magazine.Name} (tier {best.Magazine.Tier}, guidance chance {best.Chance:P0}).");
+            }
+        }
+
+        private void AnswerLicences()
+        {
+            foreach (var p in State.Progression.Projects.Where(p => p.BusinessId == State.ControlledBusinessId).ToArray())
+            {
+                var kind = p.Kind == LicenseKind.Anime ? "anime" : "merchandise";
+                if (p.Phase == LicensePhase.Offer && p.DueAt > State.Clock.Now && _licenceTried.Add(p.Id))
+                {
+                    if (Try("Accept licence", new LicenseCommand(LicenseAction.Accept, p.Id)))
+                    { Mark($"First {kind} licence signed"); Note($"Signed a {p.Kind} licence with {p.Partner} for ¥{p.Payment:N0}."); }
+                }
+                else if (p.Decision.Length > 0 && p.Phase is LicensePhase.PreProduction or LicensePhase.Production or LicensePhase.Released)
+                    Try("Licence decision", new LicenseCommand(p.Decision == "Source material" ? LicenseAction.Wait : LicenseAction.RespondDelay, p.Id));
+            }
+        }
+
+        private void PitchLicence(LicenseKind[] kinds)
+        {
+            var series = OwnedActive().Where(s => s.Fanbase >= 1000).OrderByDescending(s => s.Fanbase).FirstOrDefault();
+            if (series is null || State.Protagonist.BusyUntil > State.Clock.Now) return;
+            foreach (var kind in kinds)
+            {
+                if (State.Progression.PitchCooldowns.GetValueOrDefault($"{series.Id}:{kind}") > State.Clock.Now ||
+                    State.Progression.Projects.Any(p => p.SeriesId == series.Id && p.Kind == kind && p.Phase is LicensePhase.Offer or LicensePhase.PreProduction or LicensePhase.Production or LicensePhase.Released)) continue;
+                if (Try("Pitch licence", new LicenseCommand(LicenseAction.Pitch, series.Id, kind))) { Mark("First licence pitch"); Note($"Pitched {series.Title} for a {kind} licence."); }
+                return;
+            }
+        }
+
+        // Moves the studio to the cheapest property with at least this many seats and furnishes it, when six months' rent is in the account.
+        private bool MoveTo(int seats)
+        {
+            var offer = TokyoProperties.All.Where(p => p.Seats >= seats).OrderBy(p => p.Rent).First();
+            var current = State.Locations.Single(l => l.Id == State.Protagonist.Employment!.LocationId);
+            if (current.PropertyOfferId == offer.Id || State.AvailableBusinessCash < offer.Rent * 6) return false;
+            if (!Try("Move studio", new StudioActionCommand(StudioAction.Move, offer.Id))) return false;
+            Mark(current.IsFamilyHome ? "First studio move" : "Moved to a bigger studio");
+            Note($"Moved to {offer.District} ({offer.Seats} seats, rent {offer.Rent:N0} yen a month).");
+            var location = State.Protagonist.Employment!.LocationId;
+            var arrangement = State.ArrangeOffice(location, true, true);
+            Try("Furnish new studio", new ApplyOfficeLayoutCommand(location, State.OfficeRevision, arrangement.Placements, arrangement.Purchases, []));
+            return true;
         }
 
         private void FundBusiness()
@@ -345,10 +467,12 @@ public class CareerPlaytest
 
         private void GrowStudio()
         {
-            // After the guided first hire, one more whenever the account covers six months of the whole payroll.
+            // After the guided first hire, one more whenever the account covers six months of the whole payroll:
+            // up to four people for one series, six once two series run.
             var staff = State.ControlledStaff.ToArray();
             var payroll = staff.Sum(p => p.Employment?.MonthlySalary ?? 0);
-            if (staff.Length >= 4 || State.AvailableBusinessCash < 6 * (payroll + 180_000)) return;
+            var cap = OwnedActive().Count(s => s.Publishing == PublishingStatus.Serialized) >= 2 ? 6 : 4;
+            if (staff.Length >= cap || State.AvailableBusinessCash < 6 * (payroll + 180_000)) return;
             Mark("Growth hire attempted");
             var candidates = State.Candidates.Where(c => !c.Recruited && c.ExpiresAt > State.Clock.Now).OrderByDescending(c => c.Skills.Values.Sum()).ToArray();
             if (candidates.Length == 0)
@@ -368,16 +492,49 @@ public class CareerPlaytest
             var arrangement = State.ArrangeOffice(location, true, true);
             if (arrangement.Purchases.Count > 0 && Try("Furnish", new ApplyOfficeLayoutCommand(location, State.OfficeRevision, arrangement.Placements, arrangement.Purchases, [])))
             { Mark("First furniture purchase"); if (Try("Hire after furnishing", new HireStaffCommand(c.Id, location, salary))) { _hired = true; return true; } }
-            // Otherwise move the studio to the cheapest property with room for two.
-            if (!State.Locations.Single(l => l.Id == location).IsFamilyHome) return false;
-            var offer = TokyoProperties.All.Where(p => p.Seats >= 2).OrderBy(p => p.Rent).First();
-            if (State.AvailableBusinessCash < offer.Rent * 6 || !Try("Move studio", new StudioActionCommand(StudioAction.Move, offer.Id))) return false;
-            Mark("First studio move"); Note($"Moved to {offer.District} (rent {offer.Rent:N0} yen a month).");
+            // Otherwise move the studio to the cheapest property with room for the new team.
+            if (!MoveTo(Math.Max(4, State.ControlledStaff.Count() + 1))) return false;
             location = State.Protagonist.Employment!.LocationId;
-            arrangement = State.ArrangeOffice(location, true, true);
-            Try("Furnish new studio", new ApplyOfficeLayoutCommand(location, State.OfficeRevision, arrangement.Placements, arrangement.Purchases, []));
             if (Try("Hire after move", new HireStaffCommand(c.Id, location, salary))) { _hired = true; return true; }
             return false;
+        }
+
+        private int CareerYear(DateTime at) => (int)((at - _start).TotalDays / 365.25);
+
+        // Per career year (April to March): money at year end, business and personal flows, and how much there was to do.
+        // "Decisions" are successful player commands; "quiet days" is the longest stretch with no decision, stop event or new text.
+        private void YearSummary(StringBuilder sb)
+        {
+            static bool Flow(LedgerEntry e) => e.Kind is not (AccountEntryKind.Transfer or AccountEntryKind.Credit);
+            var business = State.Ledger.Where(Flow).GroupBy(e => CareerYear(e.Time)).ToDictionary(g => g.Key, g => g.ToArray());
+            var personal = State.Protagonist.PersonalAccount.Entries.Where(Flow).GroupBy(e => CareerYear(e.Time)).ToDictionary(g => g.Key, g => g.ToArray());
+            var goalsDone = State.Events.Where(e => e.Type == EventType.GoalCompleted).GroupBy(e => CareerYear(e.Time)).ToDictionary(g => g.Key, g => g.Count());
+            var published = State.Events.Where(e => e.Type == EventType.ChapterPublished && Owned(e.SeriesId)).GroupBy(e => CareerYear(e.Time)).ToDictionary(g => g.Key, g => g.Count());
+            sb.AppendLine("## Ten-year summary\r\n\r\nCareer years run April to March. Flows exclude transfers between savings and the business and loan movements.\r\n");
+            sb.AppendLine("| Year | Business at end | Personal at end | Business in | Business out | Biggest income | Personal in | Staff | Serialized | Top fanbase | Chapters published | Goal chapter |\r\n|---|---|---|---|---|---|---|---|---|---|---|---|");
+            foreach (var group in _snapshots.Where(s => s.At > _start).GroupBy(s => CareerYear(s.At.AddDays(-1))).OrderBy(g => g.Key))
+            {
+                var end = group.Last();
+                var entries = business.GetValueOrDefault(group.Key) ?? [];
+                var top = entries.Where(e => e.Amount > 0).GroupBy(e => e.Reason).OrderByDescending(g => g.Sum(e => e.Amount)).FirstOrDefault();
+                sb.AppendLine($"| {group.Key + 1} ({_start.AddYears(group.Key):yyyy}) | {end.Business:N0} | {end.Personal:N0} | {entries.Where(e => e.Amount > 0).Sum(e => e.Amount):N0} | " +
+                    $"{-entries.Where(e => e.Amount < 0).Sum(e => e.Amount):N0} | {(top is null ? "none" : $"{top.Key} {top.Sum(e => e.Amount):N0}")} | " +
+                    $"{(personal.GetValueOrDefault(group.Key) ?? []).Where(e => e.Amount > 0).Sum(e => e.Amount):N0} | {end.Staff} | {end.Serialized} | {end.Fans:N0} | " +
+                    $"{published.GetValueOrDefault(group.Key)} | {(end.Chapter < GoalCatalog.Chapters.Length ? GoalCatalog.Chapters[end.Chapter].Name : "all done")} |");
+            }
+            sb.AppendLine("\r\n## Middle game activity\r\n\r\n| Year | Decisions | Kinds of decision | 32x stops | Of which texts | Goals done | Longest quiet stretch (days) |\r\n|---|---|---|---|---|---|---|");
+            var moments = _actions.Select(a => a.At).Concat(_attention).OrderBy(t => t).ToList();
+            foreach (var (year, p) in _pace.OrderBy(p => p.Key))
+            {
+                var acts = _actions.Where(a => CareerYear(a.At) == year).ToArray();
+                var from = _start.AddDays(year * 365.25);
+                var until = from.AddDays(365.25) < State.Clock.Now ? from.AddDays(365.25) : State.Clock.Now;
+                var marks = moments.Where(t => t >= from && t < until).Prepend(from).Append(until).ToList();
+                var quiet = marks.Zip(marks.Skip(1)).Select(m => (m.Second - m.First).TotalDays).DefaultIfEmpty(0).Max();
+                var kinds = string.Join(", ", acts.GroupBy(a => a.Action).OrderByDescending(g => g.Count()).Select(g => $"{g.Key} {g.Count()}"));
+                sb.AppendLine($"| {year + 1} | {acts.Length} | {(kinds.Length == 0 ? "none" : kinds)} | {p.Stops + p.Texts} | {p.Texts} | {goalsDone.GetValueOrDefault(year)} | {quiet:F0} |");
+            }
+            sb.AppendLine();
         }
 
         public string Report()
@@ -396,6 +553,7 @@ public class CareerPlaytest
                     $"{(p.Work * QuietWorkSecondsPerHour + night) / 3600:F1} | {p.Stops + p.Texts} | {p.Texts} |");
             }
             sb.AppendLine();
+            YearSummary(sb);
             sb.AppendLine("## Milestones\r\n\r\n| Date | Day | Real time (h:mm) | Milestone |\r\n|---|---|---|---|");
             foreach (var m in _milestones)
                 sb.AppendLine($"| {m.At:yyyy-MM-dd} | {(m.At - _start).TotalDays:F0} | {(int)(m.Minutes / 60)}:{(int)(m.Minutes % 60):00} | {m.Name} |");
@@ -408,7 +566,7 @@ public class CareerPlaytest
             foreach (var g in _stale.GroupBy(x => (x.Step, x.Problem)))
                 sb.AppendLine($"- Stale: {g.Key.Step} failed {g.Count()} times from {g.First().At:yyyy-MM-dd}: {g.Key.Problem}");
             if (_stale.Count == 0) sb.AppendLine("- No guided action failed.");
-            sb.AppendLine("\r\n## Monthly snapshot\r\n\r\n| Month | Real hours | Personal yen | Business yen | Serialized | Staff | Guidance |\r\n|---|---|---|---|---|---|---|");
+            sb.AppendLine("\r\n## Monthly snapshot\r\n\r\n| Month | Real hours | Personal yen | Business yen | Serialized | Staff | Top fanbase | Guidance |\r\n|---|---|---|---|---|---|---|---|");
             foreach (var line in _monthly) sb.AppendLine(line);
             sb.AppendLine($"\r\nSavings contributions: {_contributions} totalling {_contributed:N0} yen. Recruitment searches: {_recruitAttempts}.\r\n");
             sb.AppendLine("## Business ledger by year\r\n\r\n| Year | Reason | Entries | Yen |\r\n|---|---|---|---|");

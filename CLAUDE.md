@@ -434,6 +434,15 @@ playtesting.
   progression, journey, management and `--steam-smoke` pass; no package
   built. Next for this item: app ID, Steamworks entries and 50 icons. Record:
   `docs/superpowers/steam-achievements-completion.md`.
+- **Ten-year balance playtest (2026-10-05):** the guided playtest now runs to
+  2006 and follows the goals board. Found an online-download runaway (seed 42
+  reaches about ¥48 trillion), struggling careers stuck in a yearly
+  cancellation loop, and an empty middle game for successful ones. All four
+  fixes made and re-run (coordinator's call): runaway gone, hits peak and
+  fade, struggling careers escape but only after 7.5 to 9.5 years, middle game
+  still empty; Aki's story milestones recommended as the Tier 3 item to pull
+  forward, awaiting the coordinator. Branch `claude/project-thread-kpkoc9`, not
+  merged. Record: `docs/superpowers/ten-year-balance-findings.md`.
 - **Controller and Steam Deck (2026-10-06):** every screen by gamepad (stick
   or D-pad, A, B back, LB/RB sections, Y pause, LT/RT speed, Start menu, View
   inbox, X phone, right stick scroll or look), our own direction search, focus

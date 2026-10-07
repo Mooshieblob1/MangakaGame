@@ -225,3 +225,9 @@ All five runs complete. Setbacks now happen and money stays meaningful.
   [completion record](mid-career-pacing-completion.md). T1.5 stays unticked
   until the fresh-player test (T1.10) judges the pacing. All playtest items
   now have a fix; next are the T1.9 display sweep and T1.10.
+
+## Ten-year run (2026-10-05)
+
+The playtest now runs to April 2006 and follows the goals board after the
+first hire. Results and proposed fixes are in the
+[ten-year balance findings](ten-year-balance-findings.md).

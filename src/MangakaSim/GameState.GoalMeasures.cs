@@ -32,7 +32,8 @@ public partial class GameState
     internal double GoalTopReaders => Math.Floor(GoalTitles.Where(s => s.LeadPersonId == ProtagonistPersonId).Select(s => s.Fanbase).DefaultIfEmpty(0).Max());
     internal bool GoalWorksFromStudio => Protagonist.Employment is { } e &&
         Locations.Any(l => l.Id == e.LocationId && l.BusinessId == ControlledBusinessId && !l.IsFamilyHome && l.PropertyOfferId > 0);
-    internal int GoalActiveTitles => GoalTitles.Count(s => s.Status == SeriesStatus.Active);
+    // Only titles running in a magazine count: an unfinished side doujin is not a second series (balance pass 2026-10-05).
+    internal int GoalMagazineTitles => GoalTitles.Count(s => s.Status == SeriesStatus.Active && s.Publishing == PublishingStatus.Serialized);
     internal bool GoalShortlisted => Progression.Awards.Any(a => a.Award.StartsWith("annual:", StringComparison.Ordinal) && GoalTitle(a.SeriesId));
     internal int GoalReleasedBooks => GoalTitles.Sum(s => s.Volumes.Count(v => v.ReleasedAt is not null));
     internal GoalProgress GoalMilestoneOr(string key, GoalProgress progress) => GoalMilestone(key) ? new(1, 1, "Done") : progress;
