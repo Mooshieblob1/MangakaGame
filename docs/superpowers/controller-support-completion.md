@@ -86,7 +86,13 @@ All on this PC, authorized by Blob on 2026-10-06.
 - Captures reviewed by me (`TestResults/gamepad-*.avif`): office, pause menu,
   title, settings, series details, a popup, furnishing, the phone and the three
   A6 sizes. Ring, prompts and layout look right.
-- Existing smokes rerun for regressions: see the result list below.
+- Existing smokes rerun with the change, all passing: `--smoke-test`,
+  `--management-smoke`, `--journey-smoke` (53), `--progression-smoke`,
+  `--alpha-smoke` (48), `--startup-smoke` (17), `--title-smoke` (74),
+  `--usability-smoke` (50), `--tester-b-smoke` (6), `--disclosure-smoke` (13),
+  `--work-feedback-smoke` (24), `--display-smoke` (16), `--brand-smoke` (29),
+  `--goals-smoke` (11), `--convenience-smoke` (25) and `--display-sweep-smoke`
+  (616 screen checks, 0 flagged).
 - Not done: a real controller in hand, a real Steam Deck, the Steam keyboard
   (needs Steam running in Big Picture or on a Deck), Valve's Deck review.
 
