@@ -40,7 +40,7 @@ public partial class GameState
             var last = done.LastOrDefault(r => r.Id == AkiMilestones.FinalArc && r.Target == series.Id);
             if (last is null || last.Answer == 1 && last.At.AddMonths(AkiMilestones.AskAgainMonths) <= Clock.Now) return (AkiMilestones.FinalArc, series.Id, null);
         }
-        if (!done.Any(r => r.Id == AkiMilestones.BiggerMagazine) && OwnRunningSeries.Count() < 2)
+        if (Since(AkiMilestones.BiggerMagazine) >= AkiMilestones.BiggerMagazineAgainMonths && OwnRunningSeries.Count() < 2)
             foreach (var series in OwnRunningSeries)
             {
                 var magazine = PublisherCatalog.Get(series.Contract!.MagazineId);
@@ -51,19 +51,40 @@ public partial class GameState
                 var bigger = PublisherCatalog.Magazines.Where(m => m.Tier == 1).OrderByDescending(m => m.Affinity(genre)).ThenBy(m => m.Id).FirstOrDefault();
                 if (bigger is not null) return (AkiMilestones.BiggerMagazine, series.Id, bigger.Id);
             }
-        if (!done.Any(r => r.Id == AkiMilestones.AssistantDebut))
+        // Recurring milestones (re-run 2026-10-06): a different assistant every two years, the bigger magazine again after three.
+        if (Since(AkiMilestones.AssistantDebut) >= AkiMilestones.DebutEveryMonths)
             foreach (var person in ControlledStaff.Where(p => p.Id != ProtagonistPersonId).OrderBy(p => p.Id))
                 if (person.Employment is { NoticeEndsAt: null } job && job.StartsAt.AddYears(AkiMilestones.DebutYears) <= Clock.Now &&
                     person.Skills.Values.DefaultIfEmpty(0).Max() >= AkiMilestones.DebutSkill &&
+                    !done.Any(r => r.Id == AkiMilestones.AssistantDebut && r.Target == person.Id) &&
                     !Series.Any(s => s.LeadPersonId == person.Id && s.Status == SeriesStatus.Active))
                     return (AkiMilestones.AssistantDebut, person.Id, null);
+        if (Milestones.TeachingUntil is null && (GoalShortlisted || GoalTopRank(10).Done) &&
+            Since(AkiMilestones.Teaching) >= (done.LastOrDefault(r => r.Id == AkiMilestones.Teaching)?.Answer == 0 ? AkiMilestones.TeachAgainMonths : AkiMilestones.TeachDeclinedMonths))
+            return (AkiMilestones.Teaching, ProtagonistPersonId, null);
+        if (Clock.Now >= AkiMilestones.OverseasFrom && Since(AkiMilestones.OverseasConvention) >= AkiMilestones.OverseasEveryMonths &&
+            Series.Where(s => s.BusinessId == ControlledBusinessId && s.LeadPersonId == ProtagonistPersonId && s.Volumes.Any(v => !v.IsDoujin && v.ReleasedAt is not null))
+                .OrderByDescending(s => s.Fanbase).ThenBy(s => s.Id).FirstOrDefault() is { } famous)
+            return (AkiMilestones.OverseasConvention, famous.Id, null);
+        var parents = done.Where(r => r.Id == AkiMilestones.ParentsHouse).ToArray();
+        if (GoalWorksFromStudio && PersonalMoney >= MilestoneYen(AkiMilestones.SavingsForRepairs) &&
+            (parents.Length == 0 || parents.Length == 1 && parents[0].Answer == 1 && parents[0].At.AddMonths(AkiMilestones.ParentsAgainMonths) <= Clock.Now))
+            return (AkiMilestones.ParentsHouse, ProtagonistPersonId, null);
         return null;
     }
+
+    /// <summary>Months since this milestone was last answered, or a large number if never.</summary>
+    private double Since(string id) => Milestones.Done.LastOrDefault(r => r.Id == id) is { } last ? (Clock.Now - last.At).TotalDays / (365.25 / 12) : 1_000;
+
+    /// <summary>A 1996 yen amount at today's prices.</summary>
+    internal long MilestoneYen(long yen) => Economy.Yen(yen * Economy.PriceIndex(TrendCatalog, Clock.Now));
 
     private bool MilestoneTargetValid() => Milestones.Pending switch
     {
         AkiMilestones.FinalArc or AkiMilestones.BiggerMagazine => OwnRunningSeries.Any(s => s.Id == Milestones.Target),
         AkiMilestones.AssistantDebut => ControlledStaff.Any(p => p.Id == Milestones.Target && p.Employment is { NoticeEndsAt: null }),
+        AkiMilestones.Teaching or AkiMilestones.ParentsHouse => Milestones.Target == ProtagonistPersonId,
+        AkiMilestones.OverseasConvention => FindSeries(Milestones.Target) is { } series && series.BusinessId == ControlledBusinessId,
         _ => false,
     };
 
@@ -71,8 +92,19 @@ public partial class GameState
     /// tidies running effects and offers the next milestone in a quiet stretch.</summary>
     private void MilestoneStep()
     {
-        if (Clock.Hour != 8 || Control != ControlMode.OwnerDirector) return;
         var m = Milestones;
+        // Teaching (milestone 4): Wednesday afternoon goes to the class, and the lecture fee is paid to Aki.
+        if (m.TeachingUntil is { } teaching)
+        {
+            if (teaching <= Clock.Now) m.TeachingUntil = null;
+            else if (Clock.DayOfWeek == DayOfWeek.Wednesday && Clock.Hour == 14)
+            {
+                var classEnds = Clock.Now.AddHours(AkiMilestones.TeachingHours);
+                if (!(Protagonist.BusyUntil > classEnds)) Protagonist.BusyUntil = classEnds;
+                AccountPost(Protagonist.PersonalAccount, MilestoneYen(AkiMilestones.LectureFee), "manga school lecture", AccountEntryKind.PersonalIncome);
+            }
+        }
+        if (Clock.Hour != 8 || Control != ControlMode.OwnerDirector) return;
         if (m.FinalArcSeries is { } arc && !OwnRunningSeries.Any(s => s.Id == arc)) m.FinalArcSeries = null;
         if (m.GuaranteedUntil <= Clock.Now) { m.GuaranteedMagazine = null; m.GuaranteedUntil = null; }
         if (m.ClosedUntil <= Clock.Now) { m.ClosedMagazine = null; m.ClosedUntil = null; }
@@ -86,14 +118,19 @@ public partial class GameState
         if (NextMilestone() is not { } next) return;
         m.Pending = next.Id; m.Target = next.Target; m.Magazine = next.Magazine;
         m.OfferedAt = Clock.Now; m.DueAt = Clock.Now.Date.AddDays(AkiMilestones.DecisionDays).AddHours(8);
-        Emit(EventType.MilestoneOffered, $"A decision is waiting: {PendingMilestone!.Title}.", next.Id == AkiMilestones.AssistantDebut ? null : next.Target,
-            personId: next.Id == AkiMilestones.AssistantDebut ? next.Target : null);
+        var aboutSeries = next.Id is AkiMilestones.FinalArc or AkiMilestones.BiggerMagazine or AkiMilestones.OverseasConvention;
+        Emit(EventType.MilestoneOffered, $"A decision is waiting: {PendingMilestone!.Title}.", aboutSeries ? next.Target : null,
+            personId: aboutSeries ? null : next.Target);
     }
 
     private void ApplyMilestone(MilestoneCommand c)
     {
         if (c.Id is null || c.Id != Milestones.Pending || c.Answer is not (0 or 1) || !MilestoneTargetValid())
             throw new InvalidCommandException("That decision is no longer waiting.");
+        if (c.Answer == 0 && c.Id == AkiMilestones.OverseasConvention && FreeCash(ControlledBusinessId) < MilestoneYen(AkiMilestones.TripCost))
+            throw new InvalidCommandException($"The trip needs ¥{MilestoneYen(AkiMilestones.TripCost):N0} of business cash after wages and bills.");
+        if (c.Answer == 0 && c.Id == AkiMilestones.ParentsHouse && Spendable(Protagonist.PersonalAccount) < MilestoneYen(AkiMilestones.RepairCost))
+            throw new InvalidCommandException($"The repairs need ¥{MilestoneYen(AkiMilestones.RepairCost):N0} of personal savings.");
         ResolveMilestone(c.Answer, false);
     }
 
@@ -134,6 +171,28 @@ public partial class GameState
                 else { person.Happiness = Math.Max(0, person.Happiness - 30); person.Loyalty = Math.Max(0, person.Loyalty - 20); }
                 break;
             }
+            case AkiMilestones.Teaching when answer == 0:
+                m.TeachingUntil = Clock.Now.AddYears(1);
+                ChangeTrackRecord(2);
+                ChangeReputation(Protagonist, 3);
+                break;
+            case AkiMilestones.OverseasConvention:
+            {
+                var series = FindSeries(m.Target)!;
+                var go = answer == 0;
+                if (go) Spend(ControlledBusinessId, MilestoneYen(AkiMilestones.TripCost), "overseas convention trip");
+                var until = Clock.Now.AddDays(go ? AkiMilestones.TripDays : 1);
+                if (!(Protagonist.BusyUntil > until)) Protagonist.BusyUntil = until;
+                series.Fanbase += FanbaseRules.Saturated(series.Fanbase, series.Fanbase * (go ? .03 : .01));
+                foreach (var channel in World.Channels.Where(a => a.SeriesId == series.Id && a.Channel == ReleaseChannel.Overseas && a.Status == NegotiationStatus.Accepted))
+                    channel.InternationalInterest = Math.Clamp(channel.InternationalInterest + (go ? 20 : 5), 0, 100);
+                if (go) ChangeTrackRecord(1);
+                break;
+            }
+            case AkiMilestones.ParentsHouse when answer == 0:
+                AccountPost(Protagonist.PersonalAccount, -MilestoneYen(AkiMilestones.RepairCost), "parents' house repairs", AccountEntryKind.Expense);
+                Protagonist.Happiness = 100;
+                break;
         }
         var chosen = answer == 0 ? $"{scene.First}: {scene.FirstCost}" : $"{scene.Second}: {scene.SecondCost}";
         Career.Journal.Add(new(scene.Id, answer, Clock.Now, scene.Text + "\n\n" + (defaulted ? "No answer in time, so: " : "") + chosen));
@@ -175,5 +234,6 @@ public partial class GameState
         Check(m is not null && m.Done is not null && m.Done.All(r => r is not null && AkiMilestones.Known(r.Id) && r.Answer is 0 or 1), "records");
         Check(m!.Pending is null || AkiMilestones.Known(m.Pending), "pending");
         Check(m.FinalArcChaptersLeft is >= 0 and <= AkiMilestones.FinalArcChapters, "final arc");
+        Check(m.TeachingUntil is null || m.TeachingUntil <= Clock.Now.AddYears(1), "teaching");
     }
 }

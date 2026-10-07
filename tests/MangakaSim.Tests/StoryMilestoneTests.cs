@@ -200,4 +200,63 @@ public class StoryMilestoneTests
         Assert.Null(upgraded.Milestones.Pending);
         Assert.Empty(upgraded.Milestones.Done);
     }
+
+    static void Offer(GameState s, string id, int target)
+    {
+        s.Milestones.Pending = id; s.Milestones.Target = target; s.Milestones.DueAt = s.Clock.Now.AddDays(30);
+    }
+
+    [Fact] public void A_top_ten_creator_is_asked_to_teach_and_teaching_takes_wednesday_afternoons()
+    {
+        var (s, hit) = LongRunningHit(months: 20);
+        hit.Chapters.First().Rank = 5;
+        ToEight(s);
+        Assert.Equal(AkiMilestones.Teaching, s.Milestones.Pending);
+        var track = s.ControlledBusiness.TrackRecord;
+        s.Apply(new MilestoneCommand(AkiMilestones.Teaching, 0));
+        Assert.Equal((DateTime?)s.Clock.Now.AddYears(1), s.Milestones.TeachingUntil);
+        Assert.True(s.ControlledBusiness.TrackRecord > track);
+        var wednesday = s.Clock.Now.Date.AddDays(((int)DayOfWeek.Wednesday - (int)s.Clock.Now.DayOfWeek + 7) % 7 + 7).AddHours(15);
+        s.Advance(s.Clock.HoursUntil(wednesday));
+        Assert.True(s.Protagonist.BusyUntil > s.Clock.Now);
+        Assert.Contains(s.Protagonist.PersonalAccount.Entries, e => e.Reason == "manga school lecture" && e.Amount > 0);
+    }
+
+    [Fact] public void The_overseas_trip_needs_the_cash_and_takes_a_week()
+    {
+        var (s, hit) = LongRunningHit(months: 20);
+        Offer(s, AkiMilestones.OverseasConvention, hit.Id);
+        s.Money = 0;
+        Assert.Throws<InvalidCommandException>(() => s.Apply(new MilestoneCommand(AkiMilestones.OverseasConvention, 0)));
+        s.Money = 5_000_000;
+        var fans = hit.Fanbase = 50_000;
+        s.Apply(new MilestoneCommand(AkiMilestones.OverseasConvention, 0));
+        Assert.True(s.Protagonist.BusyUntil >= s.Clock.Now.AddDays(AkiMilestones.TripDays));
+        Assert.True(hit.Fanbase > fans * 1.02);
+        Assert.Contains(s.Ledger, e => e.Reason == "overseas convention trip" && e.Amount == -s.MilestoneYen(AkiMilestones.TripCost));
+    }
+
+    [Fact] public void Helping_the_parents_costs_savings_and_lifts_aki()
+    {
+        var s = GameState.NewGame(0);
+        Offer(s, AkiMilestones.ParentsHouse, s.ProtagonistPersonId);
+        var cost = s.MilestoneYen(AkiMilestones.RepairCost);
+        Assert.Throws<InvalidCommandException>(() => s.Apply(new MilestoneCommand(AkiMilestones.ParentsHouse, 0)));
+        s.Protagonist.PersonalAccount.Balance = 6_000_000;
+        s.Protagonist.Happiness = 40;
+        s.Apply(new MilestoneCommand(AkiMilestones.ParentsHouse, 0));
+        Assert.Equal(6_000_000 - cost, s.PersonalMoney);
+        Assert.Equal(100, s.Protagonist.Happiness);
+    }
+
+    [Fact] public void Declined_parents_ask_once_more_a_year_later_and_then_stop()
+    {
+        var s = GameState.NewGame(0);
+        s.Milestones.Done.Add(new(AkiMilestones.ParentsHouse, s.ProtagonistPersonId, 1, s.Clock.Now.AddMonths(-13), false));
+        Assert.Equal(1, s.Milestones.Done.Count(r => r.Id == AkiMilestones.ParentsHouse));
+        Offer(s, AkiMilestones.ParentsHouse, s.ProtagonistPersonId);
+        s.Apply(new MilestoneCommand(AkiMilestones.ParentsHouse, 1));
+        Assert.Equal(2, s.Milestones.Done.Count(r => r.Id == AkiMilestones.ParentsHouse));
+        foreach (var id in AkiMilestones.All) Assert.False(string.IsNullOrWhiteSpace(AkiMilestones.Describe(s, id, s.ProtagonistPersonId, null).SecondCost));
+    }
 }
