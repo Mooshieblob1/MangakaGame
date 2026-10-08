@@ -73,6 +73,9 @@ public partial class DebugMain
         _officeItems.ItemSelected+=i=>{_officeItem=(int)_officeItems.GetItemMetadata((int)i);_officeView.SelectedFurniture=_officeItem;RefreshOfficeSelection();};
         Button(_officeEditor,"Place selected stored item",()=>PlaceStoredOffice());
         Button(_officeEditor,"Rotate selected (R)",RotateOfficeFurniture);
+        // Move buttons place furniture without the mouse (controller support, 2026-10-06); arrows follow the screen.
+        var nudge=new HFlowContainer();_officeEditor.AddChild(nudge);
+        foreach(var (arrow,x,y) in new[]{("←",-1,0),("↑",0,-1),("↓",0,1),("→",1,0)}){var (sx,sy)=(x,y);Button(nudge,"Move "+arrow,()=>NudgeOfficeFurniture(sx,sy));}
         Button(_officeEditor,"Lock / unlock selected",()=>{if(_officeDraft is null)return;var p=_officeDraft.Placements.FirstOrDefault(p=>p.ItemId==_officeItem);if(p is not null)ReplaceOfficePlacement(p,p with{Locked=!p.Locked});});
         Button(_officeEditor,"Put selected in storage",()=>RemoveOfficeFurniture(false));
         Button(_officeEditor,"Sell selected",()=>RemoveOfficeFurniture(true));
@@ -236,6 +239,15 @@ public partial class DebugMain
         if(p.DeskId is{} desk)p=_officeDraft.Placements.Single(x=>x.ItemId==desk);
         if(p.Locked){_officeFeedback.Text="Unlock this furniture before moving it.";return;}
         ReplaceOfficePlacement(p,p with{X=cell.X,Z=cell.Z});
+    }
+    // One grid square in a screen direction, whichever way the camera faces.
+    private void NudgeOfficeFurniture(int screenX,int screenY)
+    {
+        if(_officeDraft is null)return;var p=_officeDraft.Placements.FirstOrDefault(p=>p.ItemId==_officeItem);
+        if(p is null){_officeFeedback.Text="Choose a placed piece of furniture in the list first.";return;}
+        if(p.DeskId is{} desk)p=_officeDraft.Placements.Single(x=>x.ItemId==desk);
+        var (dx,dz)=_officeView.GridStep(new Vector2(screenX,screenY));
+        MoveOfficeFurniture(new OfficeCell(p.X+dx,p.Z+dz));
     }
     private void RotateOfficeFurniture()
     {

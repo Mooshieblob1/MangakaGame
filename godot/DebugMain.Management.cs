@@ -101,8 +101,12 @@ public partial class DebugMain
         var button=ActionButton(parent,title,action);button.ThemeTypeVariation="HeaderButton";
         button.SizeFlagsVertical=SizeFlags.ShrinkCenter;button.CustomMinimumSize=new(0,32);return button;
     }
+    // Steam Deck legibility (Q70, 2026-10-07): at 1280 x 800 the interface cannot grow past 100%, so no text is set
+    // smaller than 13 px (about 9 px tall letters, Valve's guidance). Captions asked for at 11 or 12 px get 13.
+    internal const int MinTextSize=13;
     private static Label Words(Control parent,string text,int size=16)
     {
+        size=Math.Max(size,MinTextSize);
         var label=new Label{Text=text,AutowrapMode=TextServer.AutowrapMode.WordSmart,SizeFlagsHorizontal=SizeFlags.ExpandFill};label.SetMeta("base_font_size",size);parent.AddChild(label);
         var root=parent.IsInsideTree()?parent.GetTree().Root.GetChildren().OfType<DebugMain>().FirstOrDefault():null;label.AddThemeFontSizeOverride("font_size",(int)(size*(root?._presentation.UiScale??1)));
         if(size>=20&&HeadingFont is not null)label.AddThemeFontOverride("font",HeadingFont); // headings (20 px and above)
@@ -180,7 +184,12 @@ public partial class DebugMain
         _report.VisibilityChanged+=()=>_notice.Visible=!_report.Visible;
         var production=(Control)_mainTabs.GetChild(0);_mainTabs.RemoveChild(production);
         var productionScroll=new ScrollContainer{Name="Production"};_mainTabs.AddChild(productionScroll);_mainTabs.MoveChild(productionScroll,0);productionScroll.AddChild(production);
-        production.SizeFlagsHorizontal=production.SizeFlagsVertical=SizeFlags.ExpandFill;_mainTabs.CurrentTab=0;
+        production.SizeFlagsHorizontal=production.SizeFlagsVertical=SizeFlags.ExpandFill;
+        // The furnishing workspace ran off a 1280 x 800 or 720 window (controller smoke, 2026-10-06), so it scrolls too.
+        var furnishing=(Control)_mainTabs.GetChild(5);_mainTabs.RemoveChild(furnishing);
+        var furnishingScroll=new ScrollContainer{Name="Office",HorizontalScrollMode=ScrollContainer.ScrollMode.Disabled};_mainTabs.AddChild(furnishingScroll);_mainTabs.MoveChild(furnishingScroll,5);furnishingScroll.AddChild(furnishing);
+        furnishing.SizeFlagsHorizontal=furnishing.SizeFlagsVertical=SizeFlags.ExpandFill;furnishing.Show(); // the tab container had hidden it as a background tab
+        _mainTabs.CurrentTab=0;
         _workbenchNotice=Words(reportBox,"Changes use the selected studio, person and series.",14);
         // The developer event stream is not part of the player-facing workbench.
         _log.Hide();
@@ -196,6 +205,7 @@ public partial class DebugMain
         BuildAlpha();BuildSpeedFeedback();PrepareWorkspaceForms();
         BuildFloatingOffice(margin,railPanel,body,shade);
         BuildWorkFeedback();
+        BuildGamepad();
         _side.VisibilityChanged+=RefreshNavigation;_report.VisibilityChanged+=RefreshNavigation;
         GetViewport().SizeChanged+=ResizeGui;_managementReady=true;ApplyInterfaceSize();
         GetTree().AutoAcceptQuit=false; // the close button keeps a safety save first (HandleCloseRequest)

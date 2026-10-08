@@ -58,7 +58,7 @@ public partial class DebugMain
     {
         if(_overnightCaption is null||_overnightTarget is not {} target)return;
         var morning=_state.Clock.Hour is >=5 and <12;
-        _overnightCaption.Text=_speed<=0?"Ⅱ OVERNIGHT PAUSED\nPress Space or Ⅱ to resume at 32×":
+        _overnightCaption.Text=_speed<=0?(PadActive?"Ⅱ OVERNIGHT PAUSED\nPress Y to resume at 32×":"Ⅱ OVERNIGHT PAUSED\nPress Space or Ⅱ to resume at 32×"):
             _overnightDeparting?"Closing up for the night":
             $"▶▶ {(morning?"DAWN":"OVERNIGHT")} · 32×\n{_state.Clock.Now:HH:mm} → {target:ddd HH:mm}";
         PositionOvernightPanel();

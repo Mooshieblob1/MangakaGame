@@ -79,7 +79,7 @@ public partial class DebugMain
             total.FocusExited+=()=>total.RemoveThemeColorOverride("font_color");
             total.GuiInput+=input=>
             {
-                if(input is InputEventMouseButton{Pressed:true,ButtonIndex:MouseButton.Left}||input is InputEventKey{Pressed:true,Echo:false,Keycode:Key.Enter or Key.KpEnter})
+                if(input is InputEventMouseButton{Pressed:true,ButtonIndex:MouseButton.Left}||input is InputEventKey{Pressed:true,Echo:false,Keycode:Key.Enter or Key.KpEnter}||input is InputEventJoypadButton{Pressed:true,ButtonIndex:JoyButton.A})
                 {
                     if(OfficeEditing){Notify("Apply or discard furniture changes before opening finances.");return;}
                     _personalAccount=personal;Navigate("Finances");total.AcceptEvent();

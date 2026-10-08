@@ -108,6 +108,18 @@ public sealed class SteamAchievements : IAchievementSink
         else _storeRetry = 2;
     }
 
+    /// <summary>True on a Steam Deck (controller support, 2026-10-06): the game starts ready for the controller.</summary>
+    public bool OnSteamDeck => Connected && SteamUtils.IsSteamRunningOnSteamDeck();
+
+    /// <summary>Opens Steam's on-screen keyboard beside a text box, in window pixels. False when Steam is off, or not
+    /// in Big Picture or on a Deck, where the player has a real keyboard anyway.</summary>
+    public bool ShowKeyboard(Rect2I field, bool numeric)
+    {
+        if (!Connected) return false;
+        var mode = numeric ? EFloatingGamepadTextInputMode.k_EFloatingGamepadTextInputModeModeNumeric : EFloatingGamepadTextInputMode.k_EFloatingGamepadTextInputModeModeSingleLine;
+        return SteamUtils.ShowFloatingGamepadTextInput(mode, field.Position.X, field.Position.Y, field.Size.X, field.Size.Y);
+    }
+
     public void Stop()
     {
         if (!Connected) return;

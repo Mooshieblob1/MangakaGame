@@ -443,6 +443,16 @@ playtesting.
   still empty; Aki's story milestones recommended as the Tier 3 item to pull
   forward, awaiting the coordinator. Branch `claude/project-thread-kpkoc9`, not
   merged. Record: `docs/superpowers/ten-year-balance-findings.md`.
+- **Controller and Steam Deck (2026-10-06):** every screen by gamepad (stick
+  or D-pad, A, B back, LB/RB sections, Y pause, LT/RT speed, Start menu, View
+  inbox, X phone, right stick scroll or look), our own direction search, focus
+  kept inside menus and popups, a gold focus ring and Xbox-style prompts with
+  the focused tooltip, Steam's on-screen keyboard on a Deck, furniture Move
+  buttons, a scrolling furnishing workspace. `--gamepad-smoke` (27 screens
+  fully reachable, buttons, 1280x800 and 1280x720 layout, A6 card at
+  1280x720, 1280x800 and 150%) passes. Smallest text raised to 13 px on every
+  screen (Q70 option 1). Open: real Deck test. Branch `claude/project-thread-b9i0a0`.
+  Record: `docs/superpowers/controller-support-completion.md`.
 - Keep this section in sync with the roadmap
   (`docs/superpowers/specs/2026-09-22-roadmap.md`).
 
