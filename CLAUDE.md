@@ -440,9 +440,12 @@ playtesting.
   cancellation loop, and an empty middle game for successful ones. All four
   fixes made and re-run (coordinator's call): runaway gone, hits peak and
   fade, struggling careers escape but only after 7.5 to 9.5 years, middle game
-  still empty; Aki's story milestones recommended as the Tier 3 item to pull
-  forward, awaiting the coordinator. Branch `claude/project-thread-kpkoc9`, not
-  merged. Record: `docs/superpowers/ten-year-balance-findings.md`.
+  still empty. Fixes merged to main (b335443). Aki's story milestones (spec
+  `docs/superpowers/specs/2026-10-05-aki-story-milestones-design.md`): all six
+  built with recurrence on branch `claude/project-thread-kpkoc9` (not merged
+  yet); hit careers now make 3 to 15 decisions a year, with a few quiet years
+  left for a player who always declines; card not yet checked on screen.
+  Record: `docs/superpowers/ten-year-balance-findings.md`.
 - **Controller and Steam Deck (2026-10-06):** every screen by gamepad (stick
   or D-pad, A, B back, LB/RB sections, Y pause, LT/RT speed, Start menu, View
   inbox, X phone, right stick scroll or look), our own direction search, focus

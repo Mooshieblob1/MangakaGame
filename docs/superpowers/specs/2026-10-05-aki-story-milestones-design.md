@@ -1,6 +1,6 @@
 # Aki's story milestones: design
 
-Date: 2026-10-05. Status: approved by Blob 2026-10-05. Milestones 1 to 3 implemented 2026-10-06 on branch `claude/project-thread-kpkoc9`; 4 to 6 not yet.
+Date: 2026-10-05. Status: approved by Blob 2026-10-05. Milestones 1 to 3 implemented 2026-10-06 and 4 to 6 with recurrence 2026-10-08, on branch `claude/project-thread-kpkoc9`. Spacing changed from 120 to 90 days after the first re-run.
 
 Background: the ten-year balance pass
 (`docs/superpowers/ten-year-balance-findings.md`) found the middle game empty

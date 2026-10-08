@@ -316,3 +316,40 @@ Recommended next step: build the remaining three milestones (teaching, an
 overseas convention, the parents' house) and let some recur (a new assistant
 debut every two years or so, the bigger magazine again after a loyalty
 period), then re-run.
+
+## Re-run with all six milestones, some recurring (2026-10-08)
+
+Blob said to go ahead (2026-10-07). Built on branch
+`claude/project-thread-kpkoc9`: teaching at a manga school, an invitation from
+abroad (from 2000) and the old house, plus recurrence: a different assistant's
+debut every two years, the bigger magazine again after three years, teaching a
+year after teaching or two after declining, abroad every 18 months, the parents
+once more a year after a no. Milestones are now spaced 90 days apart instead of
+120. 821 simulation tests passed, then 828 after merging the controller branch
+(`b032504`) in, and the whole solution builds without warnings. All six
+ten-year careers pass their save round trip and replay checks. Reports are kept
+locally in `TestResults/career-playtest/ten-year-milestones-2026-10-08/`.
+
+Careers with a hit, years 5 to 10:
+
+| Career | Decisions a year (first three milestones) | Longest quiet stretch (first three milestones) | Milestones met |
+|---|---|---|---|
+| Seed 42 Standard | 4 to 15 (2 to 5) | 53 to 125 days (115 to 246) | 17 |
+| Seed 7 Relaxed | 1 to 6 (0 to 4) | 87 to 227 days (150 to 275) | 18 |
+| Seed 1 Standard | 3 to 7 (2 to 7) | 83 to 257 days (92 to 271) | 15 |
+
+- Seed 42 meets the target (at least four decisions a year, no quiet stretch
+  past about 150 days) in every year from its fifth.
+- Seeds 1 and 7 Relaxed meet it in most years but miss in a few: seed 7 Relaxed
+  has one year with a single decision and one 227-day stretch; seed 1 has three
+  decisions in years 9 and 10 and stretches of 212 and 257 days. Both answer
+  every milestone with the second answer (decline, stay loyal, keep running),
+  which ends each milestone quickly; a player who teaches or travels gets more
+  to manage.
+- Struggling careers meet one to three milestones, all after they settle.
+- Money is about the same as before the milestones; the parents' repairs and the
+  trips are small next to a hit's royalties.
+
+Verdict: the middle game is no longer empty for careers with a hit, though a
+few quiet years remain for a player who always declines. Further filling is a
+Tier 3 content question rather than a balance blocker.
