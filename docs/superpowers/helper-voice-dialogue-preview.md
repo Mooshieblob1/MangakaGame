@@ -73,5 +73,5 @@ then ffmpeg to H.264/AAC MP4 (75 s, 1600 x 900). The preview is outside the repo
 - Prompt that worked: `[mood, speaking English with a thick <X> accent] <line>`
   with a mood cue per sentence. Very strong wording ("unmistakable") made v4
   repeat whole phrases. Accent takes are outside the repo in
-  `%LOCALAPPDATA%\MangakaGameoice-testsÂ‚6-10-10ound5`, `round7` and
+  `%LOCALAPPDATA%\MangakaGameoice-tests‚6-10-10ound5`, `round7` and
   `round8`; only English (Australian) and Japanese are in the game so far.
