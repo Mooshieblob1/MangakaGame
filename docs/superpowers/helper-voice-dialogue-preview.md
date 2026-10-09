@@ -58,12 +58,29 @@ then ffmpeg to H.264/AAC MP4 (75 s, 1600 x 900). The preview is outside the repo
 - Blob is rating eleven other English accents (one take per line each) for a
   possible extra option.
 
-## Accent list (Blob, 2026-10-10)
+## Official Helper-Chan dub list (Blob, 2026-10-10)
 
-- Official English accents for Helper-Chan, all from the same designed voice with
-  only the accent changed: Australian (default), American, English (southern),
-  Scottish, Irish, Northern Irish (Belfast), Welsh (Valleys), South African, New
-  Zealand, Indian and Singlish. Plus the Japanese voice with English subtitles.
+Decided, but not done yet: Blob asked for this to be recorded as the official
+list of dubs and not produced for now. In the game today: English (Australian)
+and Japanese, for six scenes only.
+
+| Dub | Status |
+| --- | --- |
+| English, Australian (default) | In game (six scenes) |
+| Japanese, English subtitles | In game (six scenes); translation needs a native check |
+| English, American | Planned |
+| English, English (southern) | Planned |
+| English, Scottish | Planned |
+| English, Irish | Planned |
+| English, Northern Irish (Belfast) | Planned |
+| English, Welsh (Valleys) | Planned |
+| English, South African | Planned |
+| English, New Zealand | Planned |
+| English, Indian | Planned |
+| English, Singlish (Singlish wording) | Planned |
+| Tagalog | Planned, later (replaces a Filipino English accent) |
+
+- All English dubs come from the same designed voice, with only the accent changed.
 - Rule: change pronunciation only, never add words to sound stereotypical.
   Singlish is the exception: words are swapped for Singlish ones, nothing added, so
   its text box needs the Singlish wording.
