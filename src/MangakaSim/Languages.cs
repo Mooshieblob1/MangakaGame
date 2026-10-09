@@ -10,12 +10,13 @@ public static class Languages
     public sealed record Language(string Code, string Name);
 
     /// <summary>English first: it is the source text and the fallback.</summary>
-    public static readonly Language[] Supported = [new("en", "English"), new("ja", "日本語"), new("en_SG", "Singlish")];
+    public static readonly Language[] Supported = [new("en", "English"), new("ja", "日本語"), new("en_SG", "Singlish"),
+        new("es", "Español"), new("fr", "Français"), new("de", "Deutsch"), new("it", "Italiano"), new("pt_PT", "Português (Portugal)")];
 
     public static bool Known(string? code) => code is not null && Supported.Any(l => l.Code == code);
 
     /// <summary>Automatic picks the computer's language when the game has it, otherwise English. Singlish is only chosen by hand,
-    /// since a Singapore locale usually means standard English.</summary>
+    /// since a Singapore locale usually means standard English. European Portuguese only matches Portugal, not Brazil.</summary>
     public static string Automatic(string systemLocale) =>
         Supported.FirstOrDefault(l => l.Code != "en_SG" && l.Code != "en" && systemLocale.StartsWith(l.Code, StringComparison.OrdinalIgnoreCase))?.Code ?? "en";
 

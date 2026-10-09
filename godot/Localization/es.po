@@ -1,0 +1,105 @@
+# Mangaka Days, Spanish (Spain) (i18n, 2026-10-10).
+# msgid is the English text exactly as the game shows it; anything missing here stays in English.
+# Draft translations: a native speaker still needs to check them.
+msgid ""
+msgstr ""
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Automatic, follows Windows"
+msgstr "Automático, según Windows"
+
+msgid "Helper-Chan's voice"
+msgstr "Voz de Helper-Chan"
+
+msgid "English"
+msgstr "Inglés"
+
+msgid "Japanese"
+msgstr "Japonés"
+
+msgid "Off, text only"
+msgstr "Desactivada, solo texto"
+
+msgid "Read later"
+msgstr "Leer más tarde"
+
+msgid "Skip this conversation"
+msgstr "Saltar esta conversación"
+
+msgid "A place beside yours"
+msgstr "Un sitio junto al tuyo"
+
+msgid "The desk is ready. So am I. What should I remind you of when things get difficult?"
+msgstr "El escritorio está listo. Y yo también. Cuando las cosas se pongan difíciles, ¿qué quieres que te recuerde?"
+
+msgid "Make something I'm proud of"
+msgstr "Crear algo que me enorgullezca"
+
+msgid "Reach someone who needs it"
+msgstr "Llegar a alguien que lo necesite"
+
+msgid "The first page worth keeping"
+msgstr "La primera página que vale la pena guardar"
+
+msgid "I kept a copy of the first finished page. Official archival duties, obviously."
+msgstr "Guardé una copia de la primera página terminada. Tareas oficiales de archivo, obviamente."
+
+msgid "Keep the rough draft too"
+msgstr "Guarda también el borrador"
+
+msgid "Start with the finished page"
+msgstr "Empieza por la página terminada"
+
+msgid "Same clipboard, different day"
+msgstr "La misma tablilla, otro día"
+
+msgid "The clipboard has room for a difficult chapter, too. What would help right now?"
+msgstr "La tablilla también tiene espacio para un capítulo difícil. ¿Qué te ayudaría ahora mismo?"
+
+msgid "Talk it through"
+msgstr "Hablarlo"
+
+msgid "Just stay beside me for a bit"
+msgstr "Quédate a mi lado un rato"
+
+msgid "Tea beside the draft"
+msgstr "Té junto al borrador"
+
+msgid "A pause is allowed. I checked. I'll stay beside you. We don't have to fill the silence."
+msgstr "Tomarse una pausa está permitido. Lo comprobé. Me quedo a tu lado. No hace falta llenar el silencio."
+
+msgid "Stay and chat"
+msgstr "Quédate a charlar"
+
+msgid "Enjoy the quiet"
+msgstr "Disfrutar del silencio"
+
+msgid "Desk migration"
+msgstr "Mudanza de escritorio"
+
+msgid "The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair."
+msgstr "El equipo importante sobrevivió. La tablilla, las gafas y una cantidad absurda de pelo."
+
+msgid "How is the archive?"
+msgstr "¿Cómo está el archivo?"
+
+msgid "How is the new view?"
+msgstr "¿Qué tal la nueva vista?"
+
+msgid "Part of manga history"
+msgstr "Parte de la historia del manga"
+
+msgid "Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know."
+msgstr "Anime, merchandising, un millón de lectores. La gente recordará estas páginas. Yo guardé la primera, ¿sabes?"
+
+msgid "Let's keep making them"
+msgstr "Sigamos haciéndolas"
+
+msgid "Thank you for staying"
+msgstr "Gracias por quedarte"

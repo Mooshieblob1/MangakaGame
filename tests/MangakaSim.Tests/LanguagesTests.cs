@@ -11,7 +11,11 @@ public class LanguagesTests
     [InlineData("ja_JP", "ja")]
     [InlineData("en_US", "en")]
     [InlineData("en_SG", "en")] // Singlish only by hand
-    [InlineData("de_DE", "en")] // not translated yet
+    [InlineData("de_DE", "de")]
+    [InlineData("es_MX", "es")]
+    [InlineData("pt_PT", "pt_PT")]
+    [InlineData("pt_BR", "en")] // Brazilian Portuguese is not European Portuguese
+    [InlineData("nl_NL", "en")] // not translated yet
     [InlineData("", "en")]
     public void Automatic_follows_the_computer_when_the_game_has_that_language(string system, string expected) =>
         Assert.Equal(expected, Languages.Automatic(system));

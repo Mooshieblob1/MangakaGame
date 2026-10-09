@@ -1,0 +1,105 @@
+# Mangaka Days, German (i18n, 2026-10-10).
+# msgid is the English text exactly as the game shows it; anything missing here stays in English.
+# Draft translations: a native speaker still needs to check them.
+msgid ""
+msgstr ""
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Language"
+msgstr "Sprache"
+
+msgid "Automatic, follows Windows"
+msgstr "Automatisch, wie Windows"
+
+msgid "Helper-Chan's voice"
+msgstr "Helper-Chans Stimme"
+
+msgid "English"
+msgstr "Englisch"
+
+msgid "Japanese"
+msgstr "Japanisch"
+
+msgid "Off, text only"
+msgstr "Aus, nur Text"
+
+msgid "Read later"
+msgstr "Später lesen"
+
+msgid "Skip this conversation"
+msgstr "Dieses Gespräch überspringen"
+
+msgid "A place beside yours"
+msgstr "Ein Platz neben deinem"
+
+msgid "The desk is ready. So am I. What should I remind you of when things get difficult?"
+msgstr "Der Schreibtisch ist bereit. Ich auch. Woran soll ich dich erinnern, wenn es schwierig wird?"
+
+msgid "Make something I'm proud of"
+msgstr "Etwas schaffen, auf das ich stolz bin"
+
+msgid "Reach someone who needs it"
+msgstr "Jemanden erreichen, der es braucht"
+
+msgid "The first page worth keeping"
+msgstr "Die erste Seite, die es wert ist"
+
+msgid "I kept a copy of the first finished page. Official archival duties, obviously."
+msgstr "Ich habe eine Kopie der ersten fertigen Seite aufbewahrt. Offizielle Archivpflichten, selbstverständlich."
+
+msgid "Keep the rough draft too"
+msgstr "Heb auch den Rohentwurf auf"
+
+msgid "Start with the finished page"
+msgstr "Fang mit der fertigen Seite an"
+
+msgid "Same clipboard, different day"
+msgstr "Gleiches Klemmbrett, anderer Tag"
+
+msgid "The clipboard has room for a difficult chapter, too. What would help right now?"
+msgstr "Auf dem Klemmbrett ist auch Platz für ein schwieriges Kapitel. Was würde dir jetzt helfen?"
+
+msgid "Talk it through"
+msgstr "Darüber reden"
+
+msgid "Just stay beside me for a bit"
+msgstr "Bleib einfach kurz bei mir"
+
+msgid "Tea beside the draft"
+msgstr "Tee neben dem Entwurf"
+
+msgid "A pause is allowed. I checked. I'll stay beside you. We don't have to fill the silence."
+msgstr "Eine Pause ist erlaubt. Ich habe nachgesehen. Ich bleibe bei dir. Wir müssen die Stille nicht füllen."
+
+msgid "Stay and chat"
+msgstr "Bleiben und plaudern"
+
+msgid "Enjoy the quiet"
+msgstr "Die Ruhe genießen"
+
+msgid "Desk migration"
+msgstr "Schreibtischumzug"
+
+msgid "The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair."
+msgstr "Die wichtige Ausrüstung hat überlebt. Klemmbrett, Brille und eine unvernünftige Menge Haare."
+
+msgid "How is the archive?"
+msgstr "Wie geht es dem Archiv?"
+
+msgid "How is the new view?"
+msgstr "Wie ist die neue Aussicht?"
+
+msgid "Part of manga history"
+msgstr "Ein Stück Manga-Geschichte"
+
+msgid "Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know."
+msgstr "Anime, Merchandise, eine Million Leser. Die Leute werden sich an diese Seiten erinnern. Ich habe die erste aufbewahrt, weißt du."
+
+msgid "Let's keep making them"
+msgstr "Lass uns weitermachen"
+
+msgid "Thank you for staying"
+msgstr "Danke, dass du bleibst"

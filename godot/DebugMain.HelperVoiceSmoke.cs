@@ -68,7 +68,10 @@ public partial class DebugMain
     private async Task CheckDialogueLanguages()
     {
         var before = _display.Language;
-        foreach (var (code, start) in new[] { ("ja", "最初に仕上がったページ"), ("en_SG", "I keep one copy") })
+        var starts = new[] { ("ja", "最初に仕上がったページ"), ("en_SG", "I keep one copy"), ("es", "Guardé una copia"), ("fr", "J'ai gardé une copie"),
+            ("de", "Ich habe eine Kopie"), ("it", "Ho conservato una copia"), ("pt_PT", "Guardei uma cópia") };
+        Check(starts.Length == Languages.Supported.Length - 1, "Every supported language is checked");
+        foreach (var (code, start) in starts)
         {
             _display.Language = code; ApplyLanguage();
             _state.Career.PendingScene = "page"; ShowStory("page"); await SettleUi();

@@ -24,5 +24,5 @@ project/solution_directory="../"
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://Localization/ja.po", "res://Localization/en_SG.po")
+locale/translations=PackedStringArray("res://Localization/ja.po", "res://Localization/en_SG.po", "res://Localization/es.po", "res://Localization/fr.po", "res://Localization/de.po", "res://Localization/it.po", "res://Localization/pt_PT.po")
 locale/fallback="en"

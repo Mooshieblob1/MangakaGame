@@ -123,3 +123,16 @@ every language as intended. Cantonese is written in Cantonese, but Scribe
 transcribes it as standard Chinese, so only listening can confirm it. ElevenLabs
 refused the Tagalog code `tl`, so Tagalog ran without a language code and was
 still heard as Filipino.
+
+## More text languages (Blob, 2026-10-10)
+
+- Added Blob's "group 1" from the voice test as text languages: Spanish (Spain),
+  French, German, Italian and Portuguese (Portugal). The Language picker now lists
+  English, 日本語, Singlish, Español, Français, Deutsch, Italiano and Português
+  (Portugal). Automatic matches the Windows language; European Portuguese only
+  matches Portugal, not Brazil.
+- Same scope as before: Helper-Chan's six conversations and the settings labels.
+  I wrote the translations as drafts, and answers are kept gender-neutral where the
+  language allows, since the player character's gender varies.
+- Verified: `--helper-voice-smoke` 61 checks with a capture per language (accents
+  render in Lilita One), language tests pass.
