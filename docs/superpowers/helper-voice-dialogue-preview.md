@@ -136,3 +136,21 @@ still heard as Filipino.
   language allows, since the player character's gender varies.
 - Verified: `--helper-voice-smoke` 61 checks with a capture per language (accents
   render in Lilita One), language tests pass.
+
+## Groups 2 and 3 as text, more voice tests (Blob, 2026-10-10)
+
+- Added Russian, Polish, Korean and Indonesian (group 2) and Hindi, Arabic and
+  Tagalog (group 3, text only, no dubbing) as text languages. Fifteen languages in
+  the picker. Windows' "Filipino" locale picks Tagalog automatically.
+- Arabic: the text reads right to left inside each label, but the layout is not
+  mirrored. Godot would mirror the whole interface for an RTL locale; the window
+  is kept left to right and the hand-placed dialogue controls are pinned left to
+  right, since built before joining the tree they would follow the RTL locale and
+  land off screen. A proper RTL layout (and right-aligned Arabic text) is later work.
+- Cyrillic, Hangul, Devanagari and Arabic fall back to the reading or system font,
+  so headings lose Lilita One in those languages; bundled fonts are still needed.
+- Voice test, lines 1 to 3: Brazilian Portuguese, Latin American Spanish, Dutch,
+  Swedish, Danish, Norwegian and Catalan (21 takes, 217 credits) in
+  `round10-languages`. Scribe heard each as intended except two Norwegian takes it
+  labelled Danish (close relatives; listen to judge).
+- Verified: 82 voice and language checks with a capture per language, language tests.

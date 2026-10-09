@@ -15,6 +15,9 @@ public partial class DebugMain
     {
         LanguageCode = Languages.Resolve(_display.Language, OS.GetLocale());
         TranslationServer.SetLocale(LanguageCode);
+        // Arabic text reads right to left inside each label, but the layout itself is not mirrored yet: Godot would flip the
+        // whole interface for an RTL locale, and the panels and dialogue box are placed for left to right.
+        GetTree().Root.SetLayoutDirection(Window.LayoutDirection.Ltr);
     }
 
     private void SetLanguage(string? code)

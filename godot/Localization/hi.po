@@ -1,0 +1,108 @@
+# Mangaka Days, Hindi (i18n, 2026-10-10).
+# msgid is the English text exactly as the game shows it; anything missing here stays in English.
+# Draft translations: a native speaker still needs to check them.
+msgid ""
+msgstr ""
+"Language: hi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Language"
+msgstr "भाषा"
+
+msgid "Automatic, follows Windows"
+msgstr "स्वचालित, Windows के अनुसार"
+
+msgid "Helper-Chan's voice"
+msgstr "हेल्पर-चान की आवाज़"
+
+msgid "English"
+msgstr "अंग्रेज़ी"
+
+msgid "Japanese"
+msgstr "जापानी"
+
+msgid "Off, text only"
+msgstr "बंद, केवल टेक्स्ट"
+
+msgid "Read later"
+msgstr "बाद में पढ़ें"
+
+msgid "Skip this conversation"
+msgstr "यह बातचीत छोड़ें"
+
+msgid "A place beside yours"
+msgstr "तुम्हारे बगल में एक जगह"
+
+msgid "The desk is ready. So am I. What should I remind you of when things get difficult?"
+msgstr "डेस्क तैयार है। मैं भी। जब मुश्किलें आएँ, तो मैं तुम्हें क्या याद दिलाऊँ?"
+
+msgid "Make something I'm proud of"
+msgstr "कुछ ऐसा बनाना जिस पर मुझे गर्व हो"
+
+msgid "Reach someone who needs it"
+msgstr "किसी ऐसे तक पहुँचना जिसे इसकी ज़रूरत है"
+
+msgid "The first page worth keeping"
+msgstr "सहेजने लायक पहला पन्ना"
+
+msgid "I kept a copy of the first finished page. Official archival duties, obviously."
+msgstr "पहले पूरे हुए पन्ने की एक कॉपी मैंने रख ली है। आधिकारिक संग्रह का काम, ज़ाहिर है।"
+
+msgid "Keep the rough draft too"
+msgstr "रफ़ ड्राफ़्ट भी रख लो"
+
+msgid "Start with the finished page"
+msgstr "पूरे पन्ने से शुरू करो"
+
+msgid "Same clipboard, different day"
+msgstr "वही क्लिपबोर्ड, अलग दिन"
+
+msgid "The clipboard has room for a difficult chapter, too. What would help right now?"
+msgstr "इस क्लिपबोर्ड में एक मुश्किल अध्याय के लिए भी जगह है। अभी किस चीज़ से मदद मिलेगी?"
+
+msgid "Talk it through"
+msgstr "इस पर बात करना"
+
+msgid "Just stay beside me for a bit"
+msgstr "बस थोड़ी देर मेरे पास रहो"
+
+msgid "Tea beside the draft"
+msgstr "ड्राफ़्ट के पास चाय"
+
+msgid "A pause is allowed. I checked. I'll stay beside you. We don't have to fill the silence."
+msgstr "थोड़ा रुकना ठीक है। मैंने देख लिया है। मैं तुम्हारे पास ही रहूँगी। हमें खामोशी भरने की ज़रूरत नहीं।"
+
+msgid "Stay and chat"
+msgstr "रुककर बातें करें"
+
+msgid "Enjoy the quiet"
+msgstr "शांति का आनंद लें"
+
+msgid "Desk migration"
+msgstr "डेस्क का स्थानांतरण"
+
+msgid "The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair."
+msgstr "ज़रूरी सामान बच गया। क्लिपबोर्ड, चश्मा, और बेहिसाब बाल।"
+
+msgid "How is the archive?"
+msgstr "संग्रह कैसा है?"
+
+msgid "How is the new view?"
+msgstr "नया नज़ारा कैसा है?"
+
+msgid "Part of manga history"
+msgstr "मंगा इतिहास का हिस्सा"
+
+msgid "Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know."
+msgstr "एनिमे, मर्चेंडाइज़, दस लाख पाठक। लोग इन पन्नों को याद रखेंगे। पहला पन्ना मैंने रखा है, पता है?"
+
+msgid "Let's keep making them"
+msgstr "चलो इन्हें बनाते रहें"
+
+msgid "Thank you for staying"
+msgstr "रुकने के लिए शुक्रिया"
+
+msgid "Helper-Chan"
+msgstr "हेल्पर-चान"

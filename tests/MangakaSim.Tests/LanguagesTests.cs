@@ -15,6 +15,9 @@ public class LanguagesTests
     [InlineData("es_MX", "es")]
     [InlineData("pt_PT", "pt_PT")]
     [InlineData("pt_BR", "en")] // Brazilian Portuguese is not European Portuguese
+    [InlineData("ko_KR", "ko")]
+    [InlineData("ar_SA", "ar")]
+    [InlineData("fil_PH", "tl")] // Windows calls Tagalog Filipino
     [InlineData("nl_NL", "en")] // not translated yet
     [InlineData("", "en")]
     public void Automatic_follows_the_computer_when_the_game_has_that_language(string system, string expected) =>

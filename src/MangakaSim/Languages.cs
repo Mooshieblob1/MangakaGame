@@ -11,14 +11,19 @@ public static class Languages
 
     /// <summary>English first: it is the source text and the fallback.</summary>
     public static readonly Language[] Supported = [new("en", "English"), new("ja", "日本語"), new("en_SG", "Singlish"),
-        new("es", "Español"), new("fr", "Français"), new("de", "Deutsch"), new("it", "Italiano"), new("pt_PT", "Português (Portugal)")];
+        new("es", "Español"), new("fr", "Français"), new("de", "Deutsch"), new("it", "Italiano"), new("pt_PT", "Português (Portugal)"),
+        new("ru", "Русский"), new("pl", "Polski"), new("ko", "한국어"), new("id", "Bahasa Indonesia"),
+        new("hi", "हिन्दी"), new("ar", "العربية"), new("tl", "Tagalog")];
 
     public static bool Known(string? code) => code is not null && Supported.Any(l => l.Code == code);
 
     /// <summary>Automatic picks the computer's language when the game has it, otherwise English. Singlish is only chosen by hand,
     /// since a Singapore locale usually means standard English. European Portuguese only matches Portugal, not Brazil.</summary>
-    public static string Automatic(string systemLocale) =>
-        Supported.FirstOrDefault(l => l.Code != "en_SG" && l.Code != "en" && systemLocale.StartsWith(l.Code, StringComparison.OrdinalIgnoreCase))?.Code ?? "en";
+    public static string Automatic(string systemLocale)
+    {
+        if (systemLocale.StartsWith("fil", StringComparison.OrdinalIgnoreCase)) return "tl"; // Windows calls Tagalog "Filipino"
+        return Supported.FirstOrDefault(l => l.Code != "en_SG" && l.Code != "en" && systemLocale.StartsWith(l.Code, StringComparison.OrdinalIgnoreCase))?.Code ?? "en";
+    }
 
     /// <summary>The language in use: the chosen one, or Automatic when none (or an unknown one) is set.</summary>
     public static string Resolve(string? chosen, string systemLocale) => Known(chosen) ? chosen! : Automatic(systemLocale);

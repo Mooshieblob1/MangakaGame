@@ -1,0 +1,108 @@
+# Mangaka Days, Russian (i18n, 2026-10-10).
+# msgid is the English text exactly as the game shows it; anything missing here stays in English.
+# Draft translations: a native speaker still needs to check them.
+msgid ""
+msgstr ""
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "Automatic, follows Windows"
+msgstr "Автоматически, как в Windows"
+
+msgid "Helper-Chan's voice"
+msgstr "Голос Хелпер-тян"
+
+msgid "English"
+msgstr "Английский"
+
+msgid "Japanese"
+msgstr "Японский"
+
+msgid "Off, text only"
+msgstr "Выключен, только текст"
+
+msgid "Read later"
+msgstr "Прочитать позже"
+
+msgid "Skip this conversation"
+msgstr "Пропустить этот разговор"
+
+msgid "A place beside yours"
+msgstr "Место рядом с тобой"
+
+msgid "The desk is ready. So am I. What should I remind you of when things get difficult?"
+msgstr "Стол готов. Я тоже. Когда станет трудно, о чём мне тебе напомнить?"
+
+msgid "Make something I'm proud of"
+msgstr "Создать то, чем я буду гордиться"
+
+msgid "Reach someone who needs it"
+msgstr "Достучаться до того, кому это нужно"
+
+msgid "The first page worth keeping"
+msgstr "Первая страница, которую стоит сохранить"
+
+msgid "I kept a copy of the first finished page. Official archival duties, obviously."
+msgstr "Я сохранила копию первой готовой страницы. Официальные архивные обязанности, разумеется."
+
+msgid "Keep the rough draft too"
+msgstr "Сохрани и черновик"
+
+msgid "Start with the finished page"
+msgstr "Начни с готовой страницы"
+
+msgid "Same clipboard, different day"
+msgstr "Тот же планшет, другой день"
+
+msgid "The clipboard has room for a difficult chapter, too. What would help right now?"
+msgstr "На планшете найдётся место и для трудной главы. Что бы тебе сейчас помогло?"
+
+msgid "Talk it through"
+msgstr "Обсудить это"
+
+msgid "Just stay beside me for a bit"
+msgstr "Просто побудь рядом немного"
+
+msgid "Tea beside the draft"
+msgstr "Чай рядом с черновиком"
+
+msgid "A pause is allowed. I checked. I'll stay beside you. We don't have to fill the silence."
+msgstr "Перерыв разрешён. Я проверила. Я побуду рядом. Нам не обязательно заполнять тишину."
+
+msgid "Stay and chat"
+msgstr "Остаться поболтать"
+
+msgid "Enjoy the quiet"
+msgstr "Наслаждаться тишиной"
+
+msgid "Desk migration"
+msgstr "Переезд стола"
+
+msgid "The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair."
+msgstr "Важное оборудование уцелело. Планшет, очки и неразумное количество волос."
+
+msgid "How is the archive?"
+msgstr "Как там архив?"
+
+msgid "How is the new view?"
+msgstr "Как новый вид?"
+
+msgid "Part of manga history"
+msgstr "Часть истории манги"
+
+msgid "Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know."
+msgstr "Аниме, мерч, миллион читателей. Люди запомнят эти страницы. А первую я сохранила, знаешь."
+
+msgid "Let's keep making them"
+msgstr "Продолжим их создавать"
+
+msgid "Thank you for staying"
+msgstr "Спасибо, что осталась"
+
+msgid "Helper-Chan"
+msgstr "Хелпер-тян"

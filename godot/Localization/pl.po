@@ -1,0 +1,105 @@
+# Mangaka Days, Polish (i18n, 2026-10-10).
+# msgid is the English text exactly as the game shows it; anything missing here stays in English.
+# Draft translations: a native speaker still needs to check them.
+msgid ""
+msgstr ""
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Language"
+msgstr "Język"
+
+msgid "Automatic, follows Windows"
+msgstr "Automatycznie, jak w Windows"
+
+msgid "Helper-Chan's voice"
+msgstr "Głos Helper-Chan"
+
+msgid "English"
+msgstr "Angielski"
+
+msgid "Japanese"
+msgstr "Japoński"
+
+msgid "Off, text only"
+msgstr "Wyłączony, tylko tekst"
+
+msgid "Read later"
+msgstr "Przeczytaj później"
+
+msgid "Skip this conversation"
+msgstr "Pomiń tę rozmowę"
+
+msgid "A place beside yours"
+msgstr "Miejsce obok twojego"
+
+msgid "The desk is ready. So am I. What should I remind you of when things get difficult?"
+msgstr "Biurko jest gotowe. Ja też. Kiedy zrobi się trudno, o czym mam ci przypomnieć?"
+
+msgid "Make something I'm proud of"
+msgstr "Stworzyć coś wartościowego"
+
+msgid "Reach someone who needs it"
+msgstr "Dotrzeć do kogoś, kto tego potrzebuje"
+
+msgid "The first page worth keeping"
+msgstr "Pierwsza strona warta zachowania"
+
+msgid "I kept a copy of the first finished page. Official archival duties, obviously."
+msgstr "Zachowałam kopię pierwszej skończonej strony. Oficjalne obowiązki archiwalne, oczywiście."
+
+msgid "Keep the rough draft too"
+msgstr "Zachowaj też szkic"
+
+msgid "Start with the finished page"
+msgstr "Zacznij od skończonej strony"
+
+msgid "Same clipboard, different day"
+msgstr "Ta sama podkładka, inny dzień"
+
+msgid "The clipboard has room for a difficult chapter, too. What would help right now?"
+msgstr "Na podkładce jest też miejsce na trudny rozdział. Co by ci teraz pomogło?"
+
+msgid "Talk it through"
+msgstr "Porozmawiać o tym"
+
+msgid "Just stay beside me for a bit"
+msgstr "Po prostu zostań chwilę obok"
+
+msgid "Tea beside the draft"
+msgstr "Herbata obok szkicu"
+
+msgid "A pause is allowed. I checked. I'll stay beside you. We don't have to fill the silence."
+msgstr "Przerwa jest dozwolona. Sprawdziłam. Zostanę przy tobie. Nie musimy wypełniać ciszy."
+
+msgid "Stay and chat"
+msgstr "Zostać i pogadać"
+
+msgid "Enjoy the quiet"
+msgstr "Cieszyć się ciszą"
+
+msgid "Desk migration"
+msgstr "Przeprowadzka biurka"
+
+msgid "The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair."
+msgstr "Ważny sprzęt przetrwał. Podkładka, okulary i nierozsądna ilość włosów."
+
+msgid "How is the archive?"
+msgstr "Jak tam archiwum?"
+
+msgid "How is the new view?"
+msgstr "Jak nowy widok?"
+
+msgid "Part of manga history"
+msgstr "Część historii mangi"
+
+msgid "Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know."
+msgstr "Anime, gadżety, milion czytelników. Ludzie zapamiętają te strony. A pierwszą zachowałam, wiesz."
+
+msgid "Let's keep making them"
+msgstr "Róbmy je dalej"
+
+msgid "Thank you for staying"
+msgstr "Dzięki, że zostałaś"

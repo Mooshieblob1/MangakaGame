@@ -1,0 +1,108 @@
+# Mangaka Days, Arabic (i18n, 2026-10-10).
+# msgid is the English text exactly as the game shows it; anything missing here stays in English.
+# Draft translations: a native speaker still needs to check them.
+msgid ""
+msgstr ""
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Language"
+msgstr "اللغة"
+
+msgid "Automatic, follows Windows"
+msgstr "تلقائي، حسب Windows"
+
+msgid "Helper-Chan's voice"
+msgstr "صوت هيلبر-تشان"
+
+msgid "English"
+msgstr "الإنجليزية"
+
+msgid "Japanese"
+msgstr "اليابانية"
+
+msgid "Off, text only"
+msgstr "إيقاف، نص فقط"
+
+msgid "Read later"
+msgstr "اقرأ لاحقاً"
+
+msgid "Skip this conversation"
+msgstr "تخطَّ هذه المحادثة"
+
+msgid "A place beside yours"
+msgstr "مكان بجانبك"
+
+msgid "The desk is ready. So am I. What should I remind you of when things get difficult?"
+msgstr "المكتب جاهز. وأنا أيضاً. عندما تصبح الأمور صعبة، بماذا تريدني أن أذكّرك؟"
+
+msgid "Make something I'm proud of"
+msgstr "صنع شيء أفخر به"
+
+msgid "Reach someone who needs it"
+msgstr "الوصول إلى من يحتاجه"
+
+msgid "The first page worth keeping"
+msgstr "الصفحة الأولى التي تستحق الحفظ"
+
+msgid "I kept a copy of the first finished page. Official archival duties, obviously."
+msgstr "احتفظتُ بنسخة من أول صفحة مكتملة. مهام الأرشفة الرسمية، بالطبع."
+
+msgid "Keep the rough draft too"
+msgstr "احتفظي بالمسودة أيضاً"
+
+msgid "Start with the finished page"
+msgstr "ابدئي بالصفحة المكتملة"
+
+msgid "Same clipboard, different day"
+msgstr "الحافظة نفسها، يوم مختلف"
+
+msgid "The clipboard has room for a difficult chapter, too. What would help right now?"
+msgstr "في الحافظة متّسع لفصل صعب أيضاً. ما الذي قد يساعدك الآن؟"
+
+msgid "Talk it through"
+msgstr "التحدث في الأمر"
+
+msgid "Just stay beside me for a bit"
+msgstr "ابقي بجانبي قليلاً فقط"
+
+msgid "Tea beside the draft"
+msgstr "شاي بجانب المسودة"
+
+msgid "A pause is allowed. I checked. I'll stay beside you. We don't have to fill the silence."
+msgstr "لا بأس بأخذ استراحة. لقد تحقّقت. سأبقى بجانبك. لا داعي لأن نملأ الصمت."
+
+msgid "Stay and chat"
+msgstr "البقاء والدردشة"
+
+msgid "Enjoy the quiet"
+msgstr "الاستمتاع بالهدوء"
+
+msgid "Desk migration"
+msgstr "نقل المكتب"
+
+msgid "The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair."
+msgstr "نجت المعدات المهمة. الحافظة، والنظارات، وكمية غير معقولة من الشعر."
+
+msgid "How is the archive?"
+msgstr "كيف حال الأرشيف؟"
+
+msgid "How is the new view?"
+msgstr "كيف هو المنظر الجديد؟"
+
+msgid "Part of manga history"
+msgstr "جزء من تاريخ المانغا"
+
+msgid "Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know."
+msgstr "أنمي، وبضائع، ومليون قارئ. سيتذكر الناس هذه الصفحات. أما الأولى فقد احتفظتُ بها، أتعلم؟"
+
+msgid "Let's keep making them"
+msgstr "لنواصل صنعها"
+
+msgid "Thank you for staying"
+msgstr "شكراً لبقائك"
+
+msgid "Helper-Chan"
+msgstr "هيلبر-تشان"

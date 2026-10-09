@@ -71,7 +71,10 @@ public partial class DebugMain
         var view = GetViewportRect().Size;
         _helperPopup.AddThemeStyleboxOverride("panel", new StyleBoxEmpty());
         _helperPopup.Position = Vector2.Zero; _helperPopup.Size = view;
-        var stage = new Control { MouseFilter = MouseFilterEnum.Ignore }; _helperPopup.AddChild(stage);
+        // Everything here is placed by hand for left to right. Controls set up before they join the tree would otherwise
+        // follow an RTL locale (Arabic) and land mirrored off screen; the Arabic text itself still reads right to left.
+        _helperPopup.LayoutDirection = LayoutDirectionEnum.Ltr;
+        var stage = new Control { LayoutDirection = LayoutDirectionEnum.Ltr, MouseFilter = MouseFilterEnum.Ignore }; _helperPopup.AddChild(stage);
         // A deeper dim than the usual popup shade, so the scene reads over the busy office and panels.
         var dim = new ColorRect { Color = new Color(0, 0, 0, .38f), Size = view, MouseFilter = MouseFilterEnum.Ignore }; stage.AddChild(dim);
 
@@ -79,11 +82,11 @@ public partial class DebugMain
         var texture = GD.Load<Texture2D>($"res://Assets/Helper/{scene.Expression}.png");
         var height = view.Y * 1.5f; var width = height * texture.GetWidth() / texture.GetHeight();
         var portrait = new TextureRect { Texture = texture, ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, StretchMode = TextureRect.StretchModeEnum.Scale,
-            Size = new(width, height), Position = new(view.X * .24f - width / 2, view.Y * .03f), MouseFilter = MouseFilterEnum.Ignore };
+            LayoutDirection = LayoutDirectionEnum.Ltr, Size = new(width, height), Position = new(view.X * .24f - width / 2, view.Y * .03f), MouseFilter = MouseFilterEnum.Ignore };
         stage.AddChild(portrait);
 
         var boxRect = new Rect2(view.X * .04f, view.Y * .755f, view.X * .92f, view.Y * .205f);
-        var box = new PanelContainer { Position = boxRect.Position, Size = boxRect.Size, MouseFilter = MouseFilterEnum.Stop };
+        var box = new PanelContainer { LayoutDirection = LayoutDirectionEnum.Ltr, Position = boxRect.Position, Size = boxRect.Size, MouseFilter = MouseFilterEnum.Stop };
         var face = new Color(Brand.Card) { A = .95f };
         box.AddThemeStyleboxOverride("panel", new StyleBoxFlat { BgColor = face, BorderColor = new Color(BrandPalette.Gold), BorderWidthLeft = 3, BorderWidthTop = 3,
             BorderWidthRight = 3, BorderWidthBottom = 3, CornerRadiusTopLeft = 18, CornerRadiusTopRight = 18, CornerRadiusBottomLeft = 18, CornerRadiusBottomRight = 18,
@@ -97,13 +100,13 @@ public partial class DebugMain
         box.GuiInput += e => { if (e is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } && DialogueTyping) FinishDialogueLine(); };
 
         // Name plate on the box's top edge, in the logo's gold slab.
-        var plate = new PanelContainer { Position = boxRect.Position + new Vector2(36, -26), MouseFilter = MouseFilterEnum.Ignore };
+        var plate = new PanelContainer { LayoutDirection = LayoutDirectionEnum.Ltr, Position = boxRect.Position + new Vector2(36, -26), MouseFilter = MouseFilterEnum.Ignore };
         plate.AddThemeStyleboxOverride("panel", SlabStyle(BrandPalette.Gold, BrandPalette.GoldBase, 4, 22, 6));
         var name = Words(plate, "Helper-Chan", 26); name.AutowrapMode = TextServer.AutowrapMode.Off; name.AddThemeColorOverride("font_color", new Color(BrandPalette.Ink));
         stage.AddChild(plate);
 
         // Answers stack on the right, above the box, once the line is complete.
-        var choices = new VBoxContainer { Position = new(view.X * .60f, 0), CustomMinimumSize = new(view.X * .34f, 0), Visible = false };
+        var choices = new VBoxContainer { LayoutDirection = LayoutDirectionEnum.Ltr, Position = new(view.X * .60f, 0), CustomMinimumSize = new(view.X * .34f, 0), Visible = false };
         choices.AddThemeConstantOverride("separation", 10);
         choices.Resized += () => choices.Position = new(view.X * .60f, boxRect.Position.Y - choices.Size.Y - 34);
         stage.AddChild(choices); _dialogueChoices = choices;

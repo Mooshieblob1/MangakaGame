@@ -1,0 +1,105 @@
+# Mangaka Days, Indonesian (i18n, 2026-10-10).
+# msgid is the English text exactly as the game shows it; anything missing here stays in English.
+# Draft translations: a native speaker still needs to check them.
+msgid ""
+msgstr ""
+"Language: id\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Language"
+msgstr "Bahasa"
+
+msgid "Automatic, follows Windows"
+msgstr "Otomatis, mengikuti Windows"
+
+msgid "Helper-Chan's voice"
+msgstr "Suara Helper-Chan"
+
+msgid "English"
+msgstr "Inggris"
+
+msgid "Japanese"
+msgstr "Jepang"
+
+msgid "Off, text only"
+msgstr "Mati, teks saja"
+
+msgid "Read later"
+msgstr "Baca nanti"
+
+msgid "Skip this conversation"
+msgstr "Lewati percakapan ini"
+
+msgid "A place beside yours"
+msgstr "Tempat di sampingmu"
+
+msgid "The desk is ready. So am I. What should I remind you of when things get difficult?"
+msgstr "Mejanya sudah siap. Aku juga. Kalau keadaan jadi sulit, kamu mau aku mengingatkanmu tentang apa?"
+
+msgid "Make something I'm proud of"
+msgstr "Membuat sesuatu yang kubanggakan"
+
+msgid "Reach someone who needs it"
+msgstr "Menjangkau orang yang membutuhkannya"
+
+msgid "The first page worth keeping"
+msgstr "Halaman pertama yang layak disimpan"
+
+msgid "I kept a copy of the first finished page. Official archival duties, obviously."
+msgstr "Aku menyimpan salinan halaman pertama yang selesai. Tugas arsip resmi, tentu saja."
+
+msgid "Keep the rough draft too"
+msgstr "Simpan juga drafnya"
+
+msgid "Start with the finished page"
+msgstr "Mulai dari halaman yang sudah jadi"
+
+msgid "Same clipboard, different day"
+msgstr "Papan klip yang sama, hari yang berbeda"
+
+msgid "The clipboard has room for a difficult chapter, too. What would help right now?"
+msgstr "Papan klipnya juga masih punya ruang untuk bab yang sulit. Apa yang bisa membantu sekarang?"
+
+msgid "Talk it through"
+msgstr "Membicarakannya"
+
+msgid "Just stay beside me for a bit"
+msgstr "Temani aku sebentar saja"
+
+msgid "Tea beside the draft"
+msgstr "Teh di samping draf"
+
+msgid "A pause is allowed. I checked. I'll stay beside you. We don't have to fill the silence."
+msgstr "Istirahat sebentar itu boleh. Aku sudah memeriksanya. Aku akan tetap di sampingmu. Kita tidak perlu mengisi keheningan."
+
+msgid "Stay and chat"
+msgstr "Tetap di sini dan mengobrol"
+
+msgid "Enjoy the quiet"
+msgstr "Menikmati ketenangan"
+
+msgid "Desk migration"
+msgstr "Pindahan meja"
+
+msgid "The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair."
+msgstr "Peralatan penting selamat. Papan klip, kacamata, dan rambut yang jumlahnya tidak masuk akal."
+
+msgid "How is the archive?"
+msgstr "Bagaimana arsipnya?"
+
+msgid "How is the new view?"
+msgstr "Bagaimana pemandangan barunya?"
+
+msgid "Part of manga history"
+msgstr "Bagian dari sejarah manga"
+
+msgid "Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know."
+msgstr "Anime, merchandise, sejuta pembaca. Orang-orang akan mengingat halaman-halaman ini. Yang pertama aku simpan, lho."
+
+msgid "Let's keep making them"
+msgstr "Ayo terus membuatnya"
+
+msgid "Thank you for staying"
+msgstr "Terima kasih sudah tetap di sini"

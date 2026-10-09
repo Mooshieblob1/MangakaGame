@@ -69,7 +69,9 @@ public partial class DebugMain
     {
         var before = _display.Language;
         var starts = new[] { ("ja", "最初に仕上がったページ"), ("en_SG", "I keep one copy"), ("es", "Guardé una copia"), ("fr", "J'ai gardé une copie"),
-            ("de", "Ich habe eine Kopie"), ("it", "Ho conservato una copia"), ("pt_PT", "Guardei uma cópia") };
+            ("de", "Ich habe eine Kopie"), ("it", "Ho conservato una copia"), ("pt_PT", "Guardei uma cópia"),
+            ("ru", "Я сохранила копию"), ("pl", "Zachowałam kopię"), ("ko", "처음 완성한 원고"), ("id", "Aku menyimpan salinan"),
+            ("hi", "पहले पूरे हुए"), ("ar", "احتفظتُ بنسخة"), ("tl", "Nagtabi ako") };
         Check(starts.Length == Languages.Supported.Length - 1, "Every supported language is checked");
         foreach (var (code, start) in starts)
         {

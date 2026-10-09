@@ -1,0 +1,105 @@
+# Mangaka Days, Tagalog (i18n, 2026-10-10).
+# msgid is the English text exactly as the game shows it; anything missing here stays in English.
+# Draft translations: a native speaker still needs to check them.
+msgid ""
+msgstr ""
+"Language: tl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Language"
+msgstr "Wika"
+
+msgid "Automatic, follows Windows"
+msgstr "Awtomatiko, ayon sa Windows"
+
+msgid "Helper-Chan's voice"
+msgstr "Boses ni Helper-Chan"
+
+msgid "English"
+msgstr "Ingles"
+
+msgid "Japanese"
+msgstr "Hapon"
+
+msgid "Off, text only"
+msgstr "Nakapatay, teksto lang"
+
+msgid "Read later"
+msgstr "Basahin mamaya"
+
+msgid "Skip this conversation"
+msgstr "Laktawan ang usapang ito"
+
+msgid "A place beside yours"
+msgstr "Isang puwesto sa tabi mo"
+
+msgid "The desk is ready. So am I. What should I remind you of when things get difficult?"
+msgstr "Handa na ang mesa. Ako rin. Kapag naging mahirap ang mga bagay, ano ang gusto mong ipaalala ko sa'yo?"
+
+msgid "Make something I'm proud of"
+msgstr "Gumawa ng bagay na maipagmamalaki ko"
+
+msgid "Reach someone who needs it"
+msgstr "Maabot ang taong nangangailangan nito"
+
+msgid "The first page worth keeping"
+msgstr "Ang unang pahinang dapat itago"
+
+msgid "I kept a copy of the first finished page. Official archival duties, obviously."
+msgstr "Nagtabi ako ng kopya ng unang natapos na pahina. Opisyal na tungkulin sa pag-aarkibo, siyempre."
+
+msgid "Keep the rough draft too"
+msgstr "Itago mo rin ang draft"
+
+msgid "Start with the finished page"
+msgstr "Magsimula sa natapos na pahina"
+
+msgid "Same clipboard, different day"
+msgstr "Parehong clipboard, ibang araw"
+
+msgid "The clipboard has room for a difficult chapter, too. What would help right now?"
+msgstr "May puwang din ang clipboard para sa mahirap na kabanata. Ano ang makakatulong sa'yo ngayon?"
+
+msgid "Talk it through"
+msgstr "Pag-usapan ito"
+
+msgid "Just stay beside me for a bit"
+msgstr "Samahan mo lang ako sandali"
+
+msgid "Tea beside the draft"
+msgstr "Tsaa sa tabi ng draft"
+
+msgid "A pause is allowed. I checked. I'll stay beside you. We don't have to fill the silence."
+msgstr "Puwedeng magpahinga. Tiningnan ko. Nandito lang ako sa tabi mo. Hindi natin kailangang punuin ang katahimikan."
+
+msgid "Stay and chat"
+msgstr "Manatili at magkuwentuhan"
+
+msgid "Enjoy the quiet"
+msgstr "Damhin ang katahimikan"
+
+msgid "Desk migration"
+msgstr "Paglipat ng mesa"
+
+msgid "The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair."
+msgstr "Ligtas ang mahahalagang gamit. Clipboard, salamin, at sobrang daming buhok."
+
+msgid "How is the archive?"
+msgstr "Kumusta ang archive?"
+
+msgid "How is the new view?"
+msgstr "Kumusta ang bagong tanawin?"
+
+msgid "Part of manga history"
+msgstr "Bahagi ng kasaysayan ng manga"
+
+msgid "Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know."
+msgstr "Anime, merchandise, isang milyong mambabasa. Maaalala ng mga tao ang mga pahinang ito. Itinago ko ang una, alam mo ba."
+
+msgid "Let's keep making them"
+msgstr "Ituloy natin ang paggawa"
+
+msgid "Thank you for staying"
+msgstr "Salamat sa pananatili"
