@@ -92,3 +92,34 @@ and Japanese, for six scenes only.
   repeat whole phrases. Accent takes are outside the repo in
   `%LOCALAPPDATA%\MangakaGame\voice-tests\2026-10-10\round5`, `round7` and
   `round8`; only English (Australian) and Japanese are in the game so far.
+
+## i18n setup (Blob, 2026-10-10)
+
+- Text languages: English (source and fallback), Japanese and Singlish
+  (`src/MangakaSim/Languages.cs`). Settings > Screen has a Language picker:
+  Automatic (follows Windows; Singlish only by hand), English, 日本語, Singlish,
+  saved per computer as `Language` in `display-settings.json`.
+- gettext catalogues in `godot/Localization/ja.po` and `en_SG.po`, registered in
+  `project.godot`. The msgid is the exact English text, so Godot controls translate
+  themselves and anything untranslated stays English. Code that measures its text
+  (the typed dialogue line) calls `Tr` itself.
+- Translated so far: Helper-Chan's six voiced conversations (titles, lines,
+  answers, Read later, Skip), her name and the new settings labels. The rest of the
+  interface is still English: extracting every string is its own sub-project.
+- Adding a language: one entry in `Languages.Supported` plus one `.po` file.
+- Japanese text uses the Windows system font as a fallback; a bundled CJK font
+  (for Steam Deck and Linux) is still needed. Translations are drafts until a
+  native speaker checks them.
+- Verified: `--helper-voice-smoke` (45 checks, including the scene in Japanese and
+  Singlish, captured), 823 simulation tests including new `LanguagesTests`.
+
+## Voice language test (2026-10-10)
+
+Lines 1 to 4 in Mandarin, Cantonese, Korean, Tagalog, Indonesian, Hindi, Arabic,
+Russian, German, French, Spanish, European Portuguese, Italian and Polish (56
+takes, 669 credits), outside the repo in
+`%LOCALAPPDATA%\MangakaGame\voice-tests\2026-10-10\round9-languages`. Scribe heard
+every language as intended. Cantonese is written in Cantonese, but Scribe
+transcribes it as standard Chinese, so only listening can confirm it. ElevenLabs
+refused the Tagalog code `tl`, so Tagalog ran without a language code and was
+still heard as Filipino.
