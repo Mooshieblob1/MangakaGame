@@ -42,3 +42,18 @@ then ffmpeg to H.264/AAC MP4 (75 s, 1600 x 900). The preview is outside the repo
 - Voice for the remaining scenes and answer follow-ups (needs IPA lines and credits).
 - A Voice volume slider, and a "voice on/off" option.
 - Window resizes while a scene is open are not re-laid out.
+
+## Update, same day: voice choice
+
+- Blob dropped the "English with a Japanese accent" lines. Helper-Chan's voice is
+  now a per-computer setting under Settings: English (soft Australian accent, Blob's
+  picks from three takes per line), Japanese with the English text as subtitles, or
+  off. Stored as `HelperVoice` in `user://audio-settings.json`; older files and
+  unknown values fall back to English (two new tests in `AudioSettingsTests`).
+- Files are in `godot/Assets/Voice/Helper/en` and `ja`. The Japanese translations
+  were written for the preview and still need a native speaker's check.
+- `--helper-voice-smoke [--helper-voice=ja]` checks either language, plus Skip and
+  voice off (38 checks). It now detects Movie Maker mode with `OS.HasFeature("movie")`
+  so recordings end on the last answer.
+- Blob is rating eleven other English accents (one take per line each) for a
+  possible extra option.

@@ -11,8 +11,9 @@ namespace MangakaGame;
 // Presentation only: the scenes, answers and saves are unchanged. Illustrated scenes keep the framed popup.
 public partial class DebugMain
 {
-    // The exact text each recording speaks. A scene whose text has changed (follow-ups added by earlier answers)
-    // still opens as a visual novel scene, just without the voice.
+    // The exact English text each recording belongs to (the Japanese recordings say the same thing, with this text as
+    // the subtitle). A scene whose text has changed (follow-ups added by earlier answers) still opens as a visual novel
+    // scene, just without the voice. Voice language is a per-computer setting: English, Japanese or off (2026-10-10).
     private static readonly Dictionary<string, string> HelperVoiceLines = new()
     {
         ["beside"] = "The desk is ready. So am I. What should I remind you of when things get difficult?",
@@ -34,9 +35,19 @@ public partial class DebugMain
 
     private AudioStream? HelperVoice(StoryScene scene)
     {
-        var path = $"res://Assets/Voice/Helper/{scene.Id}.ogg";
+        if (_audioSettings.HelperVoice is not ("en" or "ja")) return null;
+        var path = $"res://Assets/Voice/Helper/{_audioSettings.HelperVoice}/{scene.Id}.ogg";
         return HelperVoiceLines.TryGetValue(scene.Id, out var recorded) && recorded == scene.Text.Trim() && ResourceLoader.Exists(path)
             ? ResourceLoader.Load<AudioStream>(path) : null;
+    }
+
+    private void HelperVoiceChoice(Control parent)
+    {
+        Words(parent, "Helper-Chan's voice");
+        var choice = new OptionButton { Name = "HelperVoice" }; parent.AddChild(choice);
+        foreach (var (label, id) in new[] { ("English", "en"), ("Japanese, English subtitles", "ja"), ("Off, text only", "off") })
+        { choice.AddItem(label); if (id == _audioSettings.HelperVoice) choice.Select(choice.ItemCount - 1); }
+        choice.ItemSelected += i => { _audioSettings.HelperVoice = AudioSettings.HelperVoices[i]; SaveAudioSettings(); };
     }
 
     private void EnsureVoicePlayer()

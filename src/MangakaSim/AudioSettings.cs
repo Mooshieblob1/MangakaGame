@@ -15,6 +15,9 @@ public sealed class AudioSettings
     public double Effects { get; set; } = .6;
     public bool PlayWhileUnfocused { get; set; }
     public bool SetupDone { get; set; }
+    /// <summary>Helper-Chan's spoken lines: "en" English, "ja" Japanese with the English text as subtitles, "off" text only.</summary>
+    public string HelperVoice { get; set; } = "en";
+    public static readonly string[] HelperVoices = ["en", "ja", "off"];
 
     public static double Clamp(double value) => double.IsFinite(value) ? Math.Clamp(value, 0, 1) : 0;
 
@@ -25,6 +28,7 @@ public sealed class AudioSettings
             if (!File.Exists(path)) return new();
             var settings = JsonSerializer.Deserialize<AudioSettings>(File.ReadAllText(path)) ?? new();
             settings.Master = Clamp(settings.Master); settings.Music = Clamp(settings.Music); settings.Effects = Clamp(settings.Effects);
+            if (!HelperVoices.Contains(settings.HelperVoice)) settings.HelperVoice = "en";
             return settings;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException) { return new(); }

@@ -274,6 +274,7 @@ public partial class DebugMain
         Words(parent,"Controls: WASD or middle drag to pan · wheel to zoom · right drag to rotate. Space pauses/resumes; 1 slows down; 2 speeds up. Shortcuts stay off while typing or in dialogs.",14);
         if(career){var guidance=new CheckBox{Text="Helper-Chan's phone pops up for new messages",ButtonPressed=_presentation.Guidance.Visible};parent.AddChild(guidance);guidance.Toggled+=SetGuidanceVisible;}
         AudioSliders(parent);
+        HelperVoiceChoice(parent);
         var unfocused=new CheckBox{Text="Play sound even while unfocused",ButtonPressed=_audioSettings.PlayWhileUnfocused};parent.AddChild(unfocused);
         unfocused.Toggled+=on=>{_audioSettings.PlayWhileUnfocused=on;SaveAudioSettings();};
         Words(parent,"These settings apply to every career on this computer. Office ambience pauses in menus.",14);

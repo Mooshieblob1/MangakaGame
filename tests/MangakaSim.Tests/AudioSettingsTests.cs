@@ -45,6 +45,24 @@ public class AudioSettingsTests
         Assert.Equal(0, AudioSettings.Clamp(double.NaN));
     }
 
+    [Fact] public void Helper_voice_defaults_to_English_and_survives_a_save()
+    {
+        Assert.Equal("en", new AudioSettings().HelperVoice);
+        var path = TempFile();
+        new AudioSettings { HelperVoice = "ja" }.Save(path);
+        Assert.Equal("ja", AudioSettings.Load(path).HelperVoice);
+    }
+
+    [Fact] public void An_older_or_unknown_helper_voice_falls_back_to_English()
+    {
+        var path = TempFile(); Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        File.WriteAllText(path, "{\"Master\":0.5,\"SetupDone\":true}");
+        Assert.Equal("en", AudioSettings.Load(path).HelperVoice);
+        File.WriteAllText(path, "{\"HelperVoice\":\"klingon\",\"SetupDone\":true}");
+        var loaded = AudioSettings.Load(path);
+        Assert.Equal("en", loaded.HelperVoice); Assert.True(loaded.SetupDone);
+    }
+
     [Fact] public void Save_never_throws_on_an_unwritable_path()
     {
         var blocker = Path.Combine(Path.GetTempPath(), "audio-blocker-" + Guid.NewGuid().ToString("N"));

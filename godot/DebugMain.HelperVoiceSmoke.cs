@@ -10,7 +10,7 @@ namespace MangakaGame;
 // Plays six voiced Helper-Chan conversations in real time on a new career and checks the visual novel flow:
 // the voice starts, the line types out, the answers wait for her, and the answer reaches the journal.
 // Paced for watching, so it doubles as the preview recording:
-//   Godot --path godot --write-movie <file>.avi --fixed-fps 30 -- --helper-voice-smoke
+//   Godot --path godot --write-movie <file>.avi --fixed-fps 30 -- --helper-voice-smoke [--helper-voice=ja]
 public partial class DebugMain
 {
     private static readonly (string Scene, int Answer)[] VoicePreviewScenes =
@@ -22,6 +22,8 @@ public partial class DebugMain
         {
             GetWindow().Size = new(1920, 1080); Directory.CreateDirectory(SmokeOutput);
             _careers = new CareerStore(Path.Combine(SmokeOutput, "helper-voice-" + Guid.NewGuid().ToString("N")));
+            var language = OS.GetCmdlineUserArgs().FirstOrDefault(a => a.StartsWith("--helper-voice="))?["--helper-voice=".Length..] ?? "en";
+            _audioSettings.HelperVoice = language;
             NewCareerMenu(); Press("Begin career"); await SettleUi(); _helperPopup.Hide();
             ShowOffice(); Pause(); RefreshManagement(); await SettleUi();
             await Wait(3);
@@ -31,7 +33,7 @@ public partial class DebugMain
                 var scene = HelperStories.Describe(_state, id); var journal = _state.Career.Journal.Count;
                 ShowStory(id); await SettleUi();
                 Check(_storyOpen && _dialogueLine is not null && _helperPopup.Visible, $"{id} opens as a visual novel scene");
-                Check(HelperSpeaking, $"{id} plays her recorded voice (text: {scene.Text.Trim()})");
+                Check(HelperSpeaking && _voice!.Stream.ResourcePath.Contains($"/{language}/"), $"{id} plays her {language} voice (text: {scene.Text.Trim()})");
                 Check(_dialogueChoices is { Visible: false }, $"{id} holds the answers back while she speaks");
                 await Wait(1);
                 Check(_dialogueLine!.VisibleCharacters is > 0 && _dialogueLine.VisibleCharacters < _dialogueLine.Text.Length, $"{id} types the line out");
@@ -45,11 +47,14 @@ public partial class DebugMain
                     $"{id} records the answer and closes");
                 await Wait(1.5);
             }
-            if (!OS.GetCmdlineArgs().Contains("--write-movie")) // the recording ends on the last answer
+            if (!OS.HasFeature("movie")) // the recording (Movie Maker mode) ends on the last answer
             {
                 _state.Career.PendingScene = "tea"; ShowStory("tea"); await SettleUi();
                 Press("Skip this conversation"); await SettleUi();
                 Check(!HelperSpeaking && !_storyOpen, "Skipping a conversation stops her voice");
+                _audioSettings.HelperVoice = "off"; _state.Career.PendingScene = "tea"; ShowStory("tea"); await SettleUi();
+                Check(_storyOpen && !HelperSpeaking && _dialogueLine is not null, "With the voice off, the scene still opens as text only");
+                Press("Skip this conversation"); await SettleUi(); _audioSettings.HelperVoice = language;
             }
             GD.Print($"HELPER VOICE SMOKE PASSED: {_smokeChecks} checks.");
             var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => QuitTree(tree); QueueFree();
