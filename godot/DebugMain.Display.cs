@@ -23,6 +23,7 @@ public partial class DebugMain
         else { _displayPath = ProjectSettings.GlobalizePath("user://display-settings.json"); _display = DisplaySettings.Load(_displayPath); ApplyWindowMode(true); }
         GetWindow().SizeChanged += OnWindowSizeChanged;
         ApplyInterfaceSize();
+        ApplyLanguage();
     }
 
     private void ApplyWindowMode(bool placeWindow)
@@ -111,6 +112,7 @@ public partial class DebugMain
         OptionButton? mode = null, sizes = null;
         if (!sizeOnly)
         {
+            LanguageChoice(parent);
             Words(parent, "Screen", 14);
             var modeButton = new OptionButton { Name = "DisplayMode" }; modeButton.AddItem("Fullscreen", (int)DisplayMode.Fullscreen); modeButton.AddItem("Windowed", (int)DisplayMode.Windowed);
             modeButton.Select(modeButton.GetItemIndex((int)_display.Mode)); parent.AddChild(modeButton);

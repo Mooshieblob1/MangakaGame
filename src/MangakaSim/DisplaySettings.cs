@@ -24,6 +24,8 @@ public sealed class DisplaySettings
     public bool Maximized { get; set; }
     /// <summary>The chosen interface size, or null for Automatic.</summary>
     public double? InterfaceSize { get; set; }
+    /// <summary>The text language (a <see cref="Languages"/> code), or null for Automatic.</summary>
+    public string? Language { get; set; }
 
     /// <summary>A size in five per cent steps within 80% to 200%.</summary>
     public static double Normalise(double size) =>
@@ -61,6 +63,7 @@ public sealed class DisplaySettings
             settings.WindowWidth = Math.Clamp(settings.WindowWidth, MinWindowWidth, MaxWindowWidth);
             settings.WindowHeight = Math.Clamp(settings.WindowHeight, MinWindowHeight, MaxWindowHeight);
             if (settings.InterfaceSize is { } size) settings.InterfaceSize = Normalise(size);
+            if (!Languages.Known(settings.Language)) settings.Language = null;
             return settings;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or NotSupportedException) { return new(); }

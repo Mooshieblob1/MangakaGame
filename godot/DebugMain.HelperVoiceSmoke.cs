@@ -24,6 +24,7 @@ public partial class DebugMain
             _careers = new CareerStore(Path.Combine(SmokeOutput, "helper-voice-" + Guid.NewGuid().ToString("N")));
             var language = OS.GetCmdlineUserArgs().FirstOrDefault(a => a.StartsWith("--helper-voice="))?["--helper-voice=".Length..] ?? "en";
             _audioSettings.HelperVoice = language;
+            if (OS.GetCmdlineUserArgs().FirstOrDefault(a => a.StartsWith("--language=")) is { } text) { _display.Language = text["--language=".Length..]; ApplyLanguage(); }
             NewCareerMenu(); Press("Begin career"); await SettleUi(); _helperPopup.Hide();
             ShowOffice(); Pause(); RefreshManagement(); await SettleUi();
             await Wait(3);
@@ -55,11 +56,31 @@ public partial class DebugMain
                 _audioSettings.HelperVoice = "off"; _state.Career.PendingScene = "tea"; ShowStory("tea"); await SettleUi();
                 Check(_storyOpen && !HelperSpeaking && _dialogueLine is not null, "With the voice off, the scene still opens as text only");
                 Press("Skip this conversation"); await SettleUi(); _audioSettings.HelperVoice = language;
+                await CheckDialogueLanguages();
             }
             GD.Print($"HELPER VOICE SMOKE PASSED: {_smokeChecks} checks.");
             var tree = GetTree(); tree.CreateTimer(.1).Timeout += () => QuitTree(tree); QueueFree();
         }
         catch (Exception ex) { GD.PushError($"HELPER VOICE SMOKE FAILED: {ex.Message}\n{ex.StackTrace}"); GetTree().Quit(1); }
+    }
+
+    // i18n (2026-10-10): the same scene in Japanese and Singlish text, still typed at the pace of the English recording.
+    private async Task CheckDialogueLanguages()
+    {
+        var before = _display.Language;
+        foreach (var (code, start) in new[] { ("ja", "最初に仕上がったページ"), ("en_SG", "I keep one copy") })
+        {
+            _display.Language = code; ApplyLanguage();
+            _state.Career.PendingScene = "page"; ShowStory("page"); await SettleUi();
+            while (DialogueTyping) await SettleUi();
+            await CaptureSmokeImage($"dialogue-{code}");
+            Check(_dialogueLine!.Text.StartsWith(start), $"In {code} the line reads in that language ({_dialogueLine.Text})");
+            Check(_dialogueChoices!.FindChildren("*", "Button", true, false).OfType<Button>().Any(b => b.Text == "Keep the rough draft too" && TranslationServer.Translate(b.Text) != b.Text),
+                $"In {code} the answers translate");
+            Press("Skip this conversation"); await SettleUi();
+        }
+        _display.Language = before; ApplyLanguage();
+        Check(Tr("Helper-Chan") == "Helper-Chan", "Back to English after the language checks");
     }
 
     private async Task Wait(double seconds) => await ToSignal(GetTree().CreateTimer(seconds), SceneTreeTimer.SignalName.Timeout);

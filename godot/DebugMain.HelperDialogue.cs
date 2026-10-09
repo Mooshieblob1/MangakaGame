@@ -45,7 +45,7 @@ public partial class DebugMain
     {
         Words(parent, "Helper-Chan's voice");
         var choice = new OptionButton { Name = "HelperVoice" }; parent.AddChild(choice);
-        foreach (var (label, id) in new[] { ("English", "en"), ("Japanese, English subtitles", "ja"), ("Off, text only", "off") })
+        foreach (var (label, id) in new[] { ("English", "en"), ("Japanese", "ja"), ("Off, text only", "off") })
         { choice.AddItem(label); if (id == _audioSettings.HelperVoice) choice.Select(choice.ItemCount - 1); }
         choice.ItemSelected += i => { _audioSettings.HelperVoice = AudioSettings.HelperVoices[i]; SaveAudioSettings(); };
     }
@@ -91,7 +91,7 @@ public partial class DebugMain
         stage.AddChild(box);
         var copy = new VBoxContainer(); box.AddChild(copy);
         var title = Words(copy, scene.Title, 15); title.Modulate = new Color(1, 1, 1, .7f);
-        _dialogueLine = Words(copy, scene.Text.Trim(), 30);
+        _dialogueLine = Words(copy, Tr(scene.Text.Trim()), 30); _dialogueLine.AutoTranslateMode = AutoTranslateModeEnum.Disabled;
         _dialogueLine.VisibleCharactersBehavior = TextServer.VisibleCharactersBehavior.CharsAfterShaping;
         _dialogueLine.VisibleCharacters = 0; _dialogueShown = 0;
         box.GuiInput += e => { if (e is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } && DialogueTyping) FinishDialogueLine(); };

@@ -1,0 +1,110 @@
+# Mangaka Days, Japanese (i18n, 2026-10-10).
+# msgid is the English text exactly as the game shows it; anything missing here stays in English.
+# Draft translations written for the voice preview: a native speaker still needs to check them.
+msgid ""
+msgstr ""
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# Settings
+msgid "Language"
+msgstr "言語"
+
+msgid "Automatic, follows Windows"
+msgstr "自動（Windowsに合わせる）"
+
+msgid "Helper-Chan's voice"
+msgstr "ヘルパーちゃんの声"
+
+msgid "English"
+msgstr "英語"
+
+msgid "Japanese"
+msgstr "日本語"
+
+msgid "Off, text only"
+msgstr "オフ（文字のみ）"
+
+# Helper-Chan's conversations
+msgid "Helper-Chan"
+msgstr "ヘルパーちゃん"
+
+msgid "Read later"
+msgstr "あとで読む"
+
+msgid "Skip this conversation"
+msgstr "この会話をスキップ"
+
+msgid "A place beside yours"
+msgstr "あなたの隣の席"
+
+msgid "The desk is ready. So am I. What should I remind you of when things get difficult?"
+msgstr "机の準備はできてるよ。わたしもね。……つらくなったとき、何を思い出させてほしい？"
+
+msgid "Make something I'm proud of"
+msgstr "誇れるものを作ること"
+
+msgid "Reach someone who needs it"
+msgstr "必要としている誰かに届けること"
+
+msgid "The first page worth keeping"
+msgstr "取っておきたい最初のページ"
+
+msgid "I kept a copy of the first finished page. Official archival duties, obviously."
+msgstr "最初に仕上がったページ、コピーを一枚取っておいたの。公式の記録係のお仕事だから。……当然でしょ。"
+
+msgid "Keep the rough draft too"
+msgstr "下書きも取っておいて"
+
+msgid "Start with the finished page"
+msgstr "完成したページから始めよう"
+
+msgid "Same clipboard, different day"
+msgstr "同じクリップボード、違う一日"
+
+msgid "The clipboard has room for a difficult chapter, too. What would help right now?"
+msgstr "このクリップボード、難しい章のための余白もちゃんとあるよ。……今、何があったら助かる？"
+
+msgid "Talk it through"
+msgstr "話を聞いてほしい"
+
+msgid "Just stay beside me for a bit"
+msgstr "少しだけ、そばにいて"
+
+msgid "Tea beside the draft"
+msgstr "下書きのそばでお茶を"
+
+msgid "A pause is allowed. I checked. I'll stay beside you. We don't have to fill the silence."
+msgstr "ひと休みしても大丈夫。ちゃんと確認したもん。……そばにいるね。無理に何か話さなくてもいいから。"
+
+msgid "Stay and chat"
+msgstr "ここでおしゃべりしよう"
+
+msgid "Enjoy the quiet"
+msgstr "静けさを楽しもう"
+
+msgid "Desk migration"
+msgstr "デスクのお引っ越し"
+
+msgid "The important equipment survived. Clipboard, glasses, and an unreasonable amount of hair."
+msgstr "大事な備品は無事でした。クリップボード、メガネ……それと、とんでもない量の髪の毛。"
+
+msgid "How is the archive?"
+msgstr "アーカイブは無事？"
+
+msgid "How is the new view?"
+msgstr "新しい眺めはどう？"
+
+msgid "Part of manga history"
+msgstr "マンガの歴史の一部"
+
+msgid "Anime, merchandise, a million readers. People will remember these pages. I kept the first one, you know."
+msgstr "アニメに、グッズに、百万人の読者。みんな、このページのこと覚えててくれるよ。……最初の一枚、わたしが取ってあるんだからね。"
+
+msgid "Let's keep making them"
+msgstr "これからも作り続けよう"
+
+msgid "Thank you for staying"
+msgstr "そばにいてくれてありがとう"

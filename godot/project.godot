@@ -21,3 +21,8 @@ window/size/viewport_height=900
 
 project/assembly_name="MangakaGame"
 project/solution_directory="../"
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://Localization/ja.po", "res://Localization/en_SG.po")
+locale/fallback="en"
