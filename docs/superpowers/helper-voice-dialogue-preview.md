@@ -57,3 +57,21 @@ then ffmpeg to H.264/AAC MP4 (75 s, 1600 x 900). The preview is outside the repo
   so recordings end on the last answer.
 - Blob is rating eleven other English accents (one take per line each) for a
   possible extra option.
+
+## Accent list (Blob, 2026-10-10)
+
+- Official English accents for Helper-Chan, all from the same designed voice with
+  only the accent changed: Australian (default), American, English (southern),
+  Scottish, Irish, Northern Irish (Belfast), Welsh (Valleys), South African, New
+  Zealand, Indian and Singlish. Plus the Japanese voice with English subtitles.
+- Rule: change pronunciation only, never add words to sound stereotypical.
+  Singlish is the exception: words are swapped for Singlish ones, nothing added, so
+  its text box needs the Singlish wording.
+- Not included: Canadian (too close to American; only for lines with Canadian
+  words such as zed, washroom, toque or runners), Filipino (a Tagalog dub later),
+  Nigerian, Jamaican, Yorkshire and Southern US (not different enough).
+- Prompt that worked: `[mood, speaking English with a thick <X> accent] <line>`
+  with a mood cue per sentence. Very strong wording ("unmistakable") made v4
+  repeat whole phrases. Accent takes are outside the repo in
+  `%LOCALAPPDATA%\MangakaGameoice-tests6-10-10ound5`, `round7` and
+  `round8`; only English (Australian) and Japanese are in the game so far.
