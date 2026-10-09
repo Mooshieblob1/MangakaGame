@@ -11,7 +11,8 @@ Sound effects are CC0 recordings in `Sfx/`, cut and levelled by
 `Office/OfficeAudio.cs` plays them and falls back to its original procedural
 waves if a file is missing. Music tracks are in `Music/` (see its README).
 Playback budgets use real elapsed seconds; simulation speed never changes pitch
-or increases the activity-cue rate. No voice recordings or audio service are used.
+or increases the activity-cue rate. Helper-Chan's voice lines are in `Voice/Helper/`
+(see its README); no audio service is used at runtime.
 
 ## Helper-Chan
 

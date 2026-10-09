@@ -18,7 +18,7 @@ public partial class DebugMain
 
     private void LoadAudioSettings()
     {
-        EnsureBus("Music"); EnsureBus("Effects");
+        EnsureBus("Music"); EnsureBus("Effects"); EnsureBus("Voice");
         // Automated checks use full, in-memory levels and never touch the player's file.
         if (SmokeRun) { _audioSettings = new() { Master = 1, SetupDone = true }; _audioSettingsPath = null; }
         else { _audioSettingsPath = ProjectSettings.GlobalizePath("user://audio-settings.json"); _audioSettings = AudioSettings.Load(_audioSettingsPath); }
@@ -26,7 +26,7 @@ public partial class DebugMain
     }
 
     // Music waits for the disclaimer to end, then fades in normally instead of jumping in at full level (final review).
-    private void UpdateMusic(double delta) { if (_managementReady && !_startupSilent) _music.Update(delta, MusicNow(), 1, AudioFocused); }
+    private void UpdateMusic(double delta) { if (_managementReady && !_startupSilent) _music.Update(delta, MusicNow(), MusicDuck(delta), AudioFocused); }
 
     private void SaveAudioSettings() { if (_audioSettingsPath is not null) _audioSettings.Save(_audioSettingsPath); }
 
@@ -35,6 +35,7 @@ public partial class DebugMain
         SetBus("Master", _startupSilent ? 0 : _audioSettings.Master);
         SetBus("Music", _audioSettings.Music);
         SetBus("Effects", _audioSettings.Effects);
+        SetBus("Voice", _audioSettings.Effects); // Helper-Chan's voice follows Sound effects until it gets its own slider
     }
 
     private static void EnsureBus(string name)

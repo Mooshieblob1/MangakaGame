@@ -8,7 +8,9 @@ Sound effects: CC0 (public domain) recordings, cut and levelled for this project
 Interface click and page turns from Kenney (kenney.nl). Pencil strokes, phone
 buzz and room tone from Freesound users fthgurdy, sirrealist2, Breviceps and mzui.
 Music: AI-generated with Suno (Pro plan, which grants commercial use) from
-prompts written for this project. No voice recordings are bundled.
+prompts written for this project.
+Helper-Chan's voice: AI-generated with ElevenLabs (Eleven v4, paid plan, which
+grants commercial use) from a voice designed for this project.
 Logo and title screen art: AI-generated with NovelAI Diffusion V5 from prompts by
 the project owner.
 Interface font: Copyright (c) 2011 Juan Montoreano (juan@remolacha.biz), with

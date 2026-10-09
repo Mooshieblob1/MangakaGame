@@ -252,7 +252,7 @@ public partial class DebugMain
         .OrderByDescending(x=>x.i);
     private HBoxContainer HelperBody(string expression,string title,string text,out VBoxContainer copy)
     {
-        Empty(_helperPopup);
+        Empty(_helperPopup);ResetHelperPopup();
         _helperPopup.Size=new(Math.Min(840,GetViewportRect().Size.X-40),Math.Min(520,GetViewportRect().Size.Y-40));
         _helperPopup.Position=(GetViewportRect().Size-_helperPopup.Size)/2;
         var body=new HBoxContainer();_helperPopup.AddChild(body);
@@ -273,11 +273,21 @@ public partial class DebugMain
     {
         if(OfficeEditing||_popupEvents.Count>0){Notify("Resolve the urgent notice or finish editing first.");return;}
         var scene=HelperStories.Describe(_state,id);_storyResume=_speed;Pause();_storyOpen=true;
-        VBoxContainer copy;
-        if(scene.Illustration is {} illustration)copy=IllustratedStoryBody(illustration,scene.Title,scene.Text);
-        else HelperBody(scene.Expression,scene.Title,scene.Text,out copy);
+        // Illustrated scenes keep the framed popup; the others play as visual novel scenes with her voice (2026-10-10).
+        if(scene.Illustration is {} illustration)
+        {
+            var copy=IllustratedStoryBody(illustration,scene.Title,scene.Text);
+            ActionButton(copy,scene.First,()=>Respond(0));ActionButton(copy,scene.Second,()=>Respond(1));ActionButton(copy,"Read later",()=>Respond(-1,true));ActionButton(copy,"Skip this conversation",()=>Respond(-1));
+        }
+        else
+        {
+            var choices=DialogueBody(scene);
+            foreach(var (text,answer) in new[]{(scene.First,0),(scene.Second,1)})
+            {var button=ActionButton(choices,text,()=>Respond(answer));button.ThemeTypeVariation="PrimaryAction";button.CustomMinimumSize=new(0,54);}
+            var later=new HBoxContainer{Alignment=BoxContainer.AlignmentMode.End};choices.AddChild(later);
+            ActionButton(later,"Read later",()=>Respond(-1,true));ActionButton(later,"Skip this conversation",()=>Respond(-1));
+        }
         void Respond(int answer,bool defer=false){_state.Apply(new StoryCommand(id,answer,defer));_dirty=true;_storyOpen=false;_helperPopup.Hide();BuildManagementPage();if(_popupEvents.Count==0&&!_recapDialog.Visible&&_pendingRecap is null&&_storyResume>0)SetSpeed(_storyResume);}
-        ActionButton(copy,scene.First,()=>Respond(0));ActionButton(copy,scene.Second,()=>Respond(1));ActionButton(copy,"Read later",()=>Respond(-1,true));ActionButton(copy,"Skip this conversation",()=>Respond(-1));
     }
     private void BuildHelp()
     {
@@ -293,7 +303,7 @@ public partial class DebugMain
     }
     private VBoxContainer IllustratedStoryBody(string illustration,string title,string text)
     {
-        Empty(_helperPopup);
+        Empty(_helperPopup);ResetHelperPopup();
         var size=new Vector2(Math.Min(920,GetViewportRect().Size.X-40),Math.Min(820,GetViewportRect().Size.Y-40));
         _helperPopup.Size=size;_helperPopup.Position=(GetViewportRect().Size-size)/2;
         var layout=new VBoxContainer();_helperPopup.AddChild(layout);

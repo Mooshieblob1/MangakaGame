@@ -117,6 +117,7 @@ public partial class DebugMain : Control
         if (OS.GetCmdlineUserArgs().Contains("--display-smoke")) CallDeferred(nameof(RunDisplaySmoke));
         if (OS.GetCmdlineUserArgs().Contains("--steam-smoke")) CallDeferred(nameof(RunSteamSmoke));
         if (OS.GetCmdlineUserArgs().Contains("--gamepad-smoke")) CallDeferred(nameof(RunGamepadSmoke));
+        if (OS.GetCmdlineUserArgs().Contains("--helper-voice-smoke")) CallDeferred(nameof(RunHelperVoiceSmoke));
     }
 
     // Only the title screen plays the title music; the pause menu keeps the career rotation (spec 2026-09-28).
@@ -133,6 +134,7 @@ public partial class DebugMain : Control
         UpdateMusic(delta);
         _steam.Update(delta);
         UpdateWorkFeedback(delta);
+        UpdateDialogue(delta);
         if (_overnightTarget is not null) TickOvernight(delta);
         else if (_speed > 0)
         {
